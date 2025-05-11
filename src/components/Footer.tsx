@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -68,6 +69,30 @@ const Footer = () => {
           </div>
           
           <div className="flex flex-wrap gap-4 md:gap-6">
+            <Link 
+              to="/privacy" 
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
+            >
+              Privacy Policy
+            </Link>
+            
+            <Link 
+              to="/terms" 
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
+            >
+              Terms & Conditions
+            </Link>
+            
+            <a 
+              href="https://www.instagram.com/saboris.places/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
+              aria-label="Instagram"
+            >
+              Follow Us
+            </a>
+
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
@@ -158,30 +183,6 @@ const Footer = () => {
                 </form>
               </DialogContent>
             </Dialog>
-            
-            <a 
-              href="https://www.instagram.com/saboris.places/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
-              aria-label="Instagram"
-            >
-              Follow Us
-            </a>
-            
-            <Link 
-              to="/terms" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
-            >
-              Terms & Conditions
-            </Link>
-            
-            <Link 
-              to="/privacy" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
-            >
-              Privacy Policy
-            </Link>
           </div>
         </div>
         

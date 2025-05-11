@@ -25,12 +25,12 @@ const LandingPage = () => {
           <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Features</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center h-full">
               <div className="rounded-full bg-saboris-peach p-6 mb-4">
                 <PlusCircle className="h-10 w-10 text-saboris-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Share</h3>
-              <p className="text-saboris-gray mb-4">
+              <p className="text-saboris-gray mb-4 flex-grow">
                 Share your favorite spots with friends. No fake reviews, just genuine recommendations from people you trust.
               </p>
               <Button 
@@ -41,12 +41,12 @@ const LandingPage = () => {
               </Button>
             </div>
             
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center h-full">
               <div className="rounded-full bg-saboris-light p-6 mb-4">
                 <MapPin className="h-10 w-10 text-saboris-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Explore</h3>
-              <p className="text-saboris-gray mb-4">
+              <p className="text-saboris-gray mb-4 flex-grow">
                 Discover new places recommended by your friends. Filter by cuisine, vibe, or rating to find the perfect spot.
               </p>
               <Button 
@@ -57,12 +57,12 @@ const LandingPage = () => {
               </Button>
             </div>
             
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center h-full">
               <div className="rounded-full bg-saboris-orange p-6 mb-4">
                 <User className="h-10 w-10 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Profile</h3>
-              <p className="text-saboris-gray mb-4">
+              <p className="text-saboris-gray mb-4 flex-grow">
                 Create your personalized profile, follow friends, and keep track of places you've saved and shared.
               </p>
               <Button 
