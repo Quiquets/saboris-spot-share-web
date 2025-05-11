@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -108,19 +107,6 @@ const Header = () => {
         </button>
         
         <button 
-          onClick={() => navigate('/map')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/map') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <MapPin className="h-4 w-4 mr-1" />
-          <span>Explore</span>
-        </button>
-        
-        <button 
           onClick={() => navigateProtected('/add', 'Add Place')} 
           className={cn(
             "px-3 py-2 rounded-md font-medium flex items-center text-white",
@@ -131,6 +117,32 @@ const Header = () => {
         >
           <PlusCircle className="h-4 w-4 mr-1" />
           <span>Share</span>
+        </button>
+        
+        <button 
+          onClick={() => navigateProtected('/search', 'Search Users')} 
+          className={cn(
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
+            isActive('/search') 
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
+          )}
+        >
+          <Search className="h-4 w-4 mr-1" />
+          <span>Search</span>
+        </button>
+        
+        <button 
+          onClick={() => navigate('/map')} 
+          className={cn(
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
+            isActive('/map') 
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
+          )}
+        >
+          <MapPin className="h-4 w-4 mr-1" />
+          <span>Explore</span>
         </button>
         
         <button 
@@ -216,16 +228,6 @@ const Header = () => {
               </button>
               
               <button 
-                onClick={() => navigate('/map')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/map') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <MapPin className="h-4 w-4 mr-2" /> Explore
-              </button>
-              
-              <button 
                 onClick={() => navigateProtected('/add', 'Add Place')}
                 className={cn(
                   "px-4 py-2 font-medium rounded-md flex items-center",
@@ -233,6 +235,26 @@ const Header = () => {
                 )}
               >
                 <PlusCircle className="h-4 w-4 mr-2" /> Share
+              </button>
+              
+              <button 
+                onClick={() => navigateProtected('/search', 'Search Users')}
+                className={cn(
+                  "px-4 py-2 font-medium rounded-md flex items-center",
+                  isActive('/search') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                )}
+              >
+                <Search className="h-4 w-4 mr-2" /> Search
+              </button>
+              
+              <button 
+                onClick={() => navigate('/map')}
+                className={cn(
+                  "px-4 py-2 font-medium rounded-md flex items-center",
+                  isActive('/map') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                )}
+              >
+                <MapPin className="h-4 w-4 mr-2" /> Explore
               </button>
               
               <button 

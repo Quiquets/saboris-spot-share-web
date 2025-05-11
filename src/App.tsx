@@ -15,6 +15,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SearchUsersPage from "./pages/SearchUsersPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import PageLoadingAnimation from "./components/PageLoadingAnimation";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -26,10 +27,26 @@ const AppWithProviders = () => (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/map" element={<MapPage />} />
-      <Route path="/add" element={<AddPlacePage />} />
-      <Route path="/saved" element={<SavedPlacesPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/search" element={<SearchUsersPage />} />
+      <Route path="/add" element={
+        <ProtectedRoute featureName="Add Place">
+          <AddPlacePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/search" element={
+        <ProtectedRoute featureName="Search Users">
+          <SearchUsersPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/saved" element={
+        <ProtectedRoute featureName="Saved Places">
+          <SavedPlacesPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute featureName="User Profile">
+          <ProfilePage />
+        </ProtectedRoute>
+      } />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="*" element={<NotFound />} />
