@@ -4,6 +4,7 @@ import { User as AuthUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { User, supabaseService } from '@/services/supabaseService';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   authUser: AuthUser | null;
@@ -26,28 +27,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
+    console.log("Setting up auth state listener");
+    
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
+        console.log("Auth state changed:", event);
+        
+        // Update session and user synchronously
         setSession(currentSession);
         setAuthUser(currentSession?.user || null);
         
         if (currentSession?.user) {
-          // Fetch profile data after auth state changes
+          // Defer profile fetch to avoid auth deadlock
           setTimeout(async () => {
-            const profile = await supabaseService.getUserProfile(currentSession.user.id);
-            setUser(profile);
-            
-            // Handle redirect after login
-            if (event === 'SIGNED_IN') {
-              const redirectPath = localStorage.getItem('redirectAfterLogin');
-              if (redirectPath) {
-                localStorage.removeItem('redirectAfterLogin');
-                navigate(redirectPath);
-              } else {
-                // Default redirect if no saved path
-                navigate('/profile');
+            try {
+              console.log("Fetching user profile...");
+              const profile = await supabaseService.getUserProfile(currentSession.user.id);
+              setUser(profile);
+              
+              // Handle redirect after login
+              if (event === 'SIGNED_IN') {
+                console.log("Handling redirect after login");
+                const redirectPath = localStorage.getItem('redirectAfterLogin');
+                if (redirectPath) {
+                  localStorage.removeItem('redirectAfterLogin');
+                  navigate(redirectPath);
+                } else {
+                  // Default redirect if no saved path
+                  navigate('/profile');
+                }
               }
+            } catch (error) {
+              console.error("Error fetching user profile:", error);
             }
           }, 0);
         } else {
@@ -56,10 +68,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Initial session check
+    // Then check for existing session
     const initializeAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        console.log("Checking for existing session...");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
         setSession(data.session);
         setAuthUser(data.session?.user || null);
         
@@ -69,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error("Error fetching session:", error);
+        toast.error("Authentication error. Please try signing in again.");
       } finally {
         setLoading(false);
       }

@@ -8,8 +8,8 @@ import {
   safeGetUserLocation, 
   communityRecommendations
 } from '@/utils/mapUtils';
-import { MapPin, Target, Filter, ArrowDown, ArrowUp } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { MapPin, Target, Filter, ArrowDown, ArrowUp, Sliders } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessGateModal from './AccessGateModal';
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,14 @@ const filterOptions = {
     { id: 'pizza', label: 'Pizza 🍕' },
     { id: 'bbq', label: 'BBQ 🍖' },
     { id: 'vegan', label: 'Vegan 🥬' },
+    { id: 'vegetarian', label: 'Vegetarian 🥕' },
+    { id: 'mediterranean', label: 'Mediterranean 🫒' },
+    { id: 'greek', label: 'Greek 🥙' },
+    { id: 'french', label: 'French 🥐' },
+    { id: 'korean', label: 'Korean 🍲' },
+    { id: 'japanese', label: 'Japanese 🍱' },
+    { id: 'vietnamese', label: 'Vietnamese 🍜' },
+    { id: 'tapas', label: 'Tapas 🧆' },
   ],
   vibe: [
     { id: 'romantic', label: 'Romantic' },
@@ -73,6 +81,14 @@ const filterOptions = {
     { id: 'instagrammable', label: 'Instagrammable' },
     { id: 'view', label: 'Great View' },
     { id: 'historic', label: 'Historic' },
+    { id: 'hidden-gem', label: 'Hidden Gem' },
+    { id: 'rooftop', label: 'Rooftop' },
+    { id: 'speakeasy', label: 'Speakeasy' },
+    { id: 'sports-bar', label: 'Sports Bar' },
+    { id: 'late-night', label: 'Late Night' },
+    { id: 'brunch', label: 'Brunch' },
+    { id: 'work-friendly', label: 'Work Friendly' },
+    { id: 'date-night', label: 'Date Night' },
   ],
   price: [
     { id: 'low', label: '€' },
@@ -152,6 +168,7 @@ const MapSection = () => {
   const markersRef = useRef<google.maps.Marker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
+  const googleMapsLoadedRef = useRef<boolean>(false);
   const { user } = useAuth();
   
   const [activeFilters, setActiveFilters] = useState<{
@@ -178,6 +195,7 @@ const MapSection = () => {
   
   const [showGateModal, setShowGateModal] = useState(false);
   const [mapIsReady, setMapIsReady] = useState(false);
+  const [isLoadingMap, setIsLoadingMap] = useState(true);
 
   useEffect(() => {
     // Update people filter based on authentication state
@@ -187,17 +205,39 @@ const MapSection = () => {
     }));
   }, [user]);
   
+  // Load Google Maps script first
+  useEffect(() => {
+    if (!googleMapsLoadedRef.current) {
+      console.log("Loading Google Maps script...");
+      
+      const loadMap = async () => {
+        try {
+          await loadGoogleMapsScript();
+          console.log("Google Maps script loaded successfully");
+          googleMapsLoadedRef.current = true;
+          // After script is loaded, we can initialize the map
+          initializeMap();
+        } catch (err) {
+          console.error("Error loading Google Maps script:", err);
+          toast.error("Failed to load Google Maps. Please refresh the page.");
+          setIsLoadingMap(false);
+        }
+      };
+      
+      loadMap();
+    }
+  }, []);
+  
   // Auto-center map on user's location when loaded
   const initializeMap = useCallback(async () => {
-    if (!mapContainerRef.current) return;
+    if (!mapContainerRef.current || !googleMapsLoadedRef.current || !window.google?.maps) {
+      console.log("Map container ref or Google Maps not available yet");
+      return;
+    }
+    
+    console.log("Initializing map with container:", mapContainerRef.current);
     
     try {
-      // Load Google Maps script
-      await loadGoogleMapsScript();
-      
-      // Safety check if component is still mounted and Google Maps is loaded
-      if (!mapContainerRef.current || !window.google?.maps) return;
-      
       // Automatically try to get user location on map load
       safeGetUserLocation(
         (position) => {
@@ -205,6 +245,8 @@ const MapSection = () => {
             lat: position.coords.latitude, 
             lng: position.coords.longitude 
           };
+          
+          console.log("Got user location:", userCoords);
           
           // Store user location in ref
           userLocationRef.current = userCoords;
@@ -215,11 +257,7 @@ const MapSection = () => {
         // If user location fails, use default location
         (error) => {
           console.warn("Could not get user location:", error);
-          toast({
-            title: "Location access denied",
-            description: "We're showing our default recommendations instead.",
-            variant: "destructive"
-          });
+          toast.error("Location access denied. Showing default recommendations instead.");
           // Default location - NYC
           const defaultLocation = { lat: 40.758, lng: -73.985 };
           createMap(defaultLocation);
@@ -227,19 +265,23 @@ const MapSection = () => {
       );
     } catch (error) {
       console.error("Error initializing map:", error);
-      toast({
-        title: "Map Error",
-        description: "Could not load Google Maps. Please check your internet connection and refresh.",
-        variant: "destructive"
-      });
+      toast.error("Map error. Please check your internet connection and refresh.");
+      setIsLoadingMap(false);
     }
   }, []);
   
   // Create map with given center location
   const createMap = (centerLocation: {lat: number, lng: number}) => {
-    if (!mapContainerRef.current || !window.google?.maps) return;
+    if (!mapContainerRef.current || !window.google?.maps) {
+      console.error("Map container ref or Google Maps not available");
+      setIsLoadingMap(false);
+      return;
+    }
     
     try {
+      console.log("Creating map with center:", centerLocation);
+      console.log("Map container element:", mapContainerRef.current);
+      
       const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
         center: centerLocation,
         zoom: 14,
@@ -253,6 +295,9 @@ const MapSection = () => {
       mapInstanceRef.current = mapInstance;
       mapLoadedRef.current = true;
       setMapIsReady(true);
+      setIsLoadingMap(false);
+      
+      console.log("Map created successfully");
       
       // If this is user location, add user marker
       if (userLocationRef.current && 
@@ -265,6 +310,7 @@ const MapSection = () => {
       addMarkersToMap();
     } catch (error) {
       console.error("Error creating map:", error);
+      setIsLoadingMap(false);
     }
   };
   
@@ -356,63 +402,10 @@ const MapSection = () => {
     }
   }, []);
   
-  // Initialize map on mount
-  useEffect(() => {
-    // Make sure we only load the map once
-    if (!mapLoadedRef.current) {
-      initializeMap();
-    }
-    
-    // Cleanup function with explicit error handling
-    return () => {
-      try {
-        console.log("Cleaning up map component...");
-        
-        // Clear all markers safely
-        if (markersRef.current && markersRef.current.length > 0) {
-          markersRef.current.forEach(marker => {
-            if (marker) {
-              try {
-                marker.setMap(null);
-              } catch (e) {
-                console.error("Error clearing marker:", e);
-              }
-            }
-          });
-          markersRef.current = [];
-        }
-        
-        // Clear user marker safely
-        if (userMarkerRef.current) {
-          try {
-            userMarkerRef.current.setMap(null);
-          } catch (e) {
-            console.error("Error clearing user marker:", e);
-          }
-          userMarkerRef.current = null;
-        }
-        
-        // Don't try to remove the map from the DOM directly,
-        // just clear our references to it
-        mapInstanceRef.current = null;
-        mapLoadedRef.current = false;
-        setMapIsReady(false);
-        
-        console.log("Map cleanup complete");
-      } catch (error) {
-        console.error("Error during map cleanup:", error);
-      }
-    };
-  }, [initializeMap]);
-  
   // Safe geolocation handler with improved error handling
   const handleGetUserLocation = useCallback(() => {
     if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) {
-      toast({
-        title: "Map not ready",
-        description: "Please wait for the map to load completely.",
-        variant: "destructive"
-      });
+      toast.error("Map not ready. Please wait for the map to load completely.");
       return;
     }
     
@@ -438,27 +431,16 @@ const MapSection = () => {
           // Add user marker
           addUserMarker(userCoords);
           
-          toast({
-            title: "Location found",
-            description: "Showing recommendations near you!",
-          });
+          toast.success("Location found. Showing recommendations near you!");
         } catch (error) {
           console.error("Error handling geolocation result:", error);
-          toast({
-            title: "Error",
-            description: "Something went wrong with geolocation.",
-            variant: "destructive"
-          });
+          toast.error("Something went wrong with geolocation.");
         }
       },
       // Error callback with user feedback
       (error) => {
         console.warn("Could not get user location:", error);
-        toast({
-          title: "Location access denied",
-          description: "We're showing our New York recommendations instead.",
-          variant: "destructive"
-        });
+        toast.error("Location access denied. We're showing our New York recommendations instead.");
       }
     );
   }, []);
@@ -481,10 +463,7 @@ const MapSection = () => {
     }
     
     // In a real app, we would refresh the map data based on filters here
-    toast({
-      title: "Filters applied",
-      description: "Map data would be refreshed based on your filters.",
-    });
+    toast.success("Filters applied. Map data would be refreshed based on your filters.");
   };
   
   const toggleSortDirection = (category: string) => {
@@ -516,7 +495,7 @@ const MapSection = () => {
             </TabsList>
           </Tabs>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4 w-full">
+          <div className="grid grid-cols-4 gap-2 mb-4 w-full">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -524,7 +503,7 @@ const MapSection = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
-                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
                   {filterOptions.foodType.map(option => (
                     <Button 
                       key={option.id}
@@ -551,7 +530,7 @@ const MapSection = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
-                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
                   {filterOptions.vibe.map(option => (
                     <Button 
                       key={option.id}
@@ -598,27 +577,13 @@ const MapSection = () => {
               </PopoverContent>
             </Popover>
 
-            <Select 
-              onValueChange={(value) => {
-                const [category, direction] = value.split(':');
-                toggleSortDirection(category);
-              }}
-              defaultValue="food:desc"
+            <Button 
+              variant="outline" 
+              className="flex items-center justify-center gap-2 font-bold"
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sort by ratings" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="food:desc">Food (High to Low)</SelectItem>
-                <SelectItem value="food:asc">Food (Low to High)</SelectItem>
-                <SelectItem value="service:desc">Service (High to Low)</SelectItem>
-                <SelectItem value="service:asc">Service (Low to High)</SelectItem>
-                <SelectItem value="atmosphere:desc">Atmosphere (High to Low)</SelectItem>
-                <SelectItem value="atmosphere:asc">Atmosphere (Low to High)</SelectItem>
-                <SelectItem value="value:desc">Value (High to Low)</SelectItem>
-                <SelectItem value="value:asc">Value (Low to High)</SelectItem>
-              </SelectContent>
-            </Select>
+              <Sliders className="h-4 w-4 text-saboris-primary" /> 
+              More Filters
+            </Button>
           </div>
           
           {/* Active filter badges */}
@@ -674,13 +639,15 @@ const MapSection = () => {
         
         {/* Map container with stable ID */}
         <Card className="overflow-hidden shadow-lg relative">
-          {/* Only render map container if we're ready for it */}
-          {mapIsReady ? (
-            <div 
-              ref={mapContainerRef} 
-              className="map-container h-[400px] w-full"
-            />
-          ) : (
+          {/* Map container with explicit height */}
+          <div 
+            ref={mapContainerRef} 
+            className="h-[400px] w-full"
+            style={{ display: isLoadingMap ? 'none' : 'block' }}
+          />
+          
+          {/* Loading state */}
+          {isLoadingMap && (
             <div className="h-[400px] w-full flex items-center justify-center bg-gray-100">
               <div className="flex flex-col items-center">
                 <div className="h-8 w-8 rounded-full border-4 border-saboris-primary border-t-transparent animate-spin"></div>
