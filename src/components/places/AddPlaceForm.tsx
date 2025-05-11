@@ -13,9 +13,9 @@ import { PlaceInformationSection } from '@/components/places/PlaceInformationSec
 import { PlaceDetailsSection } from '@/components/places/PlaceDetailsSection';
 import { PlaceRatingsSection } from '@/components/places/PlaceRatingsSection';
 import { PlacePhotosSection } from '@/components/places/PlacePhotosSection';
-import { PlaceTagsSection } from '@/components/places/PlaceTagsSection';
 import { PlaceExperienceSection } from '@/components/places/PlaceExperienceSection';
 import { PlaceVisibilityToggle } from '@/components/places/PlaceVisibilityToggle';
+import { FriendTagsSection } from '@/components/places/FriendTagsSection';
 import { FriendSelectorSection } from '@/components/places/FriendSelectorSection';
 import { PlaceSubmitSection } from '@/components/places/PlaceSubmitSection';
 import { formSchema, FormValues, PlaceDetails } from '@/types/place';
@@ -147,7 +147,8 @@ export function AddPlaceForm() {
           rating_atmosphere: values.rating_atmosphere,
           rating_value: values.rating_value,
           text: values.description,
-          photo_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null
+          photo_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
+          tagged_friends: values.tagged_friends
         })
         .select()
         .single();
@@ -202,13 +203,14 @@ export function AddPlaceForm() {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Vertical layout for all sections */}
+            {/* Place information (name, address, etc) */}
             <PlaceInformationSection 
               form={form} 
               handlePlaceSelect={handlePlaceSelect}
               isSubmitting={isSubmitting}
             />
             
+            {/* Details (cuisine, vibes, occasions, price) */}
             <PlaceDetailsSection 
               form={form} 
               cuisineOptions={cuisineOptions}
@@ -216,12 +218,19 @@ export function AddPlaceForm() {
               occasionOptions={occasionOptions} 
             />
             
-            <PlaceRatingsSection form={form} />
-            
-            <PlacePhotosSection form={form} googleMapPhoto={googleMapPhoto} />
-            
+            {/* Your experience - moved up before ratings */}
             <PlaceExperienceSection form={form} isSubmitting={isSubmitting} />
             
+            {/* Ratings */}
+            <PlaceRatingsSection form={form} />
+            
+            {/* Who joined you - new section */}
+            <FriendTagsSection form={form} />
+            
+            {/* Photos */}
+            <PlacePhotosSection form={form} googleMapPhoto={googleMapPhoto} />
+            
+            {/* Visibility toggle */}
             <PlaceVisibilityToggle form={form} isSubmitting={isSubmitting} />
             
             {/* Friend Selection (Only show after submission) */}
