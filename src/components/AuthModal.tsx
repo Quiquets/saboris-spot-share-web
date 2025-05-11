@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,21 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, featureName } = useAuth();
+  const { signIn, signUp, signInWithGoogle, featureName, showAuthModal, setShowAuthModal } = useAuth();
+
+  // Use the context's modal state instead of props
+  const modalOpen = showAuthModal;
+  const handleClose = () => setShowAuthModal(false);
+  
+  // Reset form when modal opens
+  useEffect(() => {
+    if (modalOpen) {
+      setEmail('');
+      setPassword('');
+      setName('');
+      setActiveTab('signin');
+    }
+  }, [modalOpen]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +48,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     try {
       const user = await signIn(email, password);
       if (user) {
-        onClose();
+        handleClose();
         toast.success("Signed in successfully!");
       }
     } catch (error) {
@@ -87,8 +101,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     : 'Sign in to your account to access all features.';
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
+    <Dialog open={modalOpen} onOpenChange={(open) => {
+      if (!open) handleClose();
     }}>
       <DialogContent className="sm:max-w-md">
         {featureName && (
@@ -134,7 +148,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-white text-saboris-primary border border-saboris-primary hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
+                className="w-full bg-saboris-primary text-white hover:bg-saboris-primary/90"
                 disabled={loading}
               >
                 {loading ? 'Signing In...' : 'Sign In'}
@@ -211,7 +225,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-white text-saboris-primary border border-saboris-primary hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
+                className="w-full bg-saboris-primary text-white hover:bg-saboris-primary/90"
                 disabled={loading}
               >
                 {loading ? 'Signing Up...' : 'Sign Up'}

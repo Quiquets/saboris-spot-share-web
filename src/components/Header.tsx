@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -9,16 +9,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessGateModal from './AccessGateModal';
 import AuthModal from './AuthModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from 'sonner';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
   const [gateFeature, setGateFeature] = useState<string>('');
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, setShowAuthModal } = useAuth();
   
   // Track scrolling for header styling
   useEffect(() => {
@@ -39,9 +44,9 @@ const Header = () => {
     return location.pathname === path;
   };
 
-  // Handle protected route navigation - Map is no longer protected
+  // Handle protected route navigation
   const navigateProtected = (path: string, featureName: string) => {
-    // If it's the map path, navigate directly without authentication
+    // Map is no longer protected, navigating directly
     if (path === '/map') {
       navigate(path);
       return;
@@ -63,7 +68,6 @@ const Header = () => {
     try {
       await signOut();
       toast.success("Successfully signed out");
-      navigate('/');
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out");
@@ -143,24 +147,37 @@ const Header = () => {
         </button>
         
         {user ? (
-          <Button 
-            onClick={() => navigate('/profile')}
-            className={cn(
-              "ml-2 p-0 w-9 h-9 rounded-full border border-white overflow-hidden",
-              isActive('/profile') ? "bg-white/20" : "bg-transparent hover:bg-white/10"
-            )}
-          >
-            <Avatar className="h-full w-full">
-              <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
-              <AvatarFallback className="bg-white/50 text-saboris-primary">
-                {user.name?.charAt(0) || '?'}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                className={cn(
+                  "ml-2 p-0 w-9 h-9 rounded-full border border-white overflow-hidden",
+                  isActive('/profile') ? "bg-white/20" : "bg-transparent hover:bg-white/10"
+                )}
+              >
+                <Avatar className="h-full w-full">
+                  <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
+                  <AvatarFallback className="bg-white/50 text-saboris-primary">
+                    {user.name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <User className="h-4 w-4 mr-2" />
+                <span>View Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-2" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <Button 
             className="bg-white text-saboris-primary border border-saboris-primary px-4 hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
-            onClick={() => setIsAuthModalOpen(true)}
+            onClick={() => setShowAuthModal(true)}
           >
             <span>Sign In</span>
           </Button>
@@ -251,7 +268,7 @@ const Header = () => {
                 </>
               ) : (
                 <button 
-                  onClick={() => setIsAuthModalOpen(true)}
+                  onClick={() => setShowAuthModal(true)}
                   className="px-4 py-2 font-medium bg-white text-saboris-primary border border-saboris-primary rounded-md flex items-center"
                 >
                   <User className="h-4 w-4 mr-2" /> Sign In
@@ -271,8 +288,8 @@ const Header = () => {
       
       {/* Auth Modal */}
       <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)}
+        isOpen={false} 
+        onClose={() => {}}
       />
     </header>
   );

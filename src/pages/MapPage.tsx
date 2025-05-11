@@ -16,7 +16,7 @@ const MapPage = () => {
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
-      <div className="flex-grow">
+      <div className="flex-grow w-full">
         <MapSection />
       </div>
       <Footer />

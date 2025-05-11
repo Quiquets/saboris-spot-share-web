@@ -14,6 +14,11 @@ const AccessGateModal = ({ isOpen, onClose, featureName = 'this feature' }: Acce
   
   // When this modal is shown, we now trigger the main auth modal instead
   if (isOpen) {
+    // Store the current location for redirect after login
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('redirectAfterLogin', window.location.pathname);
+    }
+    
     // Set the feature name in the auth context
     setFeatureName(featureName);
     

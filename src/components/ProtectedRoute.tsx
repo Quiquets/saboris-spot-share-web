@@ -26,6 +26,11 @@ const ProtectedRoute = ({ children, featureName, redirectTo = '/' }: ProtectedRo
     return <>{children}</>;
   }
   
+  // Store the current location for redirect after login
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('redirectAfterLogin', window.location.pathname);
+  }
+  
   return <Navigate to={redirectTo} replace />;
 };
 

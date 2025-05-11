@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as AuthUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,11 @@ interface AuthContextType {
   setShowAuthModal: (show: boolean) => void;
   featureName?: string;
   setFeatureName: (name?: string) => void;
+  savedPlaces: any[];
+  userReviews: any[];
+  followers: any[];
+  following: any[];
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +35,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [featureName, setFeatureName] = useState<string | undefined>();
+  const [savedPlaces, setSavedPlaces] = useState<any[]>([]);
+  const [userReviews, setUserReviews] = useState<any[]>([]);
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
   const navigate = useNavigate();
+
+  // Fetch user data after authentication
+  const fetchUserData = async (userId: string) => {
+    try {
+      // Fetch saved places
+      const savedPlaces = await supabaseService.getSavedRestaurants(userId);
+      setSavedPlaces(savedPlaces);
+      
+      // Fetch user reviews - we'll need to add this method to supabaseService
+      const { data: reviews } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('user_id', userId);
+      setUserReviews(reviews || []);
+      
+      // Fetch followers
+      const followers = await supabaseService.getFollowers(userId);
+      setFollowers(followers);
+      
+      // Fetch following - we'll need to implement this
+      const { data: followingData } = await supabase
+        .from('follows')
+        .select('following_id, users!follows_following_id_fkey(*)')
+        .eq('follower_id', userId);
+      
+      const followingUsers = followingData?.map(item => ({
+        ...item.users,
+        email: item.users.username.includes('@') ? item.users.username : ''
+      })) || [];
+      
+      setFollowing(followingUsers);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+  
+  // Function to refresh user data
+  const refreshUserData = async () => {
+    if (authUser) {
+      await fetchUserData(authUser.id);
+    }
+  };
 
   useEffect(() => {
     console.log("Setting up auth state listener");
@@ -51,6 +103,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const profile = await supabaseService.getUserProfile(currentSession.user.id);
               setUser(profile);
               
+              // Fetch user data
+              await fetchUserData(currentSession.user.id);
+              
               // Handle redirect after login
               if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 console.log("Handling redirect after login");
@@ -58,11 +113,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (redirectPath) {
                   localStorage.removeItem('redirectAfterLogin');
                   navigate(redirectPath);
-                } else {
-                  // Default redirect if no saved path
-                  navigate('/profile');
                 }
                 
+                setShowAuthModal(false); // Close auth modal after successful login
                 toast.success("Successfully signed in!");
               }
             } catch (error) {
@@ -72,7 +125,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          setSavedPlaces([]);
+          setUserReviews([]);
+          setFollowers([]);
+          setFollowing([]);
           toast.info("You've been signed out");
+          
+          // Redirect to home page after sign out
+          navigate('/');
         }
       }
     );
@@ -94,6 +154,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             const profile = await supabaseService.getUserProfile(data.session.user.id);
             setUser(profile);
+            
+            // Fetch user data
+            await fetchUserData(data.session.user.id);
           } catch (profileError) {
             console.error("Error fetching user profile on init:", profileError);
             // Don't throw here to prevent blocking auth initialization
@@ -162,12 +225,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle: () => supabaseService.signInWithProvider('google'),
     signOut: async () => {
       await supabaseService.signOut();
-      navigate('/');
     },
     showAuthModal,
     setShowAuthModal,
     featureName,
     setFeatureName,
+    savedPlaces,
+    userReviews,
+    followers,
+    following,
+    refreshUserData,
   };
 
   return (
