@@ -53,7 +53,10 @@ export function SelectDropdown({
       e.preventDefault();
       e.stopPropagation();
     }
-    onChange(selectedValues.filter((value) => value !== valueToRemove));
+    
+    // Ensure we're creating a new array to trigger state update
+    const newValues = selectedValues.filter((value) => value !== valueToRemove);
+    onChange(newValues);
   };
 
   const getSelectedLabels = () => {
@@ -90,9 +93,7 @@ export function SelectDropdown({
                       <button
                         type="button"
                         className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full"
-                        onClick={(e) => {
-                          handleRemove(selectedValues[index], e);
-                        }}
+                        onClick={(e) => handleRemove(selectedValues[index], e)}
                       >
                         <X className="h-3 w-3" />
                       </button>

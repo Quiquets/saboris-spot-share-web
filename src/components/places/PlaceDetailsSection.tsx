@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '@/types/place';
 import { SelectDropdown } from '@/components/places/SelectDropdown';
+import { Button } from '@/components/ui/button';
 
 interface PlaceDetailsSectionProps {
   form: UseFormReturn<FormValues>;
@@ -32,15 +32,31 @@ export function PlaceDetailsSection({
           name="cuisine"
           render={({ field }) => (
             <FormItem>
+              <FormLabel className="block text-gray-700 mb-2">Cuisine</FormLabel>
               <FormControl>
-                <SelectDropdown
-                  label="Cuisine"
-                  options={cuisineOptions}
-                  selectedValues={field.value ? [field.value] : []}
-                  onChange={(values) => field.onChange(values.length > 0 ? values[0] : '')}
-                  maxSelection={1}
-                  placeholder="Select cuisine..."
-                />
+                <div className="flex flex-wrap gap-2">
+                  {cuisineOptions.map((option) => (
+                    <Button
+                      key={option.value}
+                      type="button"
+                      variant={field.value === option.value ? "default" : "outline"}
+                      className={`rounded-full text-sm transition-all ${
+                        field.value === option.value
+                          ? "bg-[#FF7F7F] hover:bg-[#FF6A6A] text-white border-transparent" 
+                          : "border-gray-200 hover:border-[#FF7F7F] hover:text-[#FF7F7F]"
+                      }`}
+                      onClick={() => {
+                        // If already selected, do nothing (keep selection)
+                        // If not selected, select this cuisine
+                        if (field.value !== option.value) {
+                          field.onChange(option.value);
+                        }
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
