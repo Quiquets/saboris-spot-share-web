@@ -1,8 +1,8 @@
 
 import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
-import { TagSelector } from '@/components/places/TagSelector';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '@/types/place';
+import { SelectDropdown } from '@/components/places/SelectDropdown';
 
 interface PlaceTagsSectionProps {
   form: UseFormReturn<FormValues>;
@@ -25,13 +25,13 @@ export function PlaceTagsSection({ form, occasionOptions, vibeOptions }: PlaceTa
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <TagSelector
+                <SelectDropdown
                   label="Occasion"
-                  options={occasionOptions.map(o => o.label)}
-                  selectedTags={field.value || []}
+                  options={occasionOptions}
+                  selectedValues={field.value || []}
                   onChange={field.onChange}
-                  maxSelection={5}
-                  className="rounded-full"
+                  maxSelection={2}
+                  placeholder="Select occasions..."
                 />
               </FormControl>
               <FormMessage />
@@ -45,14 +45,13 @@ export function PlaceTagsSection({ form, occasionOptions, vibeOptions }: PlaceTa
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <TagSelector
+                <SelectDropdown
                   label="Vibe"
-                  options={vibeOptions.map(v => v.label)}
-                  selectedTags={field.value || []}
+                  options={vibeOptions}
+                  selectedValues={field.value || []}
                   onChange={field.onChange}
                   maxSelection={5}
-                  searchable={true}
-                  className="rounded-full"
+                  placeholder="Select vibes..."
                 />
               </FormControl>
               <FormMessage />

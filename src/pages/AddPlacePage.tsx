@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -242,50 +241,39 @@ const AddPlacePage = () => {
       <Header />
       
       <div className="flex-grow w-full px-4 py-12 max-w-[1440px] mx-auto">
-        <div className="mx-auto">
+        <div className="mx-auto max-w-3xl">
           <div className="flex items-center mb-8 gap-3">
             <Sparkles className="text-saboris-primary h-7 w-7" />
             <h1 className="text-3xl font-bold">Share Your Experience</h1>
           </div>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-              {/* Content in a two-column layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left column - Basic info */}
-                <div className="lg:col-span-1 space-y-8">
-                  <PlaceInformationSection 
-                    form={form} 
-                    handlePlaceSelect={handlePlaceSelect}
-                    isSubmitting={isSubmitting}
-                  />
-                  
-                  <PlaceDetailsSection 
-                    form={form} 
-                    cuisineOptions={cuisineOptions} 
-                  />
-                </div>
-
-                {/* Center column - Ratings & Photos */}
-                <div className="lg:col-span-1 space-y-8">
-                  <PlaceRatingsSection form={form} />
-                  
-                  <PlacePhotosSection form={form} googleMapPhoto={googleMapPhoto} />
-                </div>
-
-                {/* Right column - Tags & Experience */}
-                <div className="lg:col-span-1 space-y-8">
-                  <PlaceTagsSection 
-                    form={form} 
-                    occasionOptions={occasionOptions} 
-                    vibeOptions={vibeOptions} 
-                  />
-                  
-                  <PlaceExperienceSection form={form} isSubmitting={isSubmitting} />
-                  
-                  <PlaceVisibilityToggle form={form} isSubmitting={isSubmitting} />
-                </div>
-              </div>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              {/* Vertical layout for all sections */}
+              <PlaceInformationSection 
+                form={form} 
+                handlePlaceSelect={handlePlaceSelect}
+                isSubmitting={isSubmitting}
+              />
+              
+              <PlaceDetailsSection 
+                form={form} 
+                cuisineOptions={cuisineOptions} 
+              />
+              
+              <PlaceRatingsSection form={form} />
+              
+              <PlacePhotosSection form={form} googleMapPhoto={googleMapPhoto} />
+              
+              <PlaceTagsSection 
+                form={form} 
+                occasionOptions={occasionOptions} 
+                vibeOptions={vibeOptions} 
+              />
+              
+              <PlaceExperienceSection form={form} isSubmitting={isSubmitting} />
+              
+              <PlaceVisibilityToggle form={form} isSubmitting={isSubmitting} />
               
               {/* Friend Selection (Only show after submission) */}
               {showFriendSelector && (
