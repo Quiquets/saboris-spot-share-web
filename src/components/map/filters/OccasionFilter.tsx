@@ -25,17 +25,17 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
       e.stopPropagation();
     }
     
-    const newFilters = activeOccasions ? activeOccasions.filter(id => id !== idToRemove) : [];
+    const newFilters = activeOccasions.filter(id => id !== idToRemove);
     handleFilterChange('occasion', newFilters);
   };
   
   // Function to add an occasion to selection
   const addOccasion = (id: string) => {
     // If already selected, remove it, otherwise add it
-    if (activeOccasions && activeOccasions.includes(id)) {
+    if (activeOccasions.includes(id)) {
       removeOccasion(id);
     } else {
-      const newFilters = [...(activeOccasions || []), id];
+      const newFilters = [...activeOccasions, id];
       handleFilterChange('occasion', newFilters);
     }
   };
@@ -47,7 +47,7 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
           className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
           Occasion
-          {activeOccasions && activeOccasions.length > 0 && (
+          {activeOccasions.length > 0 && (
             <span className="ml-1 bg-saboris-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
               {activeOccasions.length}
             </span>
@@ -59,14 +59,14 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
           {filterOptions.occasion.map(option => (
             <Button 
               key={option.id}
-              variant={activeOccasions && activeOccasions.includes(option.id) ? "default" : "outline"}
-              className={`text-xs px-2 py-1 flex items-center ${activeOccasions && activeOccasions.includes(option.id) 
+              variant={activeOccasions.includes(option.id) ? "default" : "outline"}
+              className={`text-xs px-2 py-1 flex items-center ${activeOccasions.includes(option.id) 
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
               onClick={() => addOccasion(option.id)}
             >
               <span>{option.label}</span>
-              {activeOccasions && activeOccasions.includes(option.id) && (
+              {activeOccasions.includes(option.id) && (
                 <X 
                   className="h-3 w-3 ml-1 hover:text-saboris-light" 
                   onClick={(e) => removeOccasion(option.id, e)}

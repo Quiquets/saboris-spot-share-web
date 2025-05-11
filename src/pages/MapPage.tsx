@@ -1,11 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import MapSection from '../components/MapSection';
-import Footer from '../components/Footer';
-import AuthModal from '../components/AuthModal';
-import { useAuth } from '../contexts/AuthContext';
-import { supabaseService } from '../services/supabaseService';
+import Header from '@/components/Header';
+import MapSection from '@/components/MapSection';
+import Footer from '@/components/Footer';
+import AuthModal from '@/components/AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 
 const MapPage = () => {
@@ -49,7 +49,7 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow w-full">
-        <MapSection placeImagesData={placeImages} />
+        <MapSection placeImages={placeImages} />
       </div>
       <Footer />
       <AuthModal 

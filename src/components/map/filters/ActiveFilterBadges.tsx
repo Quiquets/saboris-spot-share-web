@@ -18,26 +18,20 @@ const ActiveFilterBadges: React.FC<ActiveFilterBadgesProps> = ({
   activePrices,
   handleFilterChange
 }) => {
-  // Ensure all arrays are initialized
-  const occasions = activeOccasions || [];
-  const foodTypes = activeFoodTypes || [];
-  const vibes = activeVibes || [];
-  const prices = activePrices || [];
-  
-  if (occasions.length === 0 && foodTypes.length === 0 && 
-      vibes.length === 0 && prices.length === 0) {
+  if (activeOccasions.length === 0 && activeFoodTypes.length === 0 && 
+      activeVibes.length === 0 && activePrices.length === 0) {
     return null;
   }
   
   return (
     <div className="flex flex-wrap gap-1 mb-2">
-      {occasions.map(filter => (
+      {activeOccasions.map(filter => (
         <Badge 
           key={filter} 
           variant="outline"
           className="cursor-pointer border-saboris-primary text-saboris-gray"
           onClick={() => {
-            const newFilters = occasions.filter(id => id !== filter);
+            const newFilters = activeOccasions.filter(id => id !== filter);
             handleFilterChange('occasion', newFilters);
           }}
         >
@@ -46,13 +40,13 @@ const ActiveFilterBadges: React.FC<ActiveFilterBadgesProps> = ({
         </Badge>
       ))}
       
-      {foodTypes.map(filter => (
+      {activeFoodTypes.map(filter => (
         <Badge 
           key={filter} 
           variant="outline"
           className="cursor-pointer border-saboris-primary text-saboris-gray"
           onClick={() => {
-            const newFilters = foodTypes.filter(id => id !== filter);
+            const newFilters = activeFoodTypes.filter(id => id !== filter);
             handleFilterChange('foodType', newFilters);
           }}
         >
@@ -61,13 +55,13 @@ const ActiveFilterBadges: React.FC<ActiveFilterBadgesProps> = ({
         </Badge>
       ))}
       
-      {vibes.map(filter => (
+      {activeVibes.map(filter => (
         <Badge 
           key={filter} 
           variant="outline"
           className="cursor-pointer border-saboris-primary text-saboris-gray"
           onClick={() => {
-            const newFilters = vibes.filter(id => id !== filter);
+            const newFilters = activeVibes.filter(id => id !== filter);
             handleFilterChange('vibe', newFilters);
           }}
         >
@@ -76,13 +70,13 @@ const ActiveFilterBadges: React.FC<ActiveFilterBadgesProps> = ({
         </Badge>
       ))}
       
-      {prices.map(filter => (
+      {activePrices.map(filter => (
         <Badge 
           key={filter} 
           variant="outline"
           className="cursor-pointer border-saboris-primary text-saboris-gray"
           onClick={() => {
-            const newFilters = prices.filter(id => id !== filter);
+            const newFilters = activePrices.filter(id => id !== filter);
             handleFilterChange('price', newFilters);
           }}
         >
