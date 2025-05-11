@@ -32,10 +32,10 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
   // Function to add a vibe to selection
   const addVibe = (id: string) => {
     // If already selected, remove it, otherwise add it
-    if (activeVibes.includes(id)) {
+    if (activeVibes && activeVibes.includes(id)) {
       removeVibe(id);
     } else {
-      const newFilters = [...activeVibes, id];
+      const newFilters = [...(activeVibes || []), id];
       handleFilterChange('vibe', newFilters);
     }
   };
@@ -47,7 +47,7 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
           className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
           Vibe
-          {activeVibes.length > 0 && (
+          {activeVibes && activeVibes.length > 0 && (
             <span className="ml-1 bg-saboris-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
               {activeVibes.length}
             </span>
@@ -59,14 +59,14 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
           {filterOptions.vibe.map(option => (
             <Button 
               key={option.id}
-              variant={activeVibes.includes(option.id) ? "default" : "outline"}
-              className={`justify-start text-xs px-2 py-1 ${activeVibes.includes(option.id) 
+              variant={activeVibes && activeVibes.includes(option.id) ? "default" : "outline"}
+              className={`justify-start text-xs px-2 py-1 ${activeVibes && activeVibes.includes(option.id) 
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
               onClick={() => addVibe(option.id)}
             >
               <span className="flex-1 text-left">{option.label}</span>
-              {activeVibes.includes(option.id) && (
+              {activeVibes && activeVibes.includes(option.id) && (
                 <X 
                   className="h-3 w-3 ml-1 hover:text-saboris-light" 
                   onClick={(e) => removeVibe(option.id, e)}

@@ -47,7 +47,7 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
           className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
           Occasion
-          {activeOccasions.length > 0 && (
+          {activeOccasions && activeOccasions.length > 0 && (
             <span className="ml-1 bg-saboris-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
               {activeOccasions.length}
             </span>
@@ -59,14 +59,14 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
           {filterOptions.occasion.map(option => (
             <Button 
               key={option.id}
-              variant={activeOccasions.includes(option.id) ? "default" : "outline"}
-              className={`text-xs px-2 py-1 flex items-center ${activeOccasions.includes(option.id) 
+              variant={activeOccasions && activeOccasions.includes(option.id) ? "default" : "outline"}
+              className={`text-xs px-2 py-1 flex items-center ${activeOccasions && activeOccasions.includes(option.id) 
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
               onClick={() => addOccasion(option.id)}
             >
               <span>{option.label}</span>
-              {activeOccasions.includes(option.id) && (
+              {activeOccasions && activeOccasions.includes(option.id) && (
                 <X 
                   className="h-3 w-3 ml-1 hover:text-saboris-light" 
                   onClick={(e) => removeOccasion(option.id, e)}

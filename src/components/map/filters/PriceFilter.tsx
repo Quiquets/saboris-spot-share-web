@@ -25,6 +25,11 @@ const PriceFilter: React.FC<PriceFilterProps> = ({
           className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
           Price
+          {activePrices && activePrices.length > 0 && (
+            <span className="ml-1 bg-saboris-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+              {activePrices.length}
+            </span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-60">
@@ -32,14 +37,14 @@ const PriceFilter: React.FC<PriceFilterProps> = ({
           {filterOptions.price.map(option => (
             <Button 
               key={option.id}
-              variant={activePrices.includes(option.id) ? "default" : "outline"}
-              className={`text-xs px-2 py-1 ${activePrices.includes(option.id) 
+              variant={activePrices && activePrices.includes(option.id) ? "default" : "outline"}
+              className={`text-xs px-2 py-1 ${activePrices && activePrices.includes(option.id) 
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
               onClick={() => {
-                const newFilters = activePrices.includes(option.id)
+                const newFilters = activePrices && activePrices.includes(option.id)
                   ? activePrices.filter(id => id !== option.id)
-                  : [...activePrices, option.id];
+                  : [...(activePrices || []), option.id];
                 handleFilterChange('price', newFilters);
               }}
             >

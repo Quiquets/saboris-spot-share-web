@@ -21,7 +21,7 @@ const FoodTypeFilter: React.FC<FoodTypeFilterProps> = ({
   const handleCuisineSelect = (id: string) => {
     // If the id is already selected, deselect it (empty array)
     // Otherwise, select only this cuisine (replace array with single item)
-    const newFilters = activeFoodTypes.includes(id) ? [] : [id];
+    const newFilters = activeFoodTypes && activeFoodTypes.includes(id) ? [] : [id];
     handleFilterChange('foodType', newFilters);
   };
   
@@ -32,7 +32,7 @@ const FoodTypeFilter: React.FC<FoodTypeFilterProps> = ({
           className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
           Cuisine
-          {activeFoodTypes.length > 0 && (
+          {activeFoodTypes && activeFoodTypes.length > 0 && (
             <span className="ml-1 bg-saboris-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
               {activeFoodTypes.length}
             </span>
@@ -44,8 +44,8 @@ const FoodTypeFilter: React.FC<FoodTypeFilterProps> = ({
           {filterOptions.foodType.map(option => (
             <Button 
               key={option.id}
-              variant={activeFoodTypes.includes(option.id) ? "default" : "outline"}
-              className={`justify-start text-xs px-2 py-1 ${activeFoodTypes.includes(option.id) 
+              variant={activeFoodTypes && activeFoodTypes.includes(option.id) ? "default" : "outline"}
+              className={`justify-start text-xs px-2 py-1 ${activeFoodTypes && activeFoodTypes.includes(option.id) 
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
               onClick={() => handleCuisineSelect(option.id)}
