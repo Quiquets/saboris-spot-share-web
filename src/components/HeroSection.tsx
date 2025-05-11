@@ -19,7 +19,7 @@ const HeroSection = () => {
       <div className="relative z-10 text-center max-w-3xl mx-auto">
         <h1 className="text-white text-6xl font-extrabold text-center mb-2">Saboris</h1>
         <h2 className="text-white text-2xl font-medium text-center mb-4">
-          Real food. Real friends. Zero BS.
+          Taste, Share, Explore
         </h2>
         
         {/* Food emojis */}

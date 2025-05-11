@@ -63,9 +63,6 @@ const LandingPage = () => {
               <span>Get Started</span>
             </Button>
           </div>
-          <p className="text-sm mt-8 font-medium">
-            🛠️ <em>Saboris App coming soon</em>
-          </p>
         </div>
 
         {/* Right side - Pink background with Phone Mockups */}
@@ -117,7 +114,7 @@ const LandingPage = () => {
       {/* Feature Cards Section */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Share. Explore.</h2>
+          <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Taste, Share, Explore</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="overflow-hidden hover:shadow-lg transition-shadow">

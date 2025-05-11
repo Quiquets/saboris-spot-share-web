@@ -439,7 +439,7 @@ const MapSection = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" /> Food Type
+                  <Filter className="h-4 w-4 text-saboris-primary" /> Food Type
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
@@ -470,7 +470,7 @@ const MapSection = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" /> Vibe
+                  <Filter className="h-4 w-4 text-saboris-primary" /> Vibe
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
@@ -562,7 +562,7 @@ const MapSection = () => {
               variant="secondary" 
               className="shadow-md flex items-center gap-2"
             >
-              <Target className="h-4 w-4" />
+              <Target className="h-4 w-4 text-saboris-primary" />
               <span>Find Me</span>
             </Button>
           </div>
