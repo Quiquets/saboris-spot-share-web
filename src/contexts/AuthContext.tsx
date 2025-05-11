@@ -37,6 +37,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(async () => {
             const profile = await supabaseService.getUserProfile(currentSession.user.id);
             setUser(profile);
+            
+            // Handle redirect after login
+            if (event === 'SIGNED_IN') {
+              const redirectPath = localStorage.getItem('redirectAfterLogin');
+              if (redirectPath) {
+                localStorage.removeItem('redirectAfterLogin');
+                navigate(redirectPath);
+              } else {
+                // Default redirect if no saved path
+                navigate('/profile');
+              }
+            }
           }, 0);
         } else {
           setUser(null);
@@ -67,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const value = {
     authUser,

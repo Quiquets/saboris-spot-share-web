@@ -5,8 +5,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MapPin, PlusCircle, User as UserIcon, Loader2 } from 'lucide-react';
+import { Heart, MapPin, PlusCircle, User as UserIcon, Loader2, UsersRound, UserCheck, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SavedRestaurant, ProfileStats, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
@@ -16,6 +18,9 @@ const ProfilePage = () => {
   const [savedPlaces, setSavedPlaces] = useState<SavedRestaurant[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [showFollowers, setShowFollowers] = useState(false);
 
   useEffect(() => {
     document.title = 'Saboris - Profile';
@@ -25,13 +30,15 @@ const ProfilePage = () => {
       
       try {
         setLoading(true);
-        const [places, stats] = await Promise.all([
+        const [places, stats, accountSettings] = await Promise.all([
           supabaseService.getSavedRestaurants(user.id),
-          supabaseService.getProfileStats(user.id)
+          supabaseService.getProfileStats(user.id),
+          supabaseService.getUserSettings(user.id)
         ]);
         
         setSavedPlaces(places);
         setProfileStats(stats);
+        setIsPrivate(accountSettings?.is_private || false);
       } catch (error) {
         console.error("Error fetching profile data:", error);
         toast.error("Failed to load profile data");
@@ -56,6 +63,33 @@ const ProfilePage = () => {
     } catch (error) {
       console.error("Error removing from wishlist:", error);
       toast.error("Failed to remove from wishlist");
+    }
+  };
+
+  const handlePrivacyToggle = async (value: boolean) => {
+    if (!user) return;
+    
+    try {
+      setIsPrivate(value);
+      await supabaseService.updateUserSettings(user.id, { is_private: value });
+      toast.success(`Account is now ${value ? 'private' : 'public'}`);
+    } catch (error) {
+      console.error("Error updating privacy settings:", error);
+      toast.error("Failed to update privacy settings");
+      setIsPrivate(!value); // Revert UI state on error
+    }
+  };
+
+  const fetchFollowers = async () => {
+    if (!user) return;
+    
+    try {
+      const followers = await supabaseService.getFollowers(user.id);
+      setFollowers(followers);
+      setShowFollowers(true);
+    } catch (error) {
+      console.error("Error fetching followers:", error);
+      toast.error("Failed to load followers");
     }
   };
 
@@ -119,23 +153,43 @@ const ProfilePage = () => {
                 {profileStats && (
                   <div className="flex gap-4 mt-3 justify-center md:justify-start">
                     <div className="text-center">
-                      <p className="font-semibold">{profileStats.followers_count}</p>
-                      <p className="text-xs text-gray-500">Followers</p>
+                      <p className="font-semibold">{profileStats.posts_count || 0}</p>
+                      <p className="text-xs text-gray-500">Posts</p>
                     </div>
+                    <button 
+                      className="text-center"
+                      onClick={fetchFollowers}
+                    >
+                      <p className="font-semibold">{profileStats.followers_count || 0}</p>
+                      <p className="text-xs text-gray-500">Followers</p>
+                    </button>
                     <div className="text-center">
-                      <p className="font-semibold">{profileStats.following_count}</p>
+                      <p className="font-semibold">{profileStats.following_count || 0}</p>
                       <p className="text-xs text-gray-500">Following</p>
                     </div>
                     <div className="text-center">
-                      <p className="font-semibold">{profileStats.saved_places_count}</p>
+                      <p className="font-semibold">{profileStats.saved_places_count || 0}</p>
                       <p className="text-xs text-gray-500">Saved</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-semibold">{profileStats.reviews_count}</p>
-                      <p className="text-xs text-gray-500">Reviews</p>
                     </div>
                   </div>
                 )}
+                
+                {/* Privacy Toggle */}
+                <div className="mt-4 flex items-center justify-center md:justify-start">
+                  <Switch 
+                    id="private-mode" 
+                    checked={isPrivate}
+                    onCheckedChange={handlePrivacyToggle}
+                  />
+                  <Label htmlFor="private-mode" className="ml-2">
+                    Private Account
+                  </Label>
+                  {isPrivate && (
+                    <span className="ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
+                      Only visible to followers
+                    </span>
+                  )}
+                </div>
               </div>
               
               <div>
@@ -145,6 +199,40 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
+          
+          {/* Followers Modal (Simplified for now) */}
+          {showFollowers && followers.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Followers</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowFollowers(false)}
+                >
+                  Close
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {followers.map((follower) => (
+                  <Card key={follower.id} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex items-center">
+                        <Avatar className="h-12 w-12 mr-3">
+                          <AvatarImage src={follower.avatar_url || undefined} />
+                          <AvatarFallback>{follower.name?.charAt(0) || '?'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{follower.name}</p>
+                          <p className="text-sm text-gray-500">@{follower.username}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
           
           {/* Saved Places Section */}
           <div>
