@@ -1,10 +1,6 @@
 
 import React from 'react';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { filterOptions } from '../FilterOptions';
 
 interface PeopleFilterProps {
@@ -12,28 +8,23 @@ interface PeopleFilterProps {
   handlePeopleFilterChange: (value: string) => void;
 }
 
-const PeopleFilter: React.FC<PeopleFilterProps> = ({ 
-  activePeople, 
-  handlePeopleFilterChange 
-}) => {
+const PeopleFilter: React.FC<PeopleFilterProps> = ({ activePeople, handlePeopleFilterChange }) => {
   return (
-    <Tabs 
-      value={activePeople} 
-      className="w-full mb-4"
-      onValueChange={handlePeopleFilterChange}
-    >
-      <TabsList className="grid grid-cols-3 mb-4 w-full">
-        {filterOptions.people.map(option => (
-          <TabsTrigger 
-            key={option.id} 
-            value={option.id} 
-            className="flex-1 whitespace-nowrap"
-          >
-            {option.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+    <div className="w-full mb-4">
+      <Tabs value={activePeople} onValueChange={handlePeopleFilterChange} className="w-full">
+        <TabsList className="grid grid-cols-3 w-full h-12">
+          {filterOptions.people.map(option => (
+            <TabsTrigger
+              key={option.id}
+              value={option.id}
+              className={`px-4 py-2 data-[state=active]:bg-saboris-primary data-[state=active]:text-white`}
+            >
+              {option.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
   );
 };
 

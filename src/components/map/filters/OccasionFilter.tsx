@@ -25,17 +25,17 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
       e.stopPropagation();
     }
     
-    const newFilters = activeOccasions.filter(id => id !== idToRemove);
+    const newFilters = activeOccasions ? activeOccasions.filter(id => id !== idToRemove) : [];
     handleFilterChange('occasion', newFilters);
   };
   
   // Function to add an occasion to selection
   const addOccasion = (id: string) => {
     // If already selected, remove it, otherwise add it
-    if (activeOccasions.includes(id)) {
+    if (activeOccasions && activeOccasions.includes(id)) {
       removeOccasion(id);
     } else {
-      const newFilters = [...activeOccasions, id];
+      const newFilters = [...(activeOccasions || []), id];
       handleFilterChange('occasion', newFilters);
     }
   };

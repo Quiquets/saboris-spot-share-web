@@ -26,7 +26,7 @@ const MapFilters: React.FC<MapFiltersProps> = ({
     <div className="flex flex-col items-start w-full">
       {/* People filter tabs */}
       <PeopleFilter 
-        activePeople={activeFilters.people}
+        activePeople={activeFilters.people || 'community'}
         handlePeopleFilterChange={handlePeopleFilterChange}
       />
 
@@ -34,25 +34,25 @@ const MapFilters: React.FC<MapFiltersProps> = ({
       <div className="grid grid-cols-5 w-full mb-4 gap-2">
         {/* Occasion Filter */}
         <OccasionFilter 
-          activeOccasions={activeFilters.occasion}
+          activeOccasions={activeFilters.occasion || []}
           handleFilterChange={handleFilterChange}
         />
         
         {/* Food Type Filter */}
         <FoodTypeFilter 
-          activeFoodTypes={activeFilters.foodType}
+          activeFoodTypes={activeFilters.foodType || []}
           handleFilterChange={handleFilterChange}
         />
 
         {/* Vibe Filter */}
         <VibeFilter 
-          activeVibes={activeFilters.vibe}
+          activeVibes={activeFilters.vibe || []}
           handleFilterChange={handleFilterChange}
         />
 
         {/* Price Filter */}
         <PriceFilter 
-          activePrices={activeFilters.price}
+          activePrices={activeFilters.price || []}
           handleFilterChange={handleFilterChange}
         />
 
@@ -65,10 +65,10 @@ const MapFilters: React.FC<MapFiltersProps> = ({
       
       {/* Active filter badges */}
       <ActiveFilterBadges 
-        activeOccasions={activeFilters.occasion}
-        activeFoodTypes={activeFilters.foodType}
-        activeVibes={activeFilters.vibe}
-        activePrices={activeFilters.price}
+        activeOccasions={activeFilters.occasion || []}
+        activeFoodTypes={activeFilters.foodType || []}
+        activeVibes={activeFilters.vibe || []}
+        activePrices={activeFilters.price || []}
         handleFilterChange={handleFilterChange}
       />
     </div>

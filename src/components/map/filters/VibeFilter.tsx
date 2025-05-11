@@ -25,7 +25,7 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
       e.stopPropagation();
     }
     
-    const newFilters = activeVibes.filter(id => id !== idToRemove);
+    const newFilters = activeVibes ? activeVibes.filter(id => id !== idToRemove) : [];
     handleFilterChange('vibe', newFilters);
   };
   
