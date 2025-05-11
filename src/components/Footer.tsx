@@ -35,9 +35,6 @@ const Footer = () => {
           <p>&copy; {new Date().getFullYear()} Saboris. All rights reserved.</p>
         </div>
       </div>
-      
-      {/* Tongue element (shaped like a speech bubble tail) */}
-      <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[20px] border-l-transparent border-b-[20px] border-b-saboris-primary border-r-[20px] border-r-transparent"></div>
     </footer>
   );
 };

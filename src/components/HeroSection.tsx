@@ -39,9 +39,6 @@ const HeroSection = () => {
           </a>
         </div>
       </div>
-      
-      {/* Speech bubble tail - updated to saboris-primary (coral pink) */}
-      <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[20px] border-l-transparent border-t-[20px] border-t-saboris-primary border-r-[20px] border-r-transparent"></div>
     </section>
   );
 };

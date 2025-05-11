@@ -28,7 +28,7 @@ const LandingPage = () => {
           className="text-white border-white hover:bg-white hover:text-saboris-primary px-4"
           onClick={() => setIsAuthModalOpen(true)}
         >
-          Sign in
+          <span>Sign In</span>
         </Button>
       </header>
       
@@ -48,7 +48,7 @@ const LandingPage = () => {
               className="bg-saboris-primary hover:bg-saboris-primary/90 text-white px-8 py-6 text-lg"
               onClick={() => setIsAuthModalOpen(true)}
             >
-              Get Started
+              <span>Get Started</span>
             </Button>
           </div>
         </div>
