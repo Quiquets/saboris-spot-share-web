@@ -1,4 +1,3 @@
-
 export type Location = {
   lat: number;
   lng: number;
@@ -43,99 +42,111 @@ export const communityRecommendations: Location[] = [
 
 // Script loading management
 const SCRIPT_ID = 'google-maps-script';
-let scriptLoadPromise: Promise<void> | null = null;
-let scriptElement: HTMLScriptElement | null = null;
+let mapsLoadState = {
+  isLoading: false,
+  isLoaded: false,
+  scriptElement: null as HTMLScriptElement | null,
+  loadPromise: null as Promise<void> | null,
+  callbackName: '',
+}
 
 /**
- * Loads the Google Maps API script safely
+ * Safely loads the Google Maps API script
  */
 export const loadGoogleMapsScript = (): Promise<void> => {
-  // If promise exists, return it
-  if (scriptLoadPromise) {
-    return scriptLoadPromise;
-  }
-  
-  // Check if Google Maps is already loaded
-  if (window.google && window.google.maps) {
+  // If already loaded, return immediately
+  if (window.google?.maps && mapsLoadState.isLoaded) {
     console.log("Google Maps API already loaded");
     return Promise.resolve();
   }
   
-  // Check if script element already exists but remove it first to avoid issues
-  const existingScript = document.getElementById(SCRIPT_ID);
-  if (existingScript) {
-    try {
-      existingScript.parentNode?.removeChild(existingScript);
-    } catch (e) {
-      console.warn("Failed to remove existing script:", e);
-    }
+  // If currently loading, return existing promise
+  if (mapsLoadState.isLoading && mapsLoadState.loadPromise) {
+    console.log("Google Maps API loading in progress");
+    return mapsLoadState.loadPromise;
   }
   
-  // Create a new promise for script loading
-  scriptLoadPromise = new Promise<void>((resolve, reject) => {
+  // Create new loading promise
+  mapsLoadState.isLoading = true;
+  mapsLoadState.loadPromise = new Promise<void>((resolve, reject) => {
     try {
-      // Create unique callback name to avoid conflicts
-      const callbackName = `initGoogleMap${Date.now()}`;
+      // Create unique callback name
+      const callbackName = `initGoogleMaps${Date.now()}`;
+      mapsLoadState.callbackName = callbackName;
       
       // Define callback function
       window[callbackName] = () => {
         console.log("Google Maps initialized");
+        mapsLoadState.isLoaded = true;
+        mapsLoadState.isLoading = false;
         resolve();
-        // Clean up callback
-        delete window[callbackName];
+        // We'll keep the callback reference to avoid any issues with DOM cleanup
       };
+      
+      // Check for existing script and cleanup if needed
+      const existingScript = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
+      if (existingScript) {
+        console.log("Removing existing Google Maps script");
+        if (existingScript.parentNode) {
+          existingScript.parentNode.removeChild(existingScript);
+        }
+      }
       
       // Create script element
-      scriptElement = document.createElement('script');
-      scriptElement.id = SCRIPT_ID;
-      scriptElement.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=${callbackName}`;
-      scriptElement.async = true;
-      scriptElement.defer = true;
+      const script = document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=${callbackName}`;
+      script.async = true;
+      script.defer = true;
       
-      scriptElement.onerror = (e) => {
+      script.onerror = (e) => {
         console.error('Google Maps failed to load:', e);
-        reject(new Error('Google Maps failed to load. Check API key or network connection.'));
         cleanupGoogleMapsScript();
+        mapsLoadState.isLoading = false;
+        reject(new Error('Google Maps failed to load. Check API key or network connection.'));
       };
       
-      // Append to document head for better practice
-      document.head.appendChild(scriptElement);
+      // Store reference to script element
+      mapsLoadState.scriptElement = script;
+      
+      // Append to document head
+      document.head.appendChild(script);
     } catch (error) {
+      mapsLoadState.isLoading = false;
+      mapsLoadState.loadPromise = null;
       reject(error);
-      scriptLoadPromise = null;
-      scriptElement = null;
     }
   });
   
-  return scriptLoadPromise;
+  return mapsLoadState.loadPromise;
 };
 
 /**
  * Safely cleans up Google Maps script
  */
 export const cleanupGoogleMapsScript = (): void => {
-  // Reset load promise
-  scriptLoadPromise = null;
+  // Don't try to remove the script if maps are still in use
+  if (!mapsLoadState.scriptElement) {
+    return;
+  }
   
-  // Only attempt to remove if we have a reference to the script we added
-  if (scriptElement && scriptElement.parentNode) {
+  // Clear callback if it exists
+  if (mapsLoadState.callbackName && window[mapsLoadState.callbackName]) {
     try {
-      scriptElement.parentNode.removeChild(scriptElement);
-      scriptElement = null;
-    } catch (error) {
-      console.warn("Error removing Google Maps script:", error);
+      delete window[mapsLoadState.callbackName];
+    } catch (e) {
+      window[mapsLoadState.callbackName] = undefined;
     }
   }
   
-  // Find and remove script if it exists by ID as a fallback
-  const scriptById = document.getElementById(SCRIPT_ID);
-  if (scriptById && scriptById.parentNode) {
-    try {
-      scriptById.parentNode.removeChild(scriptById);
-    } catch (error) {
-      console.warn("Error removing Google Maps script by ID:", error);
-    }
-  }
+  // Reset load state
+  mapsLoadState.isLoaded = false;
+  mapsLoadState.isLoading = false;
+  mapsLoadState.loadPromise = null;
+  
+  // No need to forcibly remove the script element as it doesn't cause issues once loaded
+  // This avoids the removeChild errors
+  mapsLoadState.scriptElement = null;
 };
 
 /**
