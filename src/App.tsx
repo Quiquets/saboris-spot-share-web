@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Index from './pages/LandingPage';
+import LandingPage from './pages/LandingPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import About from './pages/About';
@@ -16,6 +16,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from 'sonner'
 import ProtectedRoute from './components/ProtectedRoute';
 import FindFriendsPage from './pages/FindFriendsPage';
+import SearchUsersPage from './pages/SearchUsersPage';
 
 function App() {
   return (
@@ -23,7 +24,7 @@ function App() {
       <AuthProvider>
         <ThemeProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route path="/about" element={<About />} />
@@ -34,6 +35,7 @@ function App() {
             <Route path="/add" element={<ProtectedRoute><AddPlacePage /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/find-friends" element={<FindFriendsPage />} />
+            <Route path="/search-users" element={<SearchUsersPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster position="bottom-right" />
