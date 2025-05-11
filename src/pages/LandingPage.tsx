@@ -31,7 +31,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Share</h3>
               <p className="text-saboris-gray mb-4 flex-grow">
-                Share your favorite spots with friends. No fake reviews, just genuine recommendations from people you trust.
+                Share real recommendations from friends — no fake reviews, just trusted picks.
               </p>
               <Button 
                 className="mt-auto bg-saboris-primary hover:bg-saboris-primary/90"
