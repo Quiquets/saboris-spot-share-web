@@ -3,6 +3,7 @@ export interface SharedPlace {
   id: string;
   place_id: string;
   created_at: Date;
+  created_by?: string;
   place: {
     name: string;
     description?: string;
@@ -13,4 +14,5 @@ export interface SharedPlace {
   };
   rating?: number;
   review_text?: string;
+  photo_urls?: string[];
 }

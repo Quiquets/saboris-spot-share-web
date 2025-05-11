@@ -1,4 +1,3 @@
-
 declare global {
   interface Window {
     google: any;
@@ -7,4 +6,13 @@ declare global {
   }
 }
 
-export {};
+export interface User {
+  id: string;
+  email?: string;
+  username?: string;
+  name?: string;
+  avatar_url?: string | null;
+  bio?: string;
+  location?: string;
+  is_private?: boolean;
+}

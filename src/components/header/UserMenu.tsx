@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings, MapPin, PlusCircle, Heart } from 'lucide-react';
+import { User, LogOut, Settings, MapPin, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -74,10 +74,6 @@ const UserMenu = () => {
           <DropdownMenuItem onClick={() => navigate('/add-place')}>
             <PlusCircle className="h-4 w-4 mr-2" />
             <span>Share Experience</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/search-users')}>
-            <Heart className="h-4 w-4 mr-2" />
-            <span>Find Friends</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>

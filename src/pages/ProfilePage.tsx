@@ -37,48 +37,46 @@ const ProfilePage = () => {
   useEffect(() => {
     document.title = 'Saboris - Profile';
     
-    const fetchProfileData = async () => {
-      if (!user) return;
-      
-      try {
-        setLoading(true);
-        
-        // Get places shared by this user
-        const sharedPlacesData = await fetchSharedPlaces(user.id);
-        const stats = await supabaseService.getProfileStats(user.id);
-        
-        // Get user profile to check if account is private
-        const userProfile = await supabaseService.getUserProfile(user.id);
-        
-        setSharedPlaces(sharedPlacesData);
-        setProfileStats(stats);
-        setIsPrivate(userProfile?.is_private || false);
-        
-        // Set the existing profile data
-        setBio(userProfile?.bio || '');
-        setUsername(userProfile?.username || '');
-        setUserLocation(userProfile?.location || '');
-        setProfileImageUrl(userProfile?.avatar_url || null);
-        
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
-        toast.error("Failed to load profile data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    if (user) {
-      fetchProfileData();
-    }
+    fetchProfileData();
   }, [user]);
+
+  const fetchProfileData = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      
+      // Get places shared by this user
+      const sharedPlacesData = await fetchSharedPlaces(user.id);
+      const stats = await supabaseService.getProfileStats(user.id);
+      
+      // Get user profile to check if account is private
+      const userProfile = await supabaseService.getUserProfile(user.id);
+      
+      setSharedPlaces(sharedPlacesData);
+      setProfileStats(stats);
+      setIsPrivate(userProfile?.is_private || false);
+      
+      // Set the existing profile data
+      setBio(userProfile?.bio || '');
+      setUsername(userProfile?.username || '');
+      setUserLocation(userProfile?.location || '');
+      setProfileImageUrl(userProfile?.avatar_url || null);
+      
+    } catch (error) {
+      console.error("Error fetching profile data:", error);
+      toast.error("Failed to load profile data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchSharedPlaces = async (userId: string): Promise<SharedPlace[]> => {
     try {
       // Get places created by this user
       const { data: placesData, error: placesError } = await supabase
         .from('places')
-        .select('id, name, description, category, address, tags')
+        .select('id, name, description, category, address, tags, created_by')
         .eq('created_by', userId);
       
       if (placesError) throw placesError;
@@ -86,7 +84,7 @@ const ProfilePage = () => {
       // Get reviews created by this user
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, text, places:place_id(name, description, category, address, tags)')
+        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, rating_value, text, photo_url, photo_urls, places:place_id(id, name, description, category, address, tags, created_by)')
         .eq('user_id', userId);
       
       if (reviewsError) throw reviewsError;
@@ -96,6 +94,7 @@ const ProfilePage = () => {
         id: place.id,
         place_id: place.id,
         created_at: new Date(),
+        created_by: place.created_by,
         place: {
           name: place.name,
           description: place.description,
@@ -106,17 +105,22 @@ const ProfilePage = () => {
       }));
       
       const reviewedPlaces: SharedPlace[] = (reviewsData || []).map(review => {
-        const avgRating = review.rating_food && review.rating_service && review.rating_atmosphere
-          ? Math.round((review.rating_food + review.rating_service + review.rating_atmosphere) / 3)
-          : undefined;
-          
+        // Use rating_value if available, otherwise calculate the average
+        const avgRating = review.rating_value !== null ? 
+          review.rating_value : 
+          (review.rating_food && review.rating_service && review.rating_atmosphere) ?
+            Math.round((review.rating_food + review.rating_service + review.rating_atmosphere) / 3) :
+            undefined;
+            
         return {
           id: review.id,
           place_id: review.place_id,
           created_at: new Date(review.created_at),
+          created_by: userId,
           place: review.places || { name: 'Unknown Place' },
           rating: avgRating,
-          review_text: review.text
+          review_text: review.text,
+          photo_urls: review.photo_urls || (review.photo_url ? [review.photo_url] : [])
         };
       });
       
@@ -172,9 +176,20 @@ const ProfilePage = () => {
         const fileExt = profileImage.name.split('.').pop();
         const filePath = `${user.id}-${Date.now()}.${fileExt}`;
         
+        // Check if avatars bucket exists, create it if not
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
+        
+        if (!avatarBucketExists) {
+          await supabase.storage.createBucket('avatars', { public: true });
+        }
+        
         const { error: uploadError, data } = await supabase.storage
           .from('avatars')
-          .upload(filePath, profileImage);
+          .upload(filePath, profileImage, {
+            cacheControl: '3600',
+            upsert: true
+          });
           
         if (uploadError) {
           console.error("Error uploading image:", uploadError);
@@ -205,9 +220,9 @@ const ProfilePage = () => {
       
       toast.success("Profile updated successfully");
       setIsEditProfileOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
+      toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSubmitting(false);
     }
@@ -227,7 +242,7 @@ const ProfilePage = () => {
       // Sign out the user after successful deletion
       await supabaseService.signOut();
       toast.success("Your account has been deleted");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting account:", error);
       toast.error("Failed to delete account. Please contact support.");
     }
@@ -327,6 +342,7 @@ const ProfilePage = () => {
             isOpen={isReviewDialogOpen}
             onOpenChange={setIsReviewDialogOpen}
             selectedPlace={selectedPlace}
+            onPlaceDeleted={fetchProfileData}
           />
           
           {/* Shared Places */}
@@ -334,6 +350,7 @@ const ProfilePage = () => {
             loading={loading}
             sharedPlaces={sharedPlaces}
             openReviewDialog={openReviewDialog}
+            refreshPlaces={fetchProfileData}
           />
         </div>
       </div>
