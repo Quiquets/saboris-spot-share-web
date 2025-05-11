@@ -67,7 +67,7 @@ const DesktopNavigation = () => {
   };
 
   return (
-    <div className="hidden md:flex items-center space-x-2">
+    <div className="flex items-center space-x-2">
       <NavItem path="/" label="Home" />
       <NavItem path="/map" label="Explore" icon={<MapPin className="h-4 w-4 mr-1" />} />
       <NavItem 

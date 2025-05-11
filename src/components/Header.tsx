@@ -51,9 +51,9 @@ const Header = () => {
         </Link>
       </div>
 
-      {/* Desktop Navigation */}
-      <DesktopNavigation />
-      <div className="hidden md:block">
+      {/* Desktop Navigation and User Menu */}
+      <div className="hidden md:flex items-center space-x-4">
+        <DesktopNavigation />
         <UserMenu />
       </div>
 
