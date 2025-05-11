@@ -1,4 +1,3 @@
-
 /// <reference types="@types/google.maps" />
 
 import { useState, useEffect } from 'react';
@@ -9,9 +8,11 @@ import { toast } from 'sonner';
 import MapFilters from './map/MapFilters';
 import GoogleMapView from './map/GoogleMapView';
 import { ActiveFilters } from './map/FilterOptions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MapSection = () => {
   const { user, setShowAuthModal, setFeatureName } = useAuth();
+  const isMobile = useIsMobile();
   
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     people: 'community', // Default to Saboris Community
@@ -91,23 +92,48 @@ const MapSection = () => {
   };
   
   return (
-    <section id="map-section" className="py-16 px-4 md:px-8 bg-white">
+    <section id="map-section" className="py-6 md:py-16 px-2 md:px-8 bg-white">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-center mb-8 gap-2">
-          <MapPin className="text-saboris-primary h-6 w-6" />
-          <h2 className="text-3xl font-bold text-center text-saboris-gray">Explore</h2>
+        <div className="flex items-center justify-center mb-4 md:mb-8 gap-2">
+          <MapPin className="text-saboris-primary h-5 w-5 md:h-6 md:w-6" />
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-saboris-gray">Explore</h2>
         </div>
         
-        {/* Map Filters Component */}
-        <MapFilters 
-          activeFilters={activeFilters}
-          handleFilterChange={handleFilterChange}
-          handlePeopleFilterChange={handlePeopleFilterChange}
-          toggleSortDirection={toggleSortDirection}
-        />
+        {/* Mobile layout - stack filters and map vertically */}
+        {isMobile && (
+          <div className="flex flex-col gap-4">
+            {/* Map Filters Component */}
+            <div className="bg-white z-10 w-full pb-2">
+              <MapFilters 
+                activeFilters={activeFilters}
+                handleFilterChange={handleFilterChange}
+                handlePeopleFilterChange={handlePeopleFilterChange}
+                toggleSortDirection={toggleSortDirection}
+              />
+            </div>
+            
+            {/* Google Map Component */}
+            <div className="h-[400px] w-full border rounded-lg overflow-hidden">
+              <GoogleMapView />
+            </div>
+          </div>
+        )}
         
-        {/* Google Map Component */}
-        <GoogleMapView />
+        {/* Desktop layout - keep as is */}
+        {!isMobile && (
+          <>
+            {/* Map Filters Component */}
+            <MapFilters 
+              activeFilters={activeFilters}
+              handleFilterChange={handleFilterChange}
+              handlePeopleFilterChange={handlePeopleFilterChange}
+              toggleSortDirection={toggleSortDirection}
+            />
+            
+            {/* Google Map Component */}
+            <GoogleMapView />
+          </>
+        )}
       </div>
     </section>
   );

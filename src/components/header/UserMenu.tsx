@@ -4,8 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings, MapPin, PlusCircle, Bookmark, Heart } from 'lucide-react';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ const UserMenu = () => {
   const { user, signOut, setShowAuthModal } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -65,9 +67,21 @@ const UserMenu = () => {
             <User className="h-4 w-4 mr-2" />
             <span>My Profile</span>
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/map')}>
+            <MapPin className="h-4 w-4 mr-2" />
+            <span>Explore</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/add-place')}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            <span>Share Experience</span>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate('/saved')}>
-            <User className="h-4 w-4 mr-2" />
+            <Bookmark className="h-4 w-4 mr-2" />
             <span>Saved Places</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/search-users')}>
+            <Heart className="h-4 w-4 mr-2" />
+            <span>Find Friends</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>

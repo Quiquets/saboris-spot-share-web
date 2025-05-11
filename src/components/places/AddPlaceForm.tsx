@@ -148,7 +148,7 @@ export function AddPlaceForm() {
         
       if (placeError) throw placeError;
       
-      // 2. Insert into reviews table
+      // 2. Insert into reviews table with rating_value
       const { data: reviewData, error: reviewError } = await supabase
         .from('reviews')
         .insert({
@@ -157,7 +157,7 @@ export function AddPlaceForm() {
           rating_food: values.rating_food,
           rating_service: values.rating_service,
           rating_atmosphere: values.rating_atmosphere,
-          rating_value: values.rating_value,
+          rating_value: values.rating_value, // Include rating_value field
           text: values.description,
           photo_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
           tagged_friends: values.tagged_friends
@@ -165,7 +165,10 @@ export function AddPlaceForm() {
         .select()
         .single();
       
-      if (reviewError) throw reviewError;
+      if (reviewError) {
+        console.error("Review error:", reviewError);
+        throw reviewError;
+      }
       
       // 3. Add to user's wishlist
       await supabase

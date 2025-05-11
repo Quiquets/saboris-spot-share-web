@@ -8,6 +8,7 @@ import VibeFilter from './filters/VibeFilter';
 import PriceFilter from './filters/PriceFilter';
 import RatingFilters from './filters/RatingFilters';
 import ActiveFilterBadges from './filters/ActiveFilterBadges';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MapFiltersProps {
   activeFilters: ActiveFilters;
@@ -22,6 +23,8 @@ const MapFilters: React.FC<MapFiltersProps> = ({
   handlePeopleFilterChange, 
   toggleSortDirection 
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex flex-col items-start w-full">
       {/* People filter tabs */}
@@ -30,8 +33,8 @@ const MapFilters: React.FC<MapFiltersProps> = ({
         handlePeopleFilterChange={handlePeopleFilterChange}
       />
 
-      {/* Horizontal filter bar with evenly distributed filters */}
-      <div className="grid grid-cols-5 w-full mb-4 gap-2">
+      {/* Filter grid - responsive for mobile */}
+      <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-5 gap-2'} w-full mb-4`}>
         {/* Occasion Filter */}
         <OccasionFilter 
           activeOccasions={activeFilters.occasion}

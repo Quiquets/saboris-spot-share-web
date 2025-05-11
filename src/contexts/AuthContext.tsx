@@ -23,7 +23,7 @@ interface AuthContextType {
   userReviews: any[];
   followers: any[];
   following: any[];
-  refreshUserData: () => Promise<void>;
+  refreshUserData: () => Promise<User | null>;
   updateUserProfile: (updates: Partial<User>) => Promise<User | null>;
   deleteAccount: () => Promise<void>;
 }
@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   // Function to refresh user data
-  const refreshUserData = async () => {
+  const refreshUserData = async (): Promise<User | null> => {
     if (authUser) {
       try {
         const profile = await supabaseService.getUserProfile(authUser.id);
@@ -91,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error("Failed to refresh user data");
       }
     }
+    return null;
   };
   
   // Function to update user profile
@@ -129,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Sign out after account deletion
-      await signOut();
+      await supabaseService.signOut();
       toast.success("Your account has been deleted");
       navigate('/');
     } catch (error: any) {
@@ -270,7 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     authUser,
     session,
     user,
