@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as AuthUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,10 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<AuthUser | null>;
   signOut: () => Promise<void>;
+  showAuthModal: boolean;
+  setShowAuthModal: (show: boolean) => void;
+  featureName?: string;
+  setFeatureName: (name?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [featureName, setFeatureName] = useState<string | undefined>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -159,6 +164,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabaseService.signOut();
       navigate('/');
     },
+    showAuthModal,
+    setShowAuthModal,
+    featureName,
+    setFeatureName,
   };
 
   return (

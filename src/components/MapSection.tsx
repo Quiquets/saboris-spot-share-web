@@ -11,7 +11,6 @@ import {
 import { MapPin, Target, Filter, ArrowDown, ArrowUp, Sliders } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import AccessGateModal from './AccessGateModal';
 import { Badge } from "@/components/ui/badge";
 import {
   Popover,
@@ -24,13 +23,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const filterOptions = {
   people: [
@@ -181,7 +173,7 @@ const MapSection = () => {
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
   const googleMapsLoadedRef = useRef<boolean>(false);
-  const { user } = useAuth();
+  const { user, setShowAuthModal, setFeatureName } = useAuth();
   
   const [activeFilters, setActiveFilters] = useState<{
     people: string;
@@ -215,7 +207,7 @@ const MapSection = () => {
     // Update people filter based on authentication state
     setActiveFilters(prev => ({
       ...prev,
-      people: user ? 'friends' : 'community'
+      people: user ? prev.people : 'community'
     }));
   }, [user]);
   
@@ -492,7 +484,9 @@ const MapSection = () => {
   const handlePeopleFilterChange = (value: string) => {
     // Check if user is logged in for restricted filters
     if ((value === 'friends' || value === 'friends-of-friends') && !user) {
-      setShowGateModal(true);
+      // Show auth modal with specific feature name
+      setFeatureName('see friends\' recommendations');
+      setShowAuthModal(true);
       return;
     }
     
@@ -511,6 +505,7 @@ const MapSection = () => {
         </div>
         
         <div className="mb-4 flex flex-col items-start">
+          {/* People filter tabs */}
           <Tabs 
             value={activeFilters.people} 
             className="w-full mb-4"
@@ -523,12 +518,15 @@ const MapSection = () => {
             </TabsList>
           </Tabs>
 
-          <div className="flex flex-wrap gap-2 mb-4 w-full">
-            {/* Occasion Filter */}
+          {/* Horizontal filter bar with evenly distributed filters */}
+          <div className="flex items-center justify-between w-full mb-4 gap-2 overflow-x-auto">
+            {/* Occasion Filter (First) */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1 px-2 py-1 text-sm">
-                  <Filter className="h-3 w-3 text-saboris-primary" /> Occasion
+                <Button variant="outline" 
+                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  <Filter className="h-3 w-3 text-saboris-primary" /> 
+                  Occasion
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-60">
@@ -537,7 +535,9 @@ const MapSection = () => {
                     <Button 
                       key={option.id}
                       variant={activeFilters.occasion.includes(option.id) ? "default" : "outline"}
-                      className="text-xs px-2 py-1"
+                      className={`text-xs px-2 py-1 ${activeFilters.occasion.includes(option.id) 
+                        ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
+                        : "border-saboris-primary text-saboris-gray"}`}
                       onClick={() => {
                         const newFilters = activeFilters.occasion.includes(option.id)
                           ? activeFilters.occasion.filter(id => id !== option.id)
@@ -555,8 +555,10 @@ const MapSection = () => {
             {/* Food Type Filter */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1 px-2 py-1 text-sm">
-                  <Filter className="h-3 w-3 text-saboris-primary" /> Food Type
+                <Button variant="outline" 
+                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  <Filter className="h-3 w-3 text-saboris-primary" /> 
+                  Food Type
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
@@ -565,7 +567,9 @@ const MapSection = () => {
                     <Button 
                       key={option.id}
                       variant={activeFilters.foodType.includes(option.id) ? "default" : "outline"}
-                      className="justify-start text-xs px-2 py-1"
+                      className={`justify-start text-xs px-2 py-1 ${activeFilters.foodType.includes(option.id) 
+                        ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
+                        : "border-saboris-primary text-saboris-gray"}`}
                       onClick={() => {
                         const newFilters = activeFilters.foodType.includes(option.id)
                           ? activeFilters.foodType.filter(id => id !== option.id)
@@ -583,8 +587,10 @@ const MapSection = () => {
             {/* Vibe Filter */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1 px-2 py-1 text-sm">
-                  <Filter className="h-3 w-3 text-saboris-primary" /> Vibe
+                <Button variant="outline" 
+                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  <Filter className="h-3 w-3 text-saboris-primary" /> 
+                  Vibe
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
@@ -593,7 +599,9 @@ const MapSection = () => {
                     <Button 
                       key={option.id}
                       variant={activeFilters.vibe.includes(option.id) ? "default" : "outline"}
-                      className="justify-start text-xs px-2 py-1"
+                      className={`justify-start text-xs px-2 py-1 ${activeFilters.vibe.includes(option.id) 
+                        ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
+                        : "border-saboris-primary text-saboris-gray"}`}
                       onClick={() => {
                         const newFilters = activeFilters.vibe.includes(option.id)
                           ? activeFilters.vibe.filter(id => id !== option.id)
@@ -611,8 +619,10 @@ const MapSection = () => {
             {/* Price Filter */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1 px-2 py-1 text-sm">
-                  <Filter className="h-3 w-3 text-saboris-primary" /> Price
+                <Button variant="outline" 
+                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  <Filter className="h-3 w-3 text-saboris-primary" /> 
+                  Price
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-60">
@@ -621,7 +631,9 @@ const MapSection = () => {
                     <Button 
                       key={option.id}
                       variant={activeFilters.price.includes(option.id) ? "default" : "outline"}
-                      className="text-xs px-2 py-1"
+                      className={`text-xs px-2 py-1 ${activeFilters.price.includes(option.id) 
+                        ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
+                        : "border-saboris-primary text-saboris-gray"}`}
                       onClick={() => {
                         const newFilters = activeFilters.price.includes(option.id)
                           ? activeFilters.price.filter(id => id !== option.id)
@@ -636,23 +648,25 @@ const MapSection = () => {
               </PopoverContent>
             </Popover>
 
-            {/* More Filters */}
+            {/* More Filters (non-bold) */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-1 px-2 py-1 text-sm">
-                  <Sliders className="h-3 w-3 text-saboris-primary" /> More
+                <Button variant="outline" 
+                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  <Sliders className="h-3 w-3 text-saboris-primary" /> 
+                  More
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-72">
                 <div className="flex flex-col gap-4">
                   <div>
-                    <h3 className="font-medium mb-2">Rating Criteria</h3>
-                    <div className="grid grid-cols-2 gap-2">
+                    <h3 className="font-medium mb-2 text-saboris-gray">Rating Criteria</h3>
+                    <div className="grid grid-cols-1 gap-2">
                       {filterOptions.additional.map(option => (
                         <Button 
                           key={option.id}
                           variant="outline"
-                          className="justify-between text-xs px-2 py-1"
+                          className="justify-between text-xs px-2 py-1 w-full border-saboris-primary text-saboris-gray"
                           onClick={() => toggleSortDirection(option.id)}
                         >
                           {option.label}
@@ -689,7 +703,7 @@ const MapSection = () => {
                 <Badge 
                   key={filter} 
                   variant="outline"
-                  className="cursor-pointer"
+                  className="cursor-pointer border-saboris-primary text-saboris-gray"
                   onClick={() => {
                     const newFilters = activeFilters.occasion.filter(id => id !== filter);
                     handleFilterChange('occasion', newFilters);
@@ -704,7 +718,7 @@ const MapSection = () => {
                 <Badge 
                   key={filter} 
                   variant="outline"
-                  className="cursor-pointer"
+                  className="cursor-pointer border-saboris-primary text-saboris-gray"
                   onClick={() => {
                     const newFilters = activeFilters.foodType.filter(id => id !== filter);
                     handleFilterChange('foodType', newFilters);
@@ -719,7 +733,7 @@ const MapSection = () => {
                 <Badge 
                   key={filter} 
                   variant="outline"
-                  className="cursor-pointer"
+                  className="cursor-pointer border-saboris-primary text-saboris-gray"
                   onClick={() => {
                     const newFilters = activeFilters.vibe.filter(id => id !== filter);
                     handleFilterChange('vibe', newFilters);
@@ -734,7 +748,7 @@ const MapSection = () => {
                 <Badge 
                   key={filter} 
                   variant="outline"
-                  className="cursor-pointer"
+                  className="cursor-pointer border-saboris-primary text-saboris-gray"
                   onClick={() => {
                     const newFilters = activeFilters.price.filter(id => id !== filter);
                     handleFilterChange('price', newFilters);
