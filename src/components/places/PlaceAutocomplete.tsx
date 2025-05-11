@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { getUserLocation } from "@/utils/mapUtils";
 
 // Define the interface for Google Places predictions
 interface Prediction {
@@ -33,12 +34,13 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
+  const [userLocation, setUserLocation] = useState<google.maps.LatLng | null>(null);
   
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const autocompleteSessionToken = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   
-  // Initialize Google Places API services when component mounts
+  // Initialize Google Places API services and get user location when component mounts
   useEffect(() => {
     const initGooglePlaces = () => {
       if (window.google && window.google.maps && window.google.maps.places) {
@@ -51,6 +53,21 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
         
         // Create a new session token for better pricing
         autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
+        
+        // Get user location
+        getUserLocation()
+          .then(position => {
+            const latLng = new google.maps.LatLng(
+              position.coords.latitude,
+              position.coords.longitude
+            );
+            setUserLocation(latLng);
+            console.log("User location set:", position.coords.latitude, position.coords.longitude);
+          })
+          .catch(error => {
+            console.warn("Could not get user location:", error);
+            // Continue without user location
+          });
       } else {
         console.warn("Google Maps API not loaded yet, retrying in 500ms");
         setTimeout(initGooglePlaces, 500);
@@ -78,12 +95,18 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       setIsLoading(true);
       setShowPredictions(true);
       
-      const request = {
+      // Create request with location bias if available
+      const request: google.maps.places.AutocompletionRequest = {
         input: newInput,
         sessionToken: autocompleteSessionToken.current,
         types: ['establishment'],
-        componentRestrictions: { country: 'us' }, // Limit to US, adjust as needed
       };
+      
+      // If we have user location, add location bias
+      if (userLocation) {
+        request.location = userLocation;
+        request.radius = 50000; // 50km radius, adjust as needed
+      }
       
       autocompleteService.current.getPlacePredictions(
         request,
