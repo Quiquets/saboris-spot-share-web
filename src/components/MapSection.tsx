@@ -1,6 +1,14 @@
 
+/// <reference types="@types/google.maps" />
+
 import { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const MapSection = () => {
   const mapRef = useRef<HTMLDivElement>(null);
