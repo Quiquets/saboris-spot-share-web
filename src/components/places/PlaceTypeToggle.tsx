@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Utensil, Wine } from "lucide-react";
+import { Utensils, Wine } from "lucide-react";
 
 type PlaceType = "restaurant" | "bar";
 
@@ -19,7 +19,7 @@ export function PlaceTypeToggle({ value, onChange }: PlaceTypeToggleProps) {
         className={value === "restaurant" ? "bg-saboris-primary hover:bg-saboris-primary/90" : ""}
         onClick={() => onChange("restaurant")}
       >
-        <Utensil className="mr-2 h-4 w-4" />
+        <Utensils className="mr-2 h-4 w-4" />
         Restaurant
       </Button>
       <Button
