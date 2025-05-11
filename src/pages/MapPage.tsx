@@ -13,7 +13,7 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow">
-        <MapSection key={`map-section-${Date.now()}`} />
+        <MapSection />
       </div>
       <Footer />
     </main>

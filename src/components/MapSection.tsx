@@ -24,6 +24,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const filterOptions = {
   people: [
@@ -40,6 +47,14 @@ const filterOptions = {
     { id: 'street-food', label: 'Street Food 🌮' },
     { id: 'healthy', label: 'Healthy 🥗' },
     { id: 'dessert', label: 'Dessert 🍰' },
+    { id: 'mexican', label: 'Mexican 🌮' },
+    { id: 'thai', label: 'Thai 🍜' },
+    { id: 'chinese', label: 'Chinese 🥡' },
+    { id: 'breakfast', label: 'Breakfast 🥞' },
+    { id: 'seafood', label: 'Seafood 🦞' },
+    { id: 'pizza', label: 'Pizza 🍕' },
+    { id: 'bbq', label: 'BBQ 🍖' },
+    { id: 'vegan', label: 'Vegan 🥬' },
   ],
   vibe: [
     { id: 'romantic', label: 'Romantic' },
@@ -50,6 +65,14 @@ const filterOptions = {
     { id: 'family-friendly', label: 'Family Friendly' },
     { id: 'outdoor', label: 'Outdoor Seating' },
     { id: 'local', label: 'Local Favorite' },
+    { id: 'trendy', label: 'Trendy' },
+    { id: 'cozy', label: 'Cozy' },
+    { id: 'quiet', label: 'Quiet' },
+    { id: 'live-music', label: 'Live Music' },
+    { id: 'pet-friendly', label: 'Pet Friendly' },
+    { id: 'instagrammable', label: 'Instagrammable' },
+    { id: 'view', label: 'Great View' },
+    { id: 'historic', label: 'Historic' },
   ],
   price: [
     { id: 'low', label: '€' },
@@ -493,7 +516,7 @@ const MapSection = () => {
             </TabsList>
           </Tabs>
 
-          <div className="flex flex-wrap gap-2 mb-4 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4 w-full">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -501,7 +524,7 @@ const MapSection = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                   {filterOptions.foodType.map(option => (
                     <Button 
                       key={option.id}
@@ -528,7 +551,7 @@ const MapSection = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                   {filterOptions.vibe.map(option => (
                     <Button 
                       key={option.id}
@@ -555,12 +578,12 @@ const MapSection = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-60">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2">
                   {filterOptions.price.map(option => (
                     <Button 
                       key={option.id}
                       variant={activeFilters.price.includes(option.id) ? "default" : "outline"}
-                      className="flex-1"
+                      className="w-full justify-start"
                       onClick={() => {
                         const newFilters = activeFilters.price.includes(option.id)
                           ? activeFilters.price.filter(id => id !== option.id)
@@ -575,62 +598,31 @@ const MapSection = () => {
               </PopoverContent>
             </Popover>
 
-            {/* Separate sort buttons for each rating category */}
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => toggleSortDirection('food')}
+            <Select 
+              onValueChange={(value) => {
+                const [category, direction] = value.split(':');
+                toggleSortDirection(category);
+              }}
+              defaultValue="food:desc"
             >
-              {activeFilters.foodSortDirection === "desc" ? (
-                <ArrowDown className="h-4 w-4 text-saboris-primary" />
-              ) : (
-                <ArrowUp className="h-4 w-4 text-saboris-primary" />
-              )}
-              Food Rating
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => toggleSortDirection('service')}
-            >
-              {activeFilters.serviceSortDirection === "desc" ? (
-                <ArrowDown className="h-4 w-4 text-saboris-primary" />
-              ) : (
-                <ArrowUp className="h-4 w-4 text-saboris-primary" />
-              )}
-              Service Rating
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => toggleSortDirection('atmosphere')}
-            >
-              {activeFilters.atmosphereSortDirection === "desc" ? (
-                <ArrowDown className="h-4 w-4 text-saboris-primary" />
-              ) : (
-                <ArrowUp className="h-4 w-4 text-saboris-primary" />
-              )}
-              Atmosphere Rating
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => toggleSortDirection('value')}
-            >
-              {activeFilters.valueSortDirection === "desc" ? (
-                <ArrowDown className="h-4 w-4 text-saboris-primary" />
-              ) : (
-                <ArrowUp className="h-4 w-4 text-saboris-primary" />
-              )}
-              Value for Quality
-            </Button>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Sort by ratings" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="food:desc">Food (High to Low)</SelectItem>
+                <SelectItem value="food:asc">Food (Low to High)</SelectItem>
+                <SelectItem value="service:desc">Service (High to Low)</SelectItem>
+                <SelectItem value="service:asc">Service (Low to High)</SelectItem>
+                <SelectItem value="atmosphere:desc">Atmosphere (High to Low)</SelectItem>
+                <SelectItem value="atmosphere:asc">Atmosphere (Low to High)</SelectItem>
+                <SelectItem value="value:desc">Value (High to Low)</SelectItem>
+                <SelectItem value="value:asc">Value (Low to High)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Active filter badges */}
-          {activeFilters.foodType.length > 0 && (
+          {(activeFilters.foodType.length > 0 || activeFilters.vibe.length > 0 || activeFilters.price.length > 0) && (
             <div className="flex flex-wrap gap-1 mb-2">
               {activeFilters.foodType.map(filter => (
                 <Badge 
@@ -646,11 +638,7 @@ const MapSection = () => {
                   <span className="ml-1">×</span>
                 </Badge>
               ))}
-            </div>
-          )}
-          
-          {activeFilters.vibe.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
+              
               {activeFilters.vibe.map(filter => (
                 <Badge 
                   key={filter} 
@@ -665,11 +653,7 @@ const MapSection = () => {
                   <span className="ml-1">×</span>
                 </Badge>
               ))}
-            </div>
-          )}
-          
-          {activeFilters.price.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
+              
               {activeFilters.price.map(filter => (
                 <Badge 
                   key={filter} 
@@ -688,14 +672,13 @@ const MapSection = () => {
           )}
         </div>
         
-        {/* Add key to Card to ensure stable identity */}
+        {/* Map container with stable ID */}
         <Card className="overflow-hidden shadow-lg relative">
-          {/* Only render map container if we're ready for it, with key for stability */}
+          {/* Only render map container if we're ready for it */}
           {mapIsReady ? (
             <div 
               ref={mapContainerRef} 
               className="map-container h-[400px] w-full"
-              id={`map-container-${Date.now()}`}
             />
           ) : (
             <div className="h-[400px] w-full flex items-center justify-center bg-gray-100">
