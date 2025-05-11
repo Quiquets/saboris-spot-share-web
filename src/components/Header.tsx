@@ -1,28 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, MapPin, PlusCircle, Heart, User, LogOut, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Menu } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessGateModal from './AccessGateModal';
 import AuthModal from './AuthModal';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { toast } from 'sonner';
+import DesktopNavigation from './header/DesktopNavigation';
+import MobileNavigation from './header/MobileNavigation';
+import UserMenu from './header/UserMenu';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
   const [gateFeature, setGateFeature] = useState<string>('');
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, signOut, setShowAuthModal } = useAuth();
+  const { setShowAuthModal } = useAuth();
   
   // Track scrolling for header styling
   useEffect(() => {
@@ -37,41 +30,6 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
-  // Check if current path matches the given path
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  // Handle protected route navigation
-  const navigateProtected = (path: string, featureName: string) => {
-    // Map is no longer protected, navigating directly
-    if (path === '/map') {
-      navigate(path);
-      return;
-    }
-    
-    // For other protected routes, require authentication
-    if (user) {
-      navigate(path);
-    } else {
-      setGateFeature(featureName);
-      setShowGateModal(true);
-      // Save intended path for redirect after login
-      localStorage.setItem('redirectAfterLogin', path);
-    }
-  };
-  
-  // Handle logout
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast.success("Successfully signed out");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to sign out");
-    }
-  };
   
   return (
     <header 
@@ -93,107 +51,10 @@ const Header = () => {
         </Link>
       </div>
 
-      <div className="hidden md:flex items-center space-x-2">
-        <button 
-          onClick={() => navigate('/')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <span>Home</span>
-        </button>
-        
-        <button 
-          onClick={() => navigateProtected('/add', 'Add Place')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/add') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <PlusCircle className="h-4 w-4 mr-1" />
-          <span>Share</span>
-        </button>
-        
-        <button 
-          onClick={() => navigateProtected('/search', 'Search Users')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/search') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <Search className="h-4 w-4 mr-1" />
-          <span>Search</span>
-        </button>
-        
-        <button 
-          onClick={() => navigate('/map')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/map') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <MapPin className="h-4 w-4 mr-1" />
-          <span>Explore</span>
-        </button>
-        
-        <button 
-          onClick={() => navigateProtected('/saved', 'Saved Places')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/saved') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <Heart className="h-4 w-4 mr-1" />
-          <span>Saved</span>
-        </button>
-        
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                className={cn(
-                  "ml-2 p-0 w-9 h-9 rounded-full border border-white overflow-hidden",
-                  isActive('/profile') ? "bg-white/20" : "bg-transparent hover:bg-white/10"
-                )}
-              >
-                <Avatar className="h-full w-full">
-                  <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
-                  <AvatarFallback className="bg-white/50 text-saboris-primary">
-                    {user.name?.charAt(0) || '?'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate('/profile')}>
-                <User className="h-4 w-4 mr-2" />
-                <span>View Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                <span>Sign Out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button 
-            className="bg-white text-saboris-primary border border-saboris-primary px-4 hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
-            onClick={() => setShowAuthModal(true)}
-          >
-            <span>Sign In</span>
-          </Button>
-        )}
+      {/* Desktop Navigation */}
+      <DesktopNavigation />
+      <div className="hidden md:block">
+        <UserMenu />
       </div>
 
       {/* Mobile menu */}
@@ -203,100 +64,7 @@ const Header = () => {
             <Menu />
           </SheetTrigger>
           <SheetContent>
-            <div className="flex flex-col space-y-4 pt-8">
-              {user && (
-                <div className="flex items-center p-2 mb-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
-                    <AvatarFallback>{user.name?.charAt(0) || '?'}</AvatarFallback>
-                  </Avatar>
-                  <div className="ml-3">
-                    <p className="font-medium">{user.name}</p>
-                    <p className="text-xs text-gray-500">@{user.username}</p>
-                  </div>
-                </div>
-              )}
-              
-              <button 
-                onClick={() => navigate('/')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <span>Home</span>
-              </button>
-              
-              <button 
-                onClick={() => navigateProtected('/add', 'Add Place')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/add') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" /> Share
-              </button>
-              
-              <button 
-                onClick={() => navigateProtected('/search', 'Search Users')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/search') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <Search className="h-4 w-4 mr-2" /> Search
-              </button>
-              
-              <button 
-                onClick={() => navigate('/map')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/map') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <MapPin className="h-4 w-4 mr-2" /> Explore
-              </button>
-              
-              <button 
-                onClick={() => navigateProtected('/saved', 'Saved Places')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/saved') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <Heart className="h-4 w-4 mr-2" /> Saved
-              </button>
-              
-              {user ? (
-                <>
-                  <button 
-                    onClick={() => navigate('/profile')}
-                    className={cn(
-                      "px-4 py-2 font-medium rounded-md flex items-center",
-                      isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                    )}
-                  >
-                    <User className="h-4 w-4 mr-2" /> Profile
-                  </button>
-                  
-                  <hr className="my-2" />
-                  
-                  <button 
-                    onClick={handleSignOut}
-                    className="px-4 py-2 font-medium hover:bg-gray-100 rounded-md flex items-center text-left"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" /> Log out
-                  </button>
-                </>
-              ) : (
-                <button 
-                  onClick={() => setShowAuthModal(true)}
-                  className="px-4 py-2 font-medium bg-white text-saboris-primary border border-saboris-primary rounded-md flex items-center"
-                >
-                  <User className="h-4 w-4 mr-2" /> Sign In
-                </button>
-              )}
-            </div>
+            <MobileNavigation />
           </SheetContent>
         </Sheet>
       </div>
