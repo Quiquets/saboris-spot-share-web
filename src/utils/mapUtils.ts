@@ -41,76 +41,91 @@ export const communityRecommendations: Location[] = [
   }
 ];
 
-// Improved script loading - track script element directly
-let googleMapScriptElement: HTMLScriptElement | null = null;
+// Script loading management
+const SCRIPT_ID = 'google-maps-script';
 let scriptLoadPromise: Promise<void> | null = null;
 
+/**
+ * Loads the Google Maps API script safely
+ */
 export const loadGoogleMapsScript = (): Promise<void> => {
-  // If we already have a promise in flight, return that
+  // Check if script is already loading
   if (scriptLoadPromise) {
     return scriptLoadPromise;
   }
   
-  // If the API is already loaded, resolve immediately
+  // Check if Google Maps is already loaded
   if (window.google && window.google.maps) {
     console.log("Google Maps API already loaded");
     return Promise.resolve();
   }
   
+  // Check if script element already exists
+  const existingScript = document.getElementById(SCRIPT_ID);
+  if (existingScript) {
+    // Remove existing script first to avoid duplicates
+    existingScript.parentNode?.removeChild(existingScript);
+  }
+  
+  // Create a new promise for script loading
   scriptLoadPromise = new Promise((resolve, reject) => {
-    // Create a unique callback name to avoid conflicts
-    const callbackName = `initGoogleMap${Date.now()}`;
-    
-    // Define the callback function
-    window[callbackName] = () => {
-      console.log("Google Maps initialized");
-      resolve();
-      // Clean up the global callback
-      delete window[callbackName];
-    };
-    
-    // Create script element
-    googleMapScriptElement = document.createElement('script');
-    googleMapScriptElement.id = 'google-maps-script';
-    googleMapScriptElement.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=${callbackName}`;
-    googleMapScriptElement.async = true;
-    googleMapScriptElement.defer = true;
-    
-    googleMapScriptElement.onerror = (e) => {
-      console.error('Google Maps failed to load:', e);
-      reject(new Error('Google Maps failed to load. Check API key or network connection.'));
-      cleanupGoogleMapsScript();
-    };
-    
-    document.body.appendChild(googleMapScriptElement);
+    try {
+      // Create unique callback name to avoid conflicts
+      const callbackName = `initGoogleMap${Date.now()}`;
+      
+      // Define callback function
+      window[callbackName] = () => {
+        console.log("Google Maps initialized");
+        resolve();
+        // Clean up callback
+        delete window[callbackName];
+      };
+      
+      // Create script element
+      const script = document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=${callbackName}`;
+      script.async = true;
+      script.defer = true;
+      
+      script.onerror = (e) => {
+        console.error('Google Maps failed to load:', e);
+        reject(new Error('Google Maps failed to load. Check API key or network connection.'));
+        cleanupGoogleMapsScript();
+      };
+      
+      // Append to document body
+      document.body.appendChild(script);
+    } catch (error) {
+      reject(error);
+      scriptLoadPromise = null;
+    }
   });
   
   return scriptLoadPromise;
 };
 
-// Improved cleanup function that manages the script element directly
+/**
+ * Safely cleans up Google Maps script
+ */
 export const cleanupGoogleMapsScript = (): void => {
-  // Only remove the script if we created it
-  if (googleMapScriptElement && googleMapScriptElement.parentNode) {
+  // Reset load promise
+  scriptLoadPromise = null;
+  
+  // Find and remove script if it exists
+  const scriptElement = document.getElementById(SCRIPT_ID);
+  if (scriptElement && scriptElement.parentNode) {
     try {
-      googleMapScriptElement.parentNode.removeChild(googleMapScriptElement);
+      scriptElement.parentNode.removeChild(scriptElement);
     } catch (error) {
       console.warn("Error removing Google Maps script:", error);
     }
   }
-  
-  // Reset our references
-  googleMapScriptElement = null;
-  scriptLoadPromise = null;
-  
-  // Don't delete window.google as it can cause issues with React
-  // Just clear our specific callbacks
-  if (window.initMap) {
-    window.initMap = () => {};
-  }
 };
 
-// Get user's current location with improved error handling
+/**
+ * Gets the user's current location with improved error handling
+ */
 export const getUserLocation = (): Promise<GeolocationPosition> => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {

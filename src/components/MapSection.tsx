@@ -1,3 +1,4 @@
+
 /// <reference types="@types/google.maps" />
 
 import { useEffect, useRef, useState } from 'react';
@@ -74,6 +75,7 @@ const MapSection = () => {
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
   
   // Separate useEffect for script loading and map initialization
   useEffect(() => {
@@ -127,20 +129,27 @@ const MapSection = () => {
       isMounted = false;
       
       // Clear Google Maps setup
-      googleMapRef.current = null;
+      if (googleMapRef.current) {
+        googleMapRef.current = null;
+      }
     };
   }, []);
   
   // Separate useEffect for user location and markers
   useEffect(() => {
     let isMounted = true;
-    const markers: google.maps.Marker[] = [];
     
     const setupMapFeatures = async () => {
       // Only proceed if map is loaded
       if (!mapLoaded || !googleMapRef.current || !window.google) return;
       
       const map = googleMapRef.current;
+      
+      // Clear any existing markers
+      markersRef.current.forEach(marker => {
+        marker.setMap(null);
+      });
+      markersRef.current = [];
       
       // Add community recommendations
       communityRecommendations.forEach(location => {
@@ -159,7 +168,7 @@ const MapSection = () => {
             }
           });
           
-          markers.push(marker);
+          markersRef.current.push(marker);
           
           // Create info window with location details
           if (location.description) {
@@ -211,7 +220,7 @@ const MapSection = () => {
           }
         });
         
-        markers.push(userMarker);
+        markersRef.current.push(userMarker);
         
         if (isMounted) {
           toast({
@@ -236,20 +245,21 @@ const MapSection = () => {
       setupMapFeatures();
     }
     
-    // Clean up function - remove markers when unmounting
     return () => {
       isMounted = false;
-      
-      // Clear all markers
-      markers.forEach(marker => {
-        marker.setMap(null);
-      });
     };
   }, [mapLoaded]);
   
   // Final cleanup when component unmounts
   useEffect(() => {
     return () => {
+      // Clear all markers when unmounting
+      markersRef.current.forEach(marker => {
+        marker.setMap(null);
+      });
+      markersRef.current = [];
+      
+      // Clean up script
       cleanupGoogleMapsScript();
     };
   }, []);
