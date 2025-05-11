@@ -29,8 +29,8 @@ const LandingPage = () => {
               <div className="rounded-full bg-saboris-peach p-6 mb-4">
                 <PlusCircle className="h-10 w-10 text-saboris-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Share</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Share</h3>
+              <p className="text-saboris-gray mb-4">
                 Share your favorite spots with friends. No fake reviews, just genuine recommendations from people you trust.
               </p>
               <Button 
@@ -45,8 +45,8 @@ const LandingPage = () => {
               <div className="rounded-full bg-saboris-light p-6 mb-4">
                 <MapPin className="h-10 w-10 text-saboris-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Explore</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Explore</h3>
+              <p className="text-saboris-gray mb-4">
                 Discover new places recommended by your friends. Filter by cuisine, vibe, or rating to find the perfect spot.
               </p>
               <Button 
@@ -61,8 +61,8 @@ const LandingPage = () => {
               <div className="rounded-full bg-saboris-orange p-6 mb-4">
                 <User className="h-10 w-10 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Profile</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Profile</h3>
+              <p className="text-saboris-gray mb-4">
                 Create your personalized profile, follow friends, and keep track of places you've saved and shared.
               </p>
               <Button 

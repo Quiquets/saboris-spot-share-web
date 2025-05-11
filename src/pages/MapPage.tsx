@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 
 const MapPage = () => {
   useEffect(() => {
-    document.title = 'Saboris - Explore Map';
+    document.title = 'Saboris - Explore';
   }, []);
 
   return (

@@ -15,12 +15,12 @@ const HeroSection = () => {
       
       <div className="relative z-10 text-center max-w-3xl mx-auto">
         <h1 className="text-saboris-primary text-6xl font-extrabold text-center mb-2">Saboris</h1>
-        <h2 className="text-saboris-primary text-2xl font-medium text-center mb-4">
+        <h2 className="text-saboris-gray text-2xl font-medium text-center mb-4">
           Taste, Share, Explore
         </h2>
         
         {/* Phone mockups displayed horizontally across full width */}
-        <div className="mt-10 mb-8 w-screen max-w-none mx-[-1rem] md:mx-[-2rem] lg:mx-[-4rem] relative z-10">
+        <div className="mt-10 mb-8 w-screen max-w-none relative z-10">
           <div className="flex justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4">
             {/* First phone mockup */}
             <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
@@ -39,7 +39,7 @@ const HeroSection = () => {
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
-                  src="/lovable-uploads/7f8c4ae2-dcfb-475a-a590-cdde712f4fc0.png" 
+                  src="/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png" 
                   alt="Saboris Map Screenshot" 
                   className="h-full w-full object-cover"
                 />
@@ -51,7 +51,7 @@ const HeroSection = () => {
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
-                  src="/lovable-uploads/b5d4f98b-2f75-4fd2-a36a-bd9a11fe677d.png" 
+                  src="/lovable-uploads/2b9b1fe6-b1cb-4844-854b-480e5b719231.png" 
                   alt="Saboris Reviews Screenshot" 
                   className="h-full w-full object-cover"
                 />

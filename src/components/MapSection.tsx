@@ -57,16 +57,6 @@ const filterOptions = {
     { id: 'high', label: '€€€' },
     { id: 'premium', label: '€€€€' },
   ],
-  sort: [
-    { id: 'food-high-low', label: 'Food Rating (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
-    { id: 'food-low-high', label: 'Food Rating (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
-    { id: 'service-high-low', label: 'Service Rating (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
-    { id: 'service-low-high', label: 'Service Rating (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
-    { id: 'atmosphere-high-low', label: 'Atmosphere Rating (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
-    { id: 'atmosphere-low-high', label: 'Atmosphere Rating (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
-    { id: 'value-high-low', label: 'Value for Quality (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
-    { id: 'value-low-high', label: 'Value for Quality (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
-  ],
 };
 
 const mapStyles = [
@@ -147,14 +137,20 @@ const MapSection = () => {
     vibe: string[];
     price: string[];
     rating: number;
-    sort: string;
+    foodSortDirection: "asc" | "desc";
+    serviceSortDirection: "asc" | "desc";
+    atmosphereSortDirection: "asc" | "desc";
+    valueSortDirection: "asc" | "desc";
   }>({
     people: user ? 'friends' : 'community',
     foodType: [],
     vibe: [],
     price: [],
     rating: 0,
-    sort: 'food-high-low',
+    foodSortDirection: "desc", // Default: high to low
+    serviceSortDirection: "desc", // Default: high to low
+    atmosphereSortDirection: "desc", // Default: high to low
+    valueSortDirection: "desc", // Default: high to low
   });
   
   const [showGateModal, setShowGateModal] = useState(false);
@@ -445,11 +441,21 @@ const MapSection = () => {
   }, []);
   
   // Handle filter change
-  const handleFilterChange = (type: string, value: string | string[]) => {
-    setActiveFilters(prev => ({
-      ...prev,
-      [type]: value
-    }));
+  const handleFilterChange = (type: string, value: string | string[] | { direction: "asc" | "desc", category: string }) => {
+    if (typeof value === 'object' && 'direction' in value) {
+      // Handle sort direction change for rating categories
+      const { direction, category } = value;
+      setActiveFilters(prev => ({
+        ...prev,
+        [`${category}SortDirection`]: direction
+      }));
+    } else {
+      // Handle other filter changes
+      setActiveFilters(prev => ({
+        ...prev,
+        [type]: value
+      }));
+    }
     
     // In a real app, we would refresh the map data based on filters here
     toast({
@@ -458,12 +464,20 @@ const MapSection = () => {
     });
   };
   
+  const toggleSortDirection = (category: string) => {
+    const directionKey = `${category}SortDirection` as keyof typeof activeFilters;
+    const currentDirection = activeFilters[directionKey];
+    const newDirection = currentDirection === "desc" ? "asc" : "desc";
+    
+    handleFilterChange(category, { direction: newDirection, category });
+  };
+  
   return (
     <section id="map-section" className="py-16 px-4 md:px-8 bg-white">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-center mb-8 gap-2">
           <MapPin className="text-saboris-primary h-6 w-6" />
-          <h2 className="text-3xl font-bold text-center">Taste, Share, Explore</h2>
+          <h2 className="text-3xl font-bold text-center text-saboris-gray">Explore</h2>
         </div>
         
         <div className="mb-4 flex flex-col items-start">
@@ -561,30 +575,61 @@ const MapSection = () => {
               </PopoverContent>
             </Popover>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4 text-saboris-primary" /> Sort By
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="flex flex-col gap-1">
-                  {filterOptions.sort.map(option => (
-                    <Button 
-                      key={option.id}
-                      variant={activeFilters.sort === option.id ? "default" : "outline"}
-                      className="justify-start"
-                      onClick={() => handleFilterChange('sort', option.id)}
-                    >
-                      <span className="mr-2">{option.icon}</span>
-                      {option.label}
-                    </Button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+            {/* Separate sort buttons for each rating category */}
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => toggleSortDirection('food')}
+            >
+              {activeFilters.foodSortDirection === "desc" ? (
+                <ArrowDown className="h-4 w-4 text-saboris-primary" />
+              ) : (
+                <ArrowUp className="h-4 w-4 text-saboris-primary" />
+              )}
+              Food Rating
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => toggleSortDirection('service')}
+            >
+              {activeFilters.serviceSortDirection === "desc" ? (
+                <ArrowDown className="h-4 w-4 text-saboris-primary" />
+              ) : (
+                <ArrowUp className="h-4 w-4 text-saboris-primary" />
+              )}
+              Service Rating
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => toggleSortDirection('atmosphere')}
+            >
+              {activeFilters.atmosphereSortDirection === "desc" ? (
+                <ArrowDown className="h-4 w-4 text-saboris-primary" />
+              ) : (
+                <ArrowUp className="h-4 w-4 text-saboris-primary" />
+              )}
+              Atmosphere Rating
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => toggleSortDirection('value')}
+            >
+              {activeFilters.valueSortDirection === "desc" ? (
+                <ArrowDown className="h-4 w-4 text-saboris-primary" />
+              ) : (
+                <ArrowUp className="h-4 w-4 text-saboris-primary" />
+              )}
+              Value for Quality
+            </Button>
           </div>
           
+          {/* Active filter badges */}
           {activeFilters.foodType.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
               {activeFilters.foodType.map(filter => (
@@ -656,7 +701,7 @@ const MapSection = () => {
             <div className="h-[400px] w-full flex items-center justify-center bg-gray-100">
               <div className="flex flex-col items-center">
                 <div className="h-8 w-8 rounded-full border-4 border-saboris-primary border-t-transparent animate-spin"></div>
-                <p className="mt-2 text-gray-600">Loading map...</p>
+                <p className="mt-2 text-saboris-gray">Loading map...</p>
               </div>
             </div>
           )}
@@ -668,7 +713,7 @@ const MapSection = () => {
               className="shadow-md flex items-center gap-2"
             >
               <Target className="h-4 w-4 text-saboris-primary" />
-              <span>Find Me</span>
+              <span className="text-saboris-gray">Find Me</span>
             </Button>
           </div>
         </Card>
