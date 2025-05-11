@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -47,7 +46,6 @@ const SearchUsersPage = () => {
     
     setLoading(true);
     try {
-      // Mock search for now - would be replaced with actual Supabase query
       const results = await supabaseService.searchUsers(searchQuery);
       setUsers(results);
     } catch (error) {

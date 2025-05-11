@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Heart, MapPin, PlusCircle, User as UserIcon, Loader2, UsersRound, UserCheck, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SavedRestaurant, ProfileStats, supabaseService } from '@/services/supabaseService';
+import { SavedRestaurant, ProfileStats, UserSettings, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 
 const ProfilePage = () => {
@@ -30,15 +29,15 @@ const ProfilePage = () => {
       
       try {
         setLoading(true);
-        const [places, stats, accountSettings] = await Promise.all([
-          supabaseService.getSavedRestaurants(user.id),
-          supabaseService.getProfileStats(user.id),
-          supabaseService.getUserSettings(user.id)
-        ]);
+        const places = await supabaseService.getSavedRestaurants(user.id);
+        const stats = await supabaseService.getProfileStats(user.id);
+        
+        // Get user profile to check if account is private
+        const userProfile = await supabaseService.getUserProfile(user.id);
         
         setSavedPlaces(places);
         setProfileStats(stats);
-        setIsPrivate(accountSettings?.is_private || false);
+        setIsPrivate(userProfile?.is_private || false);
       } catch (error) {
         console.error("Error fetching profile data:", error);
         toast.error("Failed to load profile data");
@@ -71,7 +70,7 @@ const ProfilePage = () => {
     
     try {
       setIsPrivate(value);
-      await supabaseService.updateUserSettings(user.id, { is_private: value });
+      await supabaseService.updateUserProfile(user.id, { is_private: value });
       toast.success(`Account is now ${value ? 'private' : 'public'}`);
     } catch (error) {
       console.error("Error updating privacy settings:", error);

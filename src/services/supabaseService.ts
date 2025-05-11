@@ -10,6 +10,7 @@ export interface User {
   avatar_url?: string;
   bio?: string;
   location?: string;
+  is_private?: boolean;
 }
 
 export interface SavedRestaurant {
@@ -38,6 +39,11 @@ export interface ProfileStats {
   following_count: number;
   saved_places_count: number;
   reviews_count: number;
+  posts_count: number; // Added missing property
+}
+
+export interface UserSettings {
+  is_private: boolean;
 }
 
 class SupabaseService {
@@ -203,6 +209,114 @@ class SupabaseService {
       console.error("Update user profile error:", error);
       toast.error("Failed to update profile. Please try again.");
       return null;
+    }
+  }
+
+  async getUserSettings(userId: string): Promise<UserSettings | null> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('is_private')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error("Get user settings error:", error);
+        return null;
+      }
+      
+      return {
+        is_private: data.is_private || false
+      };
+    } catch (error) {
+      console.error("Get user settings error:", error);
+      return null;
+    }
+  }
+  
+  async updateUserSettings(userId: string, settings: Partial<UserSettings>): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update(settings)
+        .eq('id', userId);
+      
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+    } catch (error) {
+      console.error("Update user settings error:", error);
+      toast.error("Failed to update settings. Please try again.");
+    }
+  }
+  
+  async getFollowers(userId: string): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('follower_id, users!follows_follower_id_fkey(*)')
+        .eq('following_id', userId);
+      
+      if (error) {
+        console.error("Get followers error:", error);
+        return [];
+      }
+      
+      return data.map(item => {
+        const user = item.users;
+        // Add email field to match User interface
+        const email = user.username.includes('@') ? user.username : '';
+        return {
+          ...user,
+          email
+        };
+      });
+    } catch (error) {
+      console.error("Get followers error:", error);
+      return [];
+    }
+  }
+  
+  async searchUsers(query: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, username, avatar_url, bio, is_private')
+        .or(`name.ilike.%${query}%,username.ilike.%${query}%`)
+        .limit(20);
+      
+      if (error) {
+        console.error("Search users error:", error);
+        return [];
+      }
+      
+      // If user is authenticated, check if they are following each user
+      const currentUser = await this.getCurrentUser();
+      if (currentUser) {
+        const withFollowingStatus = await Promise.all(data.map(async (user) => {
+          if (currentUser.id === user.id) {
+            return { ...user, is_following: false };
+          }
+          
+          const isFollowing = await this.isFollowing(currentUser.id, user.id);
+          const profileStats = await this.getProfileStats(user.id);
+          
+          return {
+            ...user,
+            is_following: isFollowing,
+            followers_count: profileStats?.followers_count || 0,
+            posts_count: profileStats?.posts_count || 0
+          };
+        }));
+        
+        return withFollowingStatus;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Search users error:", error);
+      return [];
     }
   }
 
@@ -385,11 +499,18 @@ class SupabaseService {
         return null;
       }
       
+      // Get posts count from feedposts table
+      const postsCount = await supabase
+        .from('feed_posts')
+        .select('id', { count: 'exact' })
+        .eq('user_id', userId);
+      
       return {
         followers_count: followers.data || 0,
         following_count: following.data || 0,
         saved_places_count: savedPlaces.count || 0,
-        reviews_count: reviews.count || 0
+        reviews_count: reviews.count || 0,
+        posts_count: postsCount.count || 0
       };
     } catch (error) {
       console.error("Get profile stats error:", error);
