@@ -39,7 +39,7 @@ export interface ProfileStats {
   following_count: number;
   saved_places_count: number;
   reviews_count: number;
-  posts_count: number; // Added missing property
+  posts_count: number;
 }
 
 export interface UserSettings {
@@ -245,6 +245,8 @@ class SupabaseService {
         toast.error(error.message);
         return;
       }
+      
+      toast.success("Settings updated successfully");
     } catch (error) {
       console.error("Update user settings error:", error);
       toast.error("Failed to update settings. Please try again.");
@@ -409,13 +411,19 @@ class SupabaseService {
     }
   }
   
-  async followUser(followerId: string, followingId: string): Promise<void> {
+  async followUser(userId: string): Promise<void> {
     try {
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        toast.error("You need to be logged in to follow users");
+        return;
+      }
+
       const { error } = await supabase
         .from('follows')
         .insert({
-          follower_id: followerId,
-          following_id: followingId
+          follower_id: currentUser.id,
+          following_id: userId
         });
       
       if (error) {
@@ -434,13 +442,19 @@ class SupabaseService {
     }
   }
   
-  async unfollowUser(followerId: string, followingId: string): Promise<void> {
+  async unfollowUser(userId: string): Promise<void> {
     try {
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        toast.error("You need to be logged in to unfollow users");
+        return;
+      }
+
       const { error } = await supabase
         .from('follows')
         .delete()
-        .eq('follower_id', followerId)
-        .eq('following_id', followingId);
+        .eq('follower_id', currentUser.id)
+        .eq('following_id', userId);
       
       if (error) {
         toast.error(error.message);
