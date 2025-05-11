@@ -5,10 +5,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, MapPin, PlusCircle, Heart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
   
   if (typeof window !== 'undefined') {
     window.addEventListener('scroll', () => {
@@ -72,25 +74,29 @@ const Header = () => {
           <span>Add Place</span>
         </Link>
         
-        <Link 
-          to="/profile" 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/profile') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <User className="h-4 w-4 mr-1" />
-          <span>Profile</span>
-        </Link>
-        
-        <div className="flex items-center gap-2 ml-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-1 text-white border-white hover:bg-white hover:text-saboris-primary">
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
+        {user ? (
+          <Link 
+            to="/profile" 
+            className={cn(
+              "px-3 py-2 rounded-md font-medium flex items-center text-white",
+              isActive('/profile') 
+                ? "bg-white/20" 
+                : "hover:bg-white/10"
+            )}
+          >
+            <User className="h-4 w-4 mr-1" />
+            <span>Profile</span>
+          </Link>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1 text-white border-white hover:bg-white hover:text-saboris-primary"
+            onClick={() => window.location.href = '/'}
+          >
+            <span>Sign In</span>
           </Button>
-        </div>
+        )}
       </div>
 
       {/* Mobile menu */}
@@ -121,21 +127,40 @@ const Header = () => {
                 <PlusCircle className="h-4 w-4 mr-2" /> Add Place
               </Link>
               
-              <Link 
-                to="/profile" 
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <User className="h-4 w-4 mr-2" /> Profile
-              </Link>
+              {user ? (
+                <Link 
+                  to="/profile" 
+                  className={cn(
+                    "px-4 py-2 font-medium rounded-md flex items-center",
+                    isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                  )}
+                >
+                  <User className="h-4 w-4 mr-2" /> Profile
+                </Link>
+              ) : (
+                <Link 
+                  to="/" 
+                  className={cn(
+                    "px-4 py-2 font-medium rounded-md flex items-center",
+                    isActive('/') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                  )}
+                >
+                  <User className="h-4 w-4 mr-2" /> Sign In
+                </Link>
+              )}
               
-              <hr className="my-2" />
-              
-              <button className="px-4 py-2 font-medium hover:bg-gray-100 rounded-md flex items-center text-left">
-                <LogOut className="h-4 w-4 mr-2" /> Log out
-              </button>
+              {user && (
+                <>
+                  <hr className="my-2" />
+                  
+                  <button 
+                    onClick={signOut}
+                    className="px-4 py-2 font-medium hover:bg-gray-100 rounded-md flex items-center text-left"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" /> Log out
+                  </button>
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>
