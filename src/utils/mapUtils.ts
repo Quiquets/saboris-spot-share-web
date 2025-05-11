@@ -42,27 +42,56 @@ export const communityRecommendations: Location[] = [
 ];
 
 // Function to load Google Maps script
-export const loadGoogleMapsScript = (callback: () => void) => {
-  // Remove any existing Google Maps scripts to avoid conflicts
-  const existingScript = document.querySelector('script[src*="maps.googleapis.com/maps/api"]');
-  if (existingScript) {
-    existingScript.remove();
+let scriptLoadPromise: Promise<void> | null = null;
+
+export const loadGoogleMapsScript = (): Promise<void> => {
+  // If we already have a promise in flight, return that instead of creating a new script
+  if (scriptLoadPromise) {
+    return scriptLoadPromise;
   }
   
-  // Create new script element with async attribute
-  const googleMapsScript = document.createElement('script');
-  googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=initMap`;
-  googleMapsScript.async = true;
-  googleMapsScript.defer = true;
+  scriptLoadPromise = new Promise((resolve, reject) => {
+    // Check if the API is already loaded
+    if (window.google && window.google.maps) {
+      console.log("Google Maps API already loaded");
+      resolve();
+      return;
+    }
+    
+    // Define global callback before creating script
+    window.initMap = () => {
+      console.log("Google Maps initialized");
+      resolve();
+    };
+    
+    // Create script element
+    const googleMapsScript = document.createElement('script');
+    googleMapsScript.id = 'google-maps-script';
+    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=initMap`;
+    googleMapsScript.async = true;
+    googleMapsScript.defer = true;
+    
+    googleMapsScript.onerror = (e) => {
+      console.error('Google Maps failed to load:', e);
+      reject(new Error('Google Maps failed to load. Check API key or network connection.'));
+    };
+    
+    document.body.appendChild(googleMapsScript);
+  });
   
-  // Define global callback
-  window.initMap = callback;
+  return scriptLoadPromise;
+};
+
+// Clean up script and global references - IMPORTANT for preventing React DOM errors
+export const cleanupGoogleMapsScript = (): void => {
+  // Clear global callback
+  if (window.initMap) {
+    // Use a no-op function instead of deleting to prevent errors
+    window.initMap = () => {};
+  }
   
-  window.document.body.appendChild(googleMapsScript);
-  
-  googleMapsScript.onerror = () => {
-    console.error('Google Maps failed to load. Check API key restrictions or network issues.');
-  };
+  // Reset our promise reference
+  scriptLoadPromise = null;
 };
 
 // Get user's current location
