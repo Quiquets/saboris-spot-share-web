@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setUser(profile);
               
               // Handle redirect after login
-              if (event === 'SIGNED_IN') {
+              if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 console.log("Handling redirect after login");
                 const redirectPath = localStorage.getItem('redirectAfterLogin');
                 if (redirectPath) {
@@ -57,13 +57,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   // Default redirect if no saved path
                   navigate('/profile');
                 }
+                
+                toast.success("Successfully signed in!");
               }
             } catch (error) {
               console.error("Error fetching user profile:", error);
+              toast.error("Could not load your profile. Please try again.");
             }
           }, 0);
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          toast.info("You've been signed out");
         }
       }
     );
@@ -82,12 +86,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthUser(data.session?.user || null);
         
         if (data.session?.user) {
-          const profile = await supabaseService.getUserProfile(data.session.user.id);
-          setUser(profile);
+          try {
+            const profile = await supabaseService.getUserProfile(data.session.user.id);
+            setUser(profile);
+          } catch (profileError) {
+            console.error("Error fetching user profile on init:", profileError);
+            // Don't throw here to prevent blocking auth initialization
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching session:", error);
-        toast.error("Authentication error. Please try signing in again.");
+        
+        // Check for specific token errors and handle appropriately
+        if (error.message?.includes('invalid token') || error.message?.includes('JWT')) {
+          console.log("Token error detected - clearing session data");
+          // Clear any corrupted auth data
+          await supabase.auth.signOut();
+          localStorage.removeItem('supabase.auth.token');
+          toast.error("Your login session expired. Please sign in again.");
+        } else {
+          toast.error("Authentication error. Please try signing in again.");
+        }
       } finally {
         setLoading(false);
       }
@@ -100,12 +119,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [navigate]);
 
+  // Enhanced sign in with better error handling
+  const enhancedSignIn = async (email: string, password: string) => {
+    try {
+      const result = await supabaseService.signIn(email, password);
+      if (!result) {
+        toast.error("Login failed. Please check your credentials and try again.");
+      }
+      return result;
+    } catch (error: any) {
+      console.error("Enhanced sign in error:", error);
+      
+      // Handle specific error cases with helpful messages
+      if (error.message?.includes('Email not confirmed')) {
+        toast.error("Please confirm your email before signing in. Check your inbox for a verification link.");
+      } else if (error.message?.includes('Invalid login credentials')) {
+        toast.error("Invalid email or password. Please try again.");
+      } else if (error.message?.includes('invalid token') || error.message?.includes('JWT')) {
+        toast.error("Authentication error. Please try again.");
+        // Clear any corrupted auth data
+        await supabase.auth.signOut();
+      } else {
+        toast.error(`Sign in failed: ${error.message || 'Unknown error'}`);
+      }
+      
+      return null;
+    }
+  };
+
   const value = {
     authUser,
     session,
     user,
     loading,
-    signIn: supabaseService.signIn,
+    signIn: enhancedSignIn,
     signUp: supabaseService.signUp,
     signInWithGoogle: () => supabaseService.signInWithProvider('google'),
     signOut: async () => {
