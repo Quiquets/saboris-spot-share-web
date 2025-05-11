@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 const MobileNavigation = ({ onClose }: { onClose?: () => void }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, setShowAuthModal } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -19,14 +19,17 @@ const MobileNavigation = ({ onClose }: { onClose?: () => void }) => {
     if (path === '/map') {
       navigate(path);
       if (onClose) onClose();
-      return;
+      return true;
     }
     
     if (user) {
       navigate(path);
       if (onClose) onClose();
+      return true;
     } else {
       localStorage.setItem('redirectAfterLogin', path);
+      setShowAuthModal(true);
+      if (onClose) onClose();
       return false;
     }
   };

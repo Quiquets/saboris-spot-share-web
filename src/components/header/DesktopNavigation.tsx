@@ -15,7 +15,7 @@ interface NavItemProps {
 const DesktopNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setShowAuthModal } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -26,18 +26,18 @@ const DesktopNavigation = () => {
     // Map is no longer protected, navigating directly
     if (path === '/map') {
       navigate(path);
-      return;
+      return true;
     }
     
     // For other protected routes, require authentication
     if (user) {
       navigate(path);
+      return true;
     } else {
       localStorage.setItem('redirectAfterLogin', path);
-      // Handle auth modal display through NavItem
+      setShowAuthModal(true);
       return false;
     }
-    return true;
   };
 
   const NavItem = ({ path, label, icon, protected: isProtected, featureName }: NavItemProps) => {

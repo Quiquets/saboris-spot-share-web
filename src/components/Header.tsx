@@ -15,7 +15,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
   const [gateFeature, setGateFeature] = useState<string>('');
-  const { setShowAuthModal } = useAuth();
+  const { showAuthModal, setShowAuthModal } = useAuth();
   
   // Track scrolling for header styling
   useEffect(() => {
@@ -78,8 +78,8 @@ const Header = () => {
       
       {/* Auth Modal */}
       <AuthModal 
-        isOpen={false} 
-        onClose={() => {}}
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
       />
     </header>
   );
