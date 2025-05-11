@@ -62,8 +62,8 @@ export function PlaceDetailsSection({ form, cuisineOptions, occasionOptions = []
                           key={cuisine.value}
                           value={cuisine.label}
                           onSelect={() => {
-                            form.setValue("cuisine", cuisine.value)
-                            setOpenCuisine(false)
+                            form.setValue("cuisine", cuisine.value);
+                            setOpenCuisine(false);
                           }}
                         >
                           {cuisine.label}

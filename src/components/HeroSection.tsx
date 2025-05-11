@@ -44,7 +44,24 @@ const HeroSection = () => {
         <div className="absolute top-[20%] -left-10 w-96 h-96 bg-saboris-primary/10 rounded-full blur-xl"></div>
         
         {/* Coral pink horizontal line across the middle */}
-        <div className="absolute left-0 right-0 h-24 top-1/2 -translate-y-1/2 bg-[#FFDEE2] z-0"></div>
+        <div className="absolute left-0 right-0 h-24 top-1/2 -translate-y-1/2 bg-[#FFDEE2] z-0">
+          {/* Scrolling text banner - moved inside the pink background */}
+          <div className="relative w-full h-full overflow-hidden">
+            <div 
+              ref={scrollTextRef}
+              className="whitespace-nowrap text-white font-bold text-xl absolute top-1/2 -translate-y-1/2"
+              style={{ width: 'fit-content', display: 'flex' }}
+            >
+              {/* Repeat the text multiple times to create continuous scroll effect */}
+              {Array.from({ length: 20 }).map((_, i) => (
+                <span key={i} className="px-4">
+                  APP COMING SOON
+                  <span className="inline-block mx-4">•</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className="relative z-10 text-center w-full mx-auto">
@@ -52,23 +69,6 @@ const HeroSection = () => {
         <h2 className="text-saboris-gray text-2xl font-medium text-center mb-4">
           Taste, Share, Explore
         </h2>
-        
-        {/* Scrolling text banner */}
-        <div className="relative w-full overflow-hidden bg-gradient-to-r from-saboris-peach to-saboris-orange py-2 mb-4">
-          <div 
-            ref={scrollTextRef}
-            className="whitespace-nowrap text-white font-bold text-xl"
-            style={{ width: 'fit-content', display: 'flex' }}
-          >
-            {/* Repeat the text multiple times to create continuous scroll effect */}
-            {Array.from({ length: 20 }).map((_, i) => (
-              <span key={i} className="px-4">
-                APP COMING SOON
-                <span className="inline-block mx-4">•</span>
-              </span>
-            ))}
-          </div>
-        </div>
         
         {/* Phone mockups displayed horizontally across full width */}
         <div className="mt-6 mb-8 w-full relative z-10">
