@@ -3,7 +3,7 @@ import { Instagram, Coffee, Pizza, Sandwich, IceCream } from 'lucide-react';
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-[70vh] flex flex-col items-center justify-center px-4 bg-saboris-primary overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center px-4 py-16 bg-saboris-primary overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[60%] -right-10 w-72 h-72 bg-white/10 rounded-full blur-xl"></div>
@@ -18,11 +18,16 @@ const HeroSection = () => {
       
       <div className="relative z-10 text-center max-w-3xl mx-auto">
         <h1 className="text-white text-6xl font-extrabold text-center mb-2">Saboris</h1>
-        <h2 className="text-white text-2xl font-medium text-center">
+        <h2 className="text-white text-2xl font-medium text-center mb-4">
           🍣 Real food. Real friends. Zero BS.
         </h2>
         
-        <div className="mt-8">
+        {/* Food emojis */}
+        <div className="text-white text-3xl text-center mt-4 mb-8">
+          🍣 🌮 🍜 ☕ 🥐 🍕 🥟 🍦 🍔
+        </div>
+        
+        <div className="mt-4">
           <a 
             href="https://www.instagram.com/saboris.places/" 
             target="_blank" 
@@ -33,13 +38,10 @@ const HeroSection = () => {
             <span>Follow us on Instagram</span>
           </a>
         </div>
-        
-        <div className="mt-14 animate-float">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5L12 19M12 19L19 12M12 19L5 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
       </div>
+      
+      {/* Speech bubble tail */}
+      <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[20px] border-l-transparent border-t-[20px] border-t-saboris-primary border-r-[20px] border-r-transparent"></div>
     </section>
   );
 };
