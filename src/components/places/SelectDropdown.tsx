@@ -50,6 +50,7 @@ export function SelectDropdown({
 
   const handleRemove = (valueToRemove: string, e?: React.MouseEvent) => {
     if (e) {
+      e.preventDefault();
       e.stopPropagation();
     }
     onChange(selectedValues.filter((value) => value !== valueToRemove));
@@ -87,10 +88,10 @@ export function SelectDropdown({
                     <Badge key={index} variant="secondary" className="mr-1">
                       {label}
                       <button
+                        type="button"
                         className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemove(selectedValues[index]);
+                          handleRemove(selectedValues[index], e);
                         }}
                       >
                         <X className="h-3 w-3" />

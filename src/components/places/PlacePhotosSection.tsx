@@ -32,12 +32,15 @@ export function PlacePhotosSection({ form, googleMapPhoto }: PlacePhotosSectionP
             {googleMapPhoto && field.value?.length === 0 && (
               <div className="mt-3">
                 <p className="text-sm text-gray-500">Google Maps photo available:</p>
-                <div className="mt-2 relative h-24 w-24">
+                <div className="mt-2 relative h-40 w-40">
                   <img 
                     src={googleMapPhoto}
                     alt="Google Maps photo"
-                    className="h-full w-full object-cover rounded-md opacity-70"
+                    className="h-full w-full object-cover rounded-md"
                   />
+                  <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                    Default picture
+                  </div>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">Will be used if no photos are uploaded</p>
               </div>

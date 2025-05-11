@@ -13,9 +13,11 @@ import { SelectDropdown } from '@/components/places/SelectDropdown';
 interface PlaceDetailsSectionProps {
   form: UseFormReturn<FormValues>;
   cuisineOptions: { value: string; label: string }[];
+  occasionOptions?: { value: string; label: string }[];
+  vibeOptions?: { value: string; label: string }[];
 }
 
-export function PlaceDetailsSection({ form, cuisineOptions }: PlaceDetailsSectionProps) {
+export function PlaceDetailsSection({ form, cuisineOptions, occasionOptions = [], vibeOptions = [] }: PlaceDetailsSectionProps) {
   const [openCuisine, setOpenCuisine] = useState(false);
   
   return (
@@ -75,6 +77,50 @@ export function PlaceDetailsSection({ form, cuisineOptions }: PlaceDetailsSectio
             </FormItem>
           )}
         />
+        
+        {vibeOptions.length > 0 && (
+          <FormField
+            control={form.control}
+            name="vibes"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <SelectDropdown
+                    label="Vibes"
+                    options={vibeOptions}
+                    selectedValues={field.value || []}
+                    onChange={field.onChange}
+                    maxSelection={3}
+                    placeholder="Select vibes..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {occasionOptions.length > 0 && (
+          <FormField
+            control={form.control}
+            name="occasions"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <SelectDropdown
+                    label="Occasions"
+                    options={occasionOptions}
+                    selectedValues={field.value || []}
+                    onChange={field.onChange}
+                    maxSelection={2}
+                    placeholder="Select occasions..."
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
         <FormField
           control={form.control}

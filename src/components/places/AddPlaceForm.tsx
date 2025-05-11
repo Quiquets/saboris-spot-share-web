@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -97,7 +96,7 @@ export function AddPlaceForm() {
     form.setValue('lng', placeDetails.lng);
     form.setValue('place_id', placeDetails.place_id);
     
-    // If we have a Google photo and no user photos yet, save it
+    // If we have a Google photo, save it
     if (placeDetails.photos && placeDetails.photos.length > 0) {
       setGoogleMapPhoto(placeDetails.photos[0]);
     }
@@ -212,13 +211,9 @@ export function AddPlaceForm() {
             
             <PlaceDetailsSection 
               form={form} 
-              cuisineOptions={cuisineOptions} 
-            />
-            
-            <PlaceTagsSection 
-              form={form} 
+              cuisineOptions={cuisineOptions}
+              vibeOptions={vibeOptions}
               occasionOptions={occasionOptions} 
-              vibeOptions={vibeOptions} 
             />
             
             <PlaceRatingsSection form={form} />
