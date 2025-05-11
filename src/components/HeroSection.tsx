@@ -46,12 +46,12 @@ const HeroSection = () => {
               </div>
             </div>
             
-            {/* Third phone mockup */}
+            {/* Third phone mockup - Updated with the user-provided image */}
             <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
-                  src="/lovable-uploads/2ecb9839-a017-43ff-a988-cb3000277b50.png" 
+                  src="/lovable-uploads/a32b5be2-a042-4f1c-805c-6d596e8e22c6.png" 
                   alt="Saboris Reviews Screenshot" 
                   className="h-full w-full object-cover"
                 />
