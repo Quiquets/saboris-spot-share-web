@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Mail } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -71,14 +70,14 @@ const Footer = () => {
           </div>
         </div>
         
-        {/* Footer links at the bottom - consistent text size and alignment */}
-        <div className="border-t pt-6 flex flex-col items-center">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-3xl mb-6 text-center">
+        {/* Footer links - horizontally aligned to match reference */}
+        <div className="border-t pt-6">
+          <div className="flex justify-center space-x-12 mb-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
+                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
                 >
                   Contact Us
                 </Button>
@@ -169,7 +168,7 @@ const Footer = () => {
               href="https://www.instagram.com/saboris.places/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
               aria-label="Instagram"
             >
               Follow Us
@@ -177,21 +176,21 @@ const Footer = () => {
             
             <Link 
               to="/terms" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
             >
               Terms & Conditions
             </Link>
             
             <Link 
               to="/privacy" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
             >
               Privacy Policy
             </Link>
           </div>
         </div>
         
-        <div className="mt-6 text-center text-xs text-gray-400">
+        <div className="text-center text-xs text-gray-400">
           <p>&copy; {new Date().getFullYear()} Saboris. All rights reserved.</p>
         </div>
       </div>
