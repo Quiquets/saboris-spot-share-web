@@ -11,6 +11,7 @@ interface TagSelectorProps {
   onChange: (tags: string[]) => void;
   maxSelection?: number;
   searchable?: boolean;
+  className?: string; // Added className prop to the interface
 }
 
 export function TagSelector({ 
@@ -19,7 +20,8 @@ export function TagSelector({
   selectedTags, 
   onChange, 
   maxSelection,
-  searchable = false
+  searchable = false,
+  className = "" // Default to empty string if not provided
 }: TagSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -57,7 +59,7 @@ export function TagSelector({
         </div>
       )}
       
-      <div className="flex flex-wrap gap-2">
+      <div className={`flex flex-wrap gap-2 ${className}`}>
         {filteredOptions.map((tag) => (
           <Button
             key={tag}
