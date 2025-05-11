@@ -4,16 +4,13 @@
 import { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import MapFilters from './map/MapFilters';
 import GoogleMapView from './map/GoogleMapView';
 import { ActiveFilters } from './map/FilterOptions';
 
-interface MapSectionProps {
-  placeImages?: Record<string, string>;
-}
-
-const MapSection = ({ placeImages = {} }: MapSectionProps) => {
+const MapSection = () => {
   const { user, setShowAuthModal, setFeatureName } = useAuth();
   
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
@@ -110,7 +107,7 @@ const MapSection = ({ placeImages = {} }: MapSectionProps) => {
         />
         
         {/* Google Map Component */}
-        <GoogleMapView placeImages={placeImages} />
+        <GoogleMapView />
       </div>
     </section>
   );

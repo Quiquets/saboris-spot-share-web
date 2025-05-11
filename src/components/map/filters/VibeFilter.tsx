@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Filter, X } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { filterOptions } from '../FilterOptions';
 
 interface VibeFilterProps {
@@ -18,28 +18,6 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
   activeVibes, 
   handleFilterChange 
 }) => {
-  // Function to remove a vibe from selection
-  const removeVibe = (idToRemove: string, e?: React.MouseEvent) => {
-    // Stop propagation if this is called from a button click
-    if (e) {
-      e.stopPropagation();
-    }
-    
-    const newFilters = activeVibes.filter(id => id !== idToRemove);
-    handleFilterChange('vibe', newFilters);
-  };
-  
-  // Function to add a vibe to selection
-  const addVibe = (id: string) => {
-    // If already selected, remove it, otherwise add it
-    if (activeVibes.includes(id)) {
-      removeVibe(id);
-    } else {
-      const newFilters = [...activeVibes, id];
-      handleFilterChange('vibe', newFilters);
-    }
-  };
-  
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -47,11 +25,6 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
           className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
           Vibe
-          {activeVibes.length > 0 && (
-            <span className="ml-1 bg-saboris-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-              {activeVibes.length}
-            </span>
-          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
@@ -63,15 +36,14 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
               className={`justify-start text-xs px-2 py-1 ${activeVibes.includes(option.id) 
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
-              onClick={() => addVibe(option.id)}
+              onClick={() => {
+                const newFilters = activeVibes.includes(option.id)
+                  ? activeVibes.filter(id => id !== option.id)
+                  : [...activeVibes, option.id];
+                handleFilterChange('vibe', newFilters);
+              }}
             >
-              <span className="flex-1 text-left">{option.label}</span>
-              {activeVibes.includes(option.id) && (
-                <X 
-                  className="h-3 w-3 ml-1 hover:text-saboris-light" 
-                  onClick={(e) => removeVibe(option.id, e)}
-                />
-              )}
+              {option.label}
             </Button>
           ))}
         </div>
