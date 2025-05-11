@@ -1,27 +1,44 @@
 
 import { Instagram } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const HeroSection = () => {
   // Ref for the scrolling text container
   const scrollTextRef = useRef<HTMLDivElement>(null);
+  // State to track if the content is ready to animate
+  const [isReady, setIsReady] = useState(false);
 
   // Effect to handle scrolling animation
   useEffect(() => {
     const textElement = scrollTextRef.current;
     if (!textElement) return;
     
+    // Calculate how many repetitions we need to fill the container
+    const calculateInitialContent = () => {
+      const containerWidth = textElement.parentElement?.offsetWidth || 0;
+      const itemWidth = textElement.children[0]?.getBoundingClientRect().width || 0;
+      
+      if (containerWidth > 0 && itemWidth > 0) {
+        // Make sure we're already filled with text before starting animation
+        setIsReady(true);
+      }
+    };
+    
+    // Run calculation after a small delay to ensure DOM is ready
+    const timer = setTimeout(calculateInitialContent, 100);
+    
     const scrollSpeed = 1; // Controls the scrolling speed
     let animationFrameId: number;
     let scrollPosition = 0;
     
     const scrollText = () => {
-      if (!textElement) return;
+      if (!textElement || !isReady) return;
       
       scrollPosition += scrollSpeed;
       
       // Reset position when text has scrolled completely
-      if (scrollPosition > textElement.scrollWidth / 2) {
+      const firstItemWidth = textElement.children[0]?.getBoundingClientRect().width || 0;
+      if (scrollPosition > firstItemWidth) {
         scrollPosition = 0;
       }
       
@@ -29,12 +46,16 @@ const HeroSection = () => {
       animationFrameId = requestAnimationFrame(scrollText);
     };
     
-    animationFrameId = requestAnimationFrame(scrollText);
+    // Only start animation if content is ready
+    if (isReady) {
+      animationFrameId = requestAnimationFrame(scrollText);
+    }
     
     return () => {
+      clearTimeout(timer);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isReady]);
 
   return (
     <section className="relative flex flex-col items-center justify-center px-0 py-12 bg-white overflow-hidden w-full">
@@ -49,11 +70,10 @@ const HeroSection = () => {
           <div className="relative w-full h-full overflow-hidden">
             <div 
               ref={scrollTextRef}
-              className="whitespace-nowrap text-white font-bold text-xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-              style={{ width: 'fit-content', display: 'flex' }}
+              className={`whitespace-nowrap text-white font-bold text-xl absolute top-1/2 left-0 -translate-y-1/2 flex ${!isReady ? 'opacity-0' : 'opacity-100'} transition-opacity`}
             >
-              {/* Repeat the text multiple times to create continuous scroll effect */}
-              {Array.from({ length: 20 }).map((_, i) => (
+              {/* Repeat the text enough times to fill the container initially */}
+              {Array.from({ length: 40 }).map((_, i) => (
                 <span key={i} className="px-4">
                   APP COMING SOON
                   <span className="inline-block mx-4">•</span>
