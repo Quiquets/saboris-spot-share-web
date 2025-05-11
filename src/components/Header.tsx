@@ -50,8 +50,8 @@ const Header = () => {
           Who We Are
         </Link>
         
-        <span className="bg-white text-saboris-primary px-4 py-2 rounded-full font-semibold shadow-sm text-sm">
-          📱 Saboris App Coming Soon!
+        <span className="bg-white text-[#EE8C80] px-3 py-1 text-sm rounded-full font-semibold shadow">
+          📱 App coming soon
         </span>
       </div>
 
@@ -70,8 +70,8 @@ const Header = () => {
                 Who We Are
               </Link>
               <div className="px-4">
-                <span className="bg-saboris-primary/10 text-saboris-primary px-4 py-2 rounded-full font-semibold text-sm inline-block">
-                  📱 Saboris App Coming Soon!
+                <span className="bg-saboris-primary/10 text-saboris-primary px-3 py-1 text-sm rounded-full font-semibold inline-block">
+                  📱 App coming soon
                 </span>
               </div>
             </div>

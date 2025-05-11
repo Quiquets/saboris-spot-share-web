@@ -17,10 +17,8 @@ const HeroSection = () => {
       </div>
       
       <div className="relative z-10 text-center max-w-3xl mx-auto">
-        <h1 className="text-white text-5xl font-extrabold mb-4 text-center">
-          Taste. Share. Explore.
-        </h1>
-        <h2 className="text-white text-2xl font-medium mb-8 text-center">
+        <h1 className="text-white text-6xl font-extrabold text-center mb-2">Saboris</h1>
+        <h2 className="text-white text-2xl font-medium text-center">
           🍣 Real food. Real friends. Zero BS.
         </h2>
         
