@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Github, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthModalProps {
@@ -130,16 +130,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
-                  <Github className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-                <Button variant="outline" type="button" onClick={() => handleSocialAuth("Apple")} className="w-full">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Apple
-                </Button>
-              </div>
+              <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
+                <img 
+                  src="/lovable-uploads/2ecb9839-a017-43ff-a988-cb3000277b50.png" 
+                  alt="Google" 
+                  className="mr-2 h-4 w-4" 
+                />
+                Google
+              </Button>
             </form>
           </TabsContent>
           
@@ -196,16 +194,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
-                  <Github className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-                <Button variant="outline" type="button" onClick={() => handleSocialAuth("Apple")} className="w-full">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Apple
-                </Button>
-              </div>
+              <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
+                <img 
+                  src="/lovable-uploads/2ecb9839-a017-43ff-a988-cb3000277b50.png" 
+                  alt="Google" 
+                  className="mr-2 h-4 w-4" 
+                />
+                Google
+              </Button>
               
               <p className="text-xs text-center text-gray-500 mt-4">
                 By signing up, you agree to our <a href="/terms" className="text-saboris-primary hover:underline">Terms & Conditions</a>

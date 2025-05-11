@@ -83,7 +83,7 @@ const MapSection = () => {
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
   
-  // Initialize map only once when the component mounts
+  // Get user location and initialize map with it
   const initializeMap = useCallback(async () => {
     if (!mapContainerRef.current) return;
     
@@ -94,25 +94,36 @@ const MapSection = () => {
       // Safety check if component is still mounted and Google Maps is loaded
       if (!mapContainerRef.current || !window.google?.maps) return;
       
-      // Create map with default location
-      const defaultLocation = { lat: 40.758, lng: -73.985 }; // NYC default
-      
-      const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
-        center: defaultLocation,
-        zoom: 14,
-        styles: mapStyles,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
-      });
-      
-      // Store map instance in ref
-      mapInstanceRef.current = mapInstance;
-      mapLoadedRef.current = true;
-      
-      // Add markers once map is loaded
-      addMarkersToMap();
-      
+      // Try to get user location first
+      try {
+        // Get user location
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const userCoords = { 
+              lat: position.coords.latitude, 
+              lng: position.coords.longitude 
+            };
+            
+            // Store user location in ref
+            userLocationRef.current = userCoords;
+            
+            // Initialize map with user location
+            createMap(userCoords);
+          },
+          // If user location fails, use default location
+          (error) => {
+            console.warn("Could not get user location:", error);
+            // Default location - NYC
+            const defaultLocation = { lat: 40.758, lng: -73.985 };
+            createMap(defaultLocation);
+          }
+        );
+      } catch (geolocationError) {
+        console.warn("Geolocation error:", geolocationError);
+        // Default location - NYC
+        const defaultLocation = { lat: 40.758, lng: -73.985 };
+        createMap(defaultLocation);
+      }
     } catch (error) {
       console.error("Error initializing map:", error);
       toast({
@@ -122,6 +133,67 @@ const MapSection = () => {
       });
     }
   }, []);
+  
+  // Create map with given center location
+  const createMap = (centerLocation: {lat: number, lng: number}) => {
+    if (!mapContainerRef.current || !window.google?.maps) return;
+    
+    const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
+      center: centerLocation,
+      zoom: 14,
+      styles: mapStyles,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false
+    });
+    
+    // Store map instance in ref
+    mapInstanceRef.current = mapInstance;
+    mapLoadedRef.current = true;
+    
+    // If this is user location, add user marker
+    if (userLocationRef.current && 
+        centerLocation.lat === userLocationRef.current.lat && 
+        centerLocation.lng === userLocationRef.current.lng) {
+      addUserMarker(centerLocation);
+    }
+    
+    // Add recommendation markers
+    addMarkersToMap();
+  };
+  
+  // Add user location marker
+  const addUserMarker = (position: {lat: number, lng: number}) => {
+    if (!mapInstanceRef.current || !window.google?.maps) return;
+    
+    // Remove previous user marker if exists
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setMap(null);
+      userMarkerRef.current = null;
+    }
+    
+    // Create user marker
+    try {
+      const userMarker = new window.google.maps.Marker({
+        position: position,
+        map: mapInstanceRef.current,
+        title: "Your Location",
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+        }
+      });
+      
+      // Store reference to user marker
+      userMarkerRef.current = userMarker;
+    } catch (error) {
+      console.error("Error creating user marker:", error);
+    }
+  };
   
   // Add markers to map when it's loaded
   const addMarkersToMap = useCallback(() => {
@@ -235,43 +307,13 @@ const MapSection = () => {
           // Pan to user location 
           mapInstance.panTo(userCoords);
           
-          // Remove previous user marker if exists - safely
-          if (userMarkerRef.current) {
-            userMarkerRef.current.setMap(null);
-            userMarkerRef.current = null;
-          }
+          // Add user marker
+          addUserMarker(userCoords);
           
-          // Add new user location marker - safely within try/catch
-          try {
-            const userMarker = new window.google.maps.Marker({
-              position: userCoords,
-              map: mapInstance,
-              title: "Your Location",
-              icon: {
-                path: window.google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: '#4285F4',
-                fillOpacity: 1,
-                strokeColor: '#ffffff',
-                strokeWeight: 2,
-              }
-            });
-            
-            // Store reference to user marker
-            userMarkerRef.current = userMarker;
-            
-            toast({
-              title: "Location found",
-              description: "Showing recommendations near you!",
-            });
-          } catch (markerError) {
-            console.error("Error creating user marker:", markerError);
-            toast({
-              title: "Error",
-              description: "Found your location but couldn't display it on the map.",
-              variant: "destructive"
-            });
-          }
+          toast({
+            title: "Location found",
+            description: "Showing recommendations near you!",
+          });
         } catch (error) {
           console.error("Error handling geolocation result:", error);
           toast({

@@ -28,8 +28,8 @@ const Header = () => {
   return (
     <header 
       className={cn(
-        "sticky top-0 w-full z-50 transition-all duration-300 px-4 md:px-8 py-4 flex items-center justify-between",
-        isScrolled ? "bg-white/95 shadow-sm backdrop-blur-sm" : "bg-white"
+        "sticky top-0 w-full z-50 transition-all duration-300 px-4 md:px-8 py-4 flex items-center justify-between bg-saboris-primary",
+        isScrolled ? "shadow-sm" : ""
       )}
     >
       <div className="flex items-center">
@@ -39,7 +39,7 @@ const Header = () => {
             alt="Saboris Logo" 
             className="h-8 w-auto"
           />
-          <span className="ml-2 text-xl font-bold text-saboris-primary">
+          <span className="ml-2 text-xl font-bold text-white">
             Saboris
           </span>
         </Link>
@@ -49,10 +49,10 @@ const Header = () => {
         <Link 
           to="/map" 
           className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center",
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
             isActive('/map') 
-              ? "bg-saboris-light text-saboris-primary" 
-              : "text-gray-600 hover:bg-gray-100"
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
           )}
         >
           <MapPin className="h-4 w-4 mr-1" />
@@ -62,10 +62,10 @@ const Header = () => {
         <Link 
           to="/add" 
           className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center",
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
             isActive('/add') 
-              ? "bg-saboris-light text-saboris-primary" 
-              : "text-gray-600 hover:bg-gray-100"
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
           )}
         >
           <PlusCircle className="h-4 w-4 mr-1" />
@@ -73,25 +73,22 @@ const Header = () => {
         </Link>
         
         <Link 
-          to="/saved" 
+          to="/profile" 
           className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center",
-            isActive('/saved') 
-              ? "bg-saboris-light text-saboris-primary" 
-              : "text-gray-600 hover:bg-gray-100"
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
+            isActive('/profile') 
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
           )}
         >
-          <Heart className="h-4 w-4 mr-1" />
-          <span>Saved</span>
+          <User className="h-4 w-4 mr-1" />
+          <span>Profile</span>
         </Link>
         
         <div className="flex items-center gap-2 ml-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-1">
-            <User className="h-4 w-4" />
-            <span>Profile</span>
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
+          <Button variant="outline" size="sm" className="flex items-center gap-1 text-white border-white hover:bg-white hover:text-saboris-primary">
             <LogOut className="h-4 w-4" />
+            <span>Logout</span>
           </Button>
         </div>
       </div>
@@ -99,7 +96,7 @@ const Header = () => {
       {/* Mobile menu */}
       <div className="md:hidden">
         <Sheet>
-          <SheetTrigger className="p-2 text-saboris-primary">
+          <SheetTrigger className="p-2 text-white">
             <Menu />
           </SheetTrigger>
           <SheetContent>
@@ -125,23 +122,16 @@ const Header = () => {
               </Link>
               
               <Link 
-                to="/saved" 
+                to="/profile" 
                 className={cn(
                   "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/saved') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                  isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
                 )}
-              >
-                <Heart className="h-4 w-4 mr-2" /> Saved
-              </Link>
-              
-              <hr className="my-2" />
-              
-              <Link 
-                to="/profile" 
-                className="px-4 py-2 font-medium hover:bg-gray-100 rounded-md flex items-center"
               >
                 <User className="h-4 w-4 mr-2" /> Profile
               </Link>
+              
+              <hr className="my-2" />
               
               <button className="px-4 py-2 font-medium hover:bg-gray-100 rounded-md flex items-center text-left">
                 <LogOut className="h-4 w-4 mr-2" /> Log out

@@ -10,6 +10,7 @@ import About from "./pages/About";
 import MapPage from "./pages/MapPage";
 import AddPlacePage from "./pages/AddPlacePage";
 import SavedPlacesPage from "./pages/SavedPlacesPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import TermsPage from "./pages/TermsPage";
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/map" element={<MapPage />} />
           <Route path="/add" element={<AddPlacePage />} />
           <Route path="/saved" element={<SavedPlacesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="*" element={<NotFound />} />
