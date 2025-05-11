@@ -66,14 +66,11 @@ const LandingPage = () => {
         </div>
 
         {/* Right side - Pink background with Phone Mockups */}
-        <div className="w-full md:w-1/2 p-8 bg-saboris-primary flex flex-col items-center justify-center">
-          <h3 className="text-white text-xl font-medium mb-8">
-            Saboris App – Coming Soon
-          </h3>
-          
-          <div className="flex flex-col space-y-8 items-center">
+        <div className="w-full md:w-1/2 p-8 bg-saboris-light flex flex-col items-center justify-center">
+          {/* Horizontally aligned phone mockups */}
+          <div className="flex flex-row space-x-3 overflow-x-auto pb-4 max-w-full justify-center">
             {/* First phone mockup */}
-            <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="flex-shrink-0 relative w-44 h-88 bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -85,7 +82,7 @@ const LandingPage = () => {
             </div>
             
             {/* Second phone mockup */}
-            <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="flex-shrink-0 relative w-44 h-88 bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -97,7 +94,7 @@ const LandingPage = () => {
             </div>
             
             {/* Third phone mockup */}
-            <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="flex-shrink-0 relative w-44 h-88 bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -106,6 +103,13 @@ const LandingPage = () => {
                   className="h-full w-full object-cover"
                 />
               </div>
+            </div>
+          </div>
+          
+          <div className="mt-8">
+            <div className="flex justify-center space-x-3 items-center text-saboris-primary text-sm">
+              <span>Soon available on:</span>
+              <img src="/lovable-uploads/98b50480-0977-43cf-a8ab-5ea982dcca4b.png" alt="App Store and Google Play" className="h-8" />
             </div>
           </div>
         </div>
