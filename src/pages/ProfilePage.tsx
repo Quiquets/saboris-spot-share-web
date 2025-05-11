@@ -23,10 +23,11 @@ import {
   Lock,
   Trash2,
   Camera,
-  Save
+  Save,
+  Star
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SavedRestaurant, ProfileStats, UserSettings, supabaseService } from '@/services/supabaseService';
+import { ProfileStats, UserSettings, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -46,18 +47,17 @@ interface SharedPlace {
     address?: string;
   };
   rating?: number;
+  review_text?: string;
 }
 
 const ProfilePage = () => {
   const { user, loading: authLoading, refreshUserData } = useAuth();
   const [sharedPlaces, setSharedPlaces] = useState<SharedPlace[]>([]);
-  const [savedPlaces, setSavedPlaces] = useState<SavedRestaurant[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPrivate, setIsPrivate] = useState(false);
   const [followers, setFollowers] = useState<any[]>([]);
   const [showFollowers, setShowFollowers] = useState(false);
-  const [editBioOpen, setEditBioOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [bio, setBio] = useState('');
   const [username, setUsername] = useState('');
@@ -68,6 +68,8 @@ const ProfilePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [currentFilter, setCurrentFilter] = useState('all');
+  const [selectedPlace, setSelectedPlace] = useState<SharedPlace | null>(null);
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'Saboris - Profile';
@@ -80,14 +82,12 @@ const ProfilePage = () => {
         
         // Get places shared by this user
         const sharedPlacesData = await fetchSharedPlaces(user.id);
-        const savedPlacesData = await supabaseService.getSavedRestaurants(user.id);
         const stats = await supabaseService.getProfileStats(user.id);
         
         // Get user profile to check if account is private
         const userProfile = await supabaseService.getUserProfile(user.id);
         
         setSharedPlaces(sharedPlacesData);
-        setSavedPlaces(savedPlacesData);
         setProfileStats(stats);
         setIsPrivate(userProfile?.is_private || false);
         
@@ -123,7 +123,7 @@ const ProfilePage = () => {
       // Get reviews created by this user
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, places:place_id(name, description, category, address, tags)')
+        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, text, places:place_id(name, description, category, address, tags)')
         .eq('user_id', userId);
       
       if (reviewsError) throw reviewsError;
@@ -152,7 +152,8 @@ const ProfilePage = () => {
           place_id: review.place_id,
           created_at: new Date(review.created_at),
           place: review.places || { name: 'Unknown Place' },
-          rating: avgRating
+          rating: avgRating,
+          review_text: review.text
         };
       });
       
@@ -168,32 +169,15 @@ const ProfilePage = () => {
     }
   };
 
-  const handleRemoveFromWishlist = async (placeId: string) => {
-    if (!user) return;
-    
-    try {
-      await supabaseService.unsaveRestaurant(user.id, placeId);
-      setSavedPlaces(currentPlaces => 
-        currentPlaces.filter(place => place.place_id !== placeId)
-      );
-      toast.success("Place removed from your saved list");
-    } catch (error) {
-      console.error("Error removing from wishlist:", error);
-      toast.error("Failed to remove from wishlist");
-    }
-  };
-
   const handlePrivacyToggle = async (value: boolean) => {
     if (!user) return;
     
     try {
-      setIsPrivate(value);
       await supabaseService.updateUserProfile(user.id, { is_private: value });
       toast.success(`Account is now ${value ? 'private' : 'public'}`);
     } catch (error) {
       console.error("Error updating privacy settings:", error);
       toast.error("Failed to update privacy settings");
-      setIsPrivate(!value); // Revert UI state on error
     }
   };
 
@@ -259,7 +243,8 @@ const ProfilePage = () => {
         bio: bio.trim(),
         username: username.trim() || user.username,
         location: userLocation.trim(),
-        avatar_url: avatarUrl
+        avatar_url: avatarUrl,
+        is_private: isPrivate
       };
       
       await supabaseService.updateUserProfile(user.id, updates);
@@ -316,6 +301,11 @@ const ProfilePage = () => {
     setCurrentFilter(filter);
     setFilterDialogOpen(false);
     // Apply filtering logic here
+  };
+  
+  const openReviewDialog = (place: SharedPlace) => {
+    setSelectedPlace(place);
+    setIsReviewDialogOpen(true);
   };
 
   if (authLoading) {
@@ -392,28 +382,24 @@ const ProfilePage = () => {
                       <p className="font-semibold">{profileStats.following_count || 0}</p>
                       <p className="text-xs text-gray-500">Following</p>
                     </div>
-                    <div className="text-center">
-                      <p className="font-semibold">{profileStats.saved_places_count || 0}</p>
-                      <p className="text-xs text-gray-500">Saved</p>
-                    </div>
                   </div>
                 )}
                 
-                {/* Privacy Toggle */}
-                <div className="mt-4 flex items-center justify-center md:justify-start">
-                  <Switch 
-                    id="private-mode" 
-                    checked={isPrivate}
-                    onCheckedChange={handlePrivacyToggle}
-                  />
-                  <Label htmlFor="private-mode" className="ml-2">
-                    Private Account
-                  </Label>
-                  {isPrivate && (
-                    <span className="ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
-                      Only visible to followers
-                    </span>
-                  )}
+                {/* Account status indicator (public/private) */}
+                <div className="mt-2 flex items-center justify-center md:justify-start">
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full flex items-center">
+                    {isPrivate ? (
+                      <>
+                        <Lock className="h-3 w-3 mr-1" /> 
+                        Private Account
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="h-3 w-3 mr-1" />
+                        Public Account
+                      </>
+                    )}
+                  </span>
                 </div>
               </div>
               
@@ -440,7 +426,10 @@ const ProfilePage = () => {
                 <div className="flex justify-center">
                   <div className="relative">
                     <Avatar className="h-24 w-24 border-4 border-saboris-primary">
-                      <AvatarImage src={profileImageUrl || undefined} />
+                      <AvatarImage 
+                        src={profileImageUrl || undefined} 
+                        className="object-cover"
+                      />
                       <AvatarFallback className="bg-saboris-primary/20 text-saboris-primary">
                         {user.name?.charAt(0) || '?'}
                       </AvatarFallback>
@@ -493,6 +482,20 @@ const ProfilePage = () => {
                     placeholder="Tell others about yourself..."
                     rows={3}
                   />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="private-mode" 
+                    checked={isPrivate}
+                    onCheckedChange={setIsPrivate}
+                  />
+                  <Label htmlFor="private-mode">
+                    Private Account
+                  </Label>
+                  <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
+                    {isPrivate ? "Only visible to followers" : "Visible to everyone"}
+                  </span>
                 </div>
                 
                 <div className="flex items-center justify-between border-t pt-4">
@@ -581,15 +584,69 @@ const ProfilePage = () => {
             </div>
           )}
           
+          {/* Full Review Dialog */}
+          <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{selectedPlace?.place.name}</DialogTitle>
+              </DialogHeader>
+              
+              <div className="py-4">
+                {selectedPlace?.rating && (
+                  <div className="flex items-center mb-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={`h-5 w-5 ${i < (selectedPlace.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
+                      />
+                    ))}
+                    <span className="ml-2 font-medium">{selectedPlace.rating}/5</span>
+                  </div>
+                )}
+                
+                <p className="text-gray-700 whitespace-pre-line">
+                  {selectedPlace?.review_text || "No detailed review was provided."}
+                </p>
+                
+                {selectedPlace?.place.tags && selectedPlace.place.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-4">
+                    {selectedPlace.place.tags.map((tag, index) => (
+                      <span 
+                        key={index} 
+                        className="text-xs px-2 py-1 bg-gray-100 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                {selectedPlace?.place.address && (
+                  <div className="mt-4 text-sm text-gray-500 flex items-center">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {selectedPlace.place.address}
+                  </div>
+                )}
+              </div>
+              
+              <Button 
+                className="mt-2 w-full bg-saboris-primary hover:bg-saboris-primary/90"
+                asChild
+              >
+                <Link to={`/map?place=${selectedPlace?.place_id}`}>
+                  <MapPin className="h-4 w-4 mr-1" />
+                  View on Map
+                </Link>
+              </Button>
+            </DialogContent>
+          </Dialog>
+          
           {/* Content Tabs */}
           <Tabs defaultValue="shared" onValueChange={(value) => setActiveTab(value)}>
             <div className="flex items-center justify-between mb-4">
               <TabsList className="bg-gray-100 p-1">
                 <TabsTrigger value="shared" className="px-4 py-2 data-[state=active]:bg-white">
                   Shared Places
-                </TabsTrigger>
-                <TabsTrigger value="saved" className="px-4 py-2 data-[state=active]:bg-white">
-                  Saved Places
                 </TabsTrigger>
               </TabsList>
               
@@ -655,7 +712,7 @@ const ProfilePage = () => {
               ) : sharedPlaces.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {sharedPlaces.map((place) => (
-                    <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                    <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer" onClick={() => openReviewDialog(place)}>
                       <div className="aspect-video w-full overflow-hidden bg-gray-100">
                         <img 
                           src={`https://source.unsplash.com/random/400x300?food&${place.place.name}`}
@@ -676,19 +733,28 @@ const ProfilePage = () => {
                         {place.rating && (
                           <div className="flex items-center mt-1">
                             {Array.from({ length: 5 }).map((_, i) => (
-                              <span key={i} className={`text-lg ${i < place.rating ? 'text-yellow-500' : 'text-gray-300'}`}>★</span>
+                              <Star 
+                                key={i} 
+                                className={`h-4 w-4 ${i < place.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} 
+                              />
                             ))}
                           </div>
                         )}
                       </CardHeader>
                       
                       <CardContent className="py-2">
-                        {place.place.description && (
-                          <p className="text-sm text-gray-600">{place.place.description}</p>
-                        )}
+                        {place.review_text ? (
+                          <div>
+                            <h4 className="text-sm font-medium mb-1">What made this place special?</h4>
+                            <p className="text-sm text-gray-600 line-clamp-2">{place.review_text}</p>
+                          </div>
+                        ) : place.place.description ? (
+                          <p className="text-sm text-gray-600 line-clamp-2">{place.place.description}</p>
+                        ) : null}
+                        
                         {place.place.tags && place.place.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
-                            {place.place.tags.map((tag, index) => (
+                            {place.place.tags.slice(0, 3).map((tag, index) => (
                               <span 
                                 key={index} 
                                 className="text-xs px-2 py-1 bg-gray-100 rounded-full"
@@ -696,6 +762,11 @@ const ProfilePage = () => {
                                 {tag}
                               </span>
                             ))}
+                            {place.place.tags.length > 3 && (
+                              <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                                +{place.place.tags.length - 3} more
+                              </span>
+                            )}
                           </div>
                         )}
                       </CardContent>
@@ -709,7 +780,7 @@ const ProfilePage = () => {
                         >
                           <Link to={`/map?place=${place.place_id}`}>
                             <MapPin className="h-4 w-4 mr-1" />
-                            <span>View Details</span>
+                            <span>View on Map</span>
                           </Link>
                         </Button>
                       </CardFooter>
@@ -722,98 +793,9 @@ const ProfilePage = () => {
                   <h3 className="text-xl font-medium mb-2">No shared places yet</h3>
                   <p className="text-gray-600 mb-4">Start adding your favorite places to share with others</p>
                   <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
-                    <Link to="/add">
+                    <Link to="/add-place">
                       <PlusCircle className="h-4 w-4 mr-1" />
                       Add a New Place
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="saved">
-              {loading ? (
-                <div className="text-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-saboris-primary" />
-                  <p className="text-gray-600">Loading your saved places...</p>
-                </div>
-              ) : savedPlaces.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {savedPlaces.map((place) => (
-                    <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                        <img 
-                          src={`https://source.unsplash.com/random/400x300?food&${place.restaurant.name}`}
-                          alt={place.restaurant.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      
-                      <CardHeader className="py-3">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg">{place.restaurant.name}</CardTitle>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-saboris-primary"
-                            onClick={() => handleRemoveFromWishlist(place.place_id)}
-                          >
-                            <Heart className="h-5 w-5 fill-saboris-primary" />
-                          </Button>
-                        </div>
-                        {place.restaurant.category && (
-                          <span className="inline-block px-2 py-1 bg-saboris-light text-saboris-primary text-xs rounded-full">
-                            {place.restaurant.category}
-                          </span>
-                        )}
-                      </CardHeader>
-                      
-                      <CardContent className="py-2">
-                        {place.restaurant.description && (
-                          <p className="text-sm text-gray-600">{place.restaurant.description}</p>
-                        )}
-                        {place.note && (
-                          <div className="mt-2 text-sm italic text-gray-500">"{place.note}"</div>
-                        )}
-                        {place.restaurant.tags && place.restaurant.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {place.restaurant.tags.map((tag, index) => (
-                              <span 
-                                key={index} 
-                                className="text-xs px-2 py-1 bg-gray-100 rounded-full"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                      
-                      <CardFooter className="pt-0 pb-3">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full text-saboris-primary border-saboris-primary"
-                          asChild
-                        >
-                          <Link to={`/map?place=${place.place_id}`}>
-                            <MapPin className="h-4 w-4 mr-1" />
-                            <span>View Details</span>
-                          </Link>
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
-                  <Heart className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-xl font-medium mb-2">No saved places yet</h3>
-                  <p className="text-gray-600 mb-4">Start exploring and save your favorite restaurants</p>
-                  <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
-                    <Link to="/map">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      Explore Map
                     </Link>
                   </Button>
                 </div>
@@ -823,7 +805,7 @@ const ProfilePage = () => {
           
           {/* Add Place CTA */}
           <div className="mt-10 text-center">
-            <Link to="/add">
+            <Link to="/add-place">
               <Button className="bg-saboris-primary hover:bg-saboris-primary/90 flex items-center gap-1">
                 <PlusCircle className="h-4 w-4" />
                 Add a New Place
