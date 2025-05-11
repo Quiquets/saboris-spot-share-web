@@ -1,14 +1,13 @@
 
 /// <reference types="@types/google.maps" />
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   loadGoogleMapsScript, 
   safeGetUserLocation, 
-  communityRecommendations,
-  cleanupGoogleMapsScript
+  communityRecommendations
 } from '@/utils/mapUtils';
 import { MapPin, Navigation, Target } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
@@ -79,10 +78,10 @@ const mapStyles = [
 const MapSection = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const mapLoadedRef = useRef<boolean>(false);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
+  const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
   
   // Initialize map only once when the component mounts
   const initializeMap = useCallback(async () => {
@@ -109,7 +108,10 @@ const MapSection = () => {
       
       // Store map instance in ref
       mapInstanceRef.current = mapInstance;
-      setMapLoaded(true);
+      mapLoadedRef.current = true;
+      
+      // Add markers once map is loaded
+      addMarkersToMap();
       
     } catch (error) {
       console.error("Error initializing map:", error);
@@ -123,7 +125,7 @@ const MapSection = () => {
   
   // Add markers to map when it's loaded
   const addMarkersToMap = useCallback(() => {
-    if (!mapLoaded || !mapInstanceRef.current || !window.google?.maps) return;
+    if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) return;
     
     // Clear any existing markers first
     markersRef.current.forEach(marker => marker.setMap(null));
@@ -170,15 +172,18 @@ const MapSection = () => {
         console.error("Error creating recommendation marker:", error);
       }
     });
-  }, [mapLoaded]);
+  }, []);
   
   // Initialize map on mount
   useEffect(() => {
-    initializeMap();
+    // Make sure we only load the map once
+    if (!mapLoadedRef.current) {
+      initializeMap();
+    }
     
-    // Cleanup function with safety checks to prevent removeChild errors
+    // Cleanup function
     return () => {
-      // Clear all markers when unmounting - safely
+      // Clear all markers safely
       if (markersRef.current && markersRef.current.length > 0) {
         markersRef.current.forEach(marker => {
           if (marker) marker.setMap(null);
@@ -186,7 +191,7 @@ const MapSection = () => {
         markersRef.current = [];
       }
       
-      // Clear user marker - safely
+      // Clear user marker safely
       if (userMarkerRef.current) {
         userMarkerRef.current.setMap(null);
         userMarkerRef.current = null;
@@ -194,22 +199,15 @@ const MapSection = () => {
       
       // Reset map instance
       mapInstanceRef.current = null;
+      mapLoadedRef.current = false;
       
       // We don't call cleanupGoogleMapsScript() here to avoid DOM removal issues
-      // The script can remain in the DOM without causing problems
     };
   }, [initializeMap]);
   
-  // Add markers when map is loaded
-  useEffect(() => {
-    if (mapLoaded) {
-      addMarkersToMap();
-    }
-  }, [mapLoaded, addMarkersToMap]);
-  
   // Safe geolocation handler with improved error handling
   const handleGetUserLocation = useCallback(() => {
-    if (!mapLoaded || !mapInstanceRef.current || !window.google?.maps) {
+    if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) {
       toast({
         title: "Map not ready",
         description: "Please wait for the map to load completely.",
@@ -227,8 +225,8 @@ const MapSection = () => {
             lng: position.coords.longitude 
           };
           
-          // Store user location in state
-          setUserLocation(userCoords);
+          // Store user location in ref instead of state to avoid re-rendering
+          userLocationRef.current = userCoords;
           
           // Get safe reference to map instance
           const mapInstance = mapInstanceRef.current;
@@ -293,7 +291,7 @@ const MapSection = () => {
         });
       }
     );
-  }, [mapLoaded]);
+  }, []);
   
   return (
     <section id="map-section" className="py-16 px-4 md:px-8 bg-white">
@@ -303,9 +301,15 @@ const MapSection = () => {
           <h2 className="text-3xl font-bold text-center">Discover Great Places</h2>
         </div>
         
-        <Card className="overflow-hidden shadow-lg relative">
-          <div ref={mapContainerRef} className="map-container h-[400px] w-full">
-            {!mapLoaded && (
+        {/* Add key to Card to ensure stable identity */}
+        <Card key="map-card" className="overflow-hidden shadow-lg relative">
+          {/* Add suppressHydrationWarning to prevent React from modifying this DOM node */}
+          <div 
+            ref={mapContainerRef} 
+            className="map-container h-[400px] w-full"
+            suppressHydrationWarning
+          >
+            {!mapLoadedRef.current && (
               <div className="h-full w-full flex items-center justify-center bg-gray-100">
                 <div className="flex flex-col items-center">
                   <Navigation className="h-8 w-8 text-saboris-primary animate-spin" />

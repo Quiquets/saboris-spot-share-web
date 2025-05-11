@@ -1,3 +1,4 @@
+
 export type Location = {
   lat: number;
   lng: number;
@@ -82,16 +83,12 @@ export const loadGoogleMapsScript = (): Promise<void> => {
         mapsLoadState.isLoaded = true;
         mapsLoadState.isLoading = false;
         resolve();
-        // We'll keep the callback reference to avoid any issues with DOM cleanup
       };
       
-      // Check for existing script tag - but do NOT try to remove it
-      // This avoids the removeChild error
+      // Check for existing script tag
       const existingScript = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
       if (existingScript) {
         console.log("Found existing Google Maps script, will use it");
-        // Don't remove it, that causes the removeChild error
-        // Just return since the script is already loaded or loading
         mapsLoadState.scriptElement = existingScript;
         return;
       }
@@ -129,12 +126,10 @@ export const loadGoogleMapsScript = (): Promise<void> => {
 };
 
 /**
- * Safely cleans up Google Maps script
- * Avoid DOM removal operations that could cause errors
+ * Safely cleans up Google Maps script references without DOM removal
  */
 export const cleanupGoogleMapsScript = (): void => {
-  // Don't try to remove the script at all - just clean up references
-  // This avoids the removeChild errors
+  // Only clean up references, don't remove DOM elements
   
   // Clear callback if it exists
   if (mapsLoadState.callbackName && window[mapsLoadState.callbackName]) {
@@ -150,7 +145,7 @@ export const cleanupGoogleMapsScript = (): void => {
   mapsLoadState.isLoading = false;
   mapsLoadState.loadPromise = null;
   
-  // Don't try to remove the script element - just nullify the reference
+  // Don't remove the script element - just nullify the reference
   mapsLoadState.scriptElement = null;
 };
 
