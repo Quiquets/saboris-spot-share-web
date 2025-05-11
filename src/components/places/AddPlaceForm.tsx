@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -117,7 +118,19 @@ export function AddPlaceForm() {
         finalPhotoUrls = [googleMapPhoto];
       }
       
-      // 1. Insert into places table
+      // Combine all tags (occasions, cuisine, and vibes) into a single array
+      // This matches the database schema which has only a "tags" column
+      const allTags: string[] = [
+        ...(values.occasions || []), 
+        ...(values.vibes || [])
+      ];
+      
+      // Add cuisine to tags if it exists
+      if (values.cuisine) {
+        allTags.push(values.cuisine);
+      }
+      
+      // 1. Insert into places table with correct tags structure
       const { data: placeData, error: placeError } = await supabase
         .from('places')
         .insert({
@@ -127,8 +140,7 @@ export function AddPlaceForm() {
           lng: values.lng,
           category: values.place_type,
           description: values.description || '',
-          tags: values.occasions || [],
-          vibes: values.vibes || [],
+          tags: allTags, // Use combined tags array instead of separate fields
           created_by: user.id
         })
         .select()
@@ -194,15 +206,15 @@ export function AddPlaceForm() {
   };
 
   return (
-    <div className="flex-grow w-full px-4 py-12 max-w-[1440px] mx-auto">
+    <div className="flex-grow w-full px-4 py-8 md:py-12 max-w-[1440px] mx-auto">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center mb-8 gap-3">
-          <Sparkles className="text-saboris-primary h-7 w-7" />
-          <h1 className="text-3xl font-bold">Share Your Experience</h1>
+        <div className="flex items-center mb-6 md:mb-8 gap-3">
+          <Sparkles className="text-saboris-primary h-6 w-6 md:h-7 md:w-7" />
+          <h1 className="text-2xl md:text-3xl font-bold">Share Your Experience</h1>
         </div>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
             {/* Place information (name, address, etc) */}
             <PlaceInformationSection 
               form={form} 

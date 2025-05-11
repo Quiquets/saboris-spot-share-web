@@ -12,6 +12,8 @@ import { SavedRestaurant, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import MapFilters from '@/components/map/MapFilters';
 import { ActiveFilters, FilterChangeHandler, PeopleFilterChangeHandler } from '@/components/map/FilterOptions';
+import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const SavedPlacesPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -19,6 +21,7 @@ const SavedPlacesPage = () => {
   const [filteredPlaces, setFilteredPlaces] = useState<SavedRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const isMobile = useIsMobile();
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     people: 'community',
     occasion: [],
@@ -246,13 +249,13 @@ const SavedPlacesPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <div className="flex-grow container mx-auto px-4 py-16">
+        <div className="flex-grow container mx-auto px-4 py-8 md:py-16">
           <div className="max-w-md mx-auto text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 md:h-16 md:w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-12V3m0 0v2m0-2h2M9 3h2m10 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h1 className="text-2xl font-bold mb-4">Sign In Required</h1>
-            <p className="text-gray-600 mb-8">Please sign in to view your saved places.</p>
+            <h1 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Sign In Required</h1>
+            <p className="text-gray-600 mb-6 md:mb-8">Please sign in to view your saved places.</p>
             <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
               <Link to="/">Go to Home</Link>
             </Button>
@@ -267,10 +270,10 @@ const SavedPlacesPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       
-      <div className="bg-gray-50 py-8 px-4">
+      <div className="bg-gray-50 py-6 md:py-8 px-4">
         <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold flex items-center gap-2">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-0 mb-4 md:mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
               <Heart className="text-saboris-primary" />
               <span>My Saved Places</span>
             </h1>
@@ -278,7 +281,7 @@ const SavedPlacesPage = () => {
             <Button 
               onClick={() => setShowFilters(!showFilters)}
               variant="outline" 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 self-start md:self-auto"
             >
               <Filter className="h-4 w-4" />
               <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
@@ -286,7 +289,7 @@ const SavedPlacesPage = () => {
           </div>
           
           {showFilters && (
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm mb-4 md:mb-6 overflow-x-hidden overflow-y-auto max-h-[70vh] md:max-h-none">
               <MapFilters 
                 activeFilters={activeFilters}
                 handleFilterChange={handleFilterChange}
@@ -297,12 +300,12 @@ const SavedPlacesPage = () => {
           )}
           
           {loading ? (
-            <div className="text-center py-12">
+            <div className="text-center py-8 md:py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-saboris-primary border-gray-200 mx-auto mb-3"></div>
               <p className="text-gray-600">Loading your saved places...</p>
             </div>
           ) : filteredPlaces.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {filteredPlaces.map((place) => {
                 const placeReviewsData = placeReviews[place.place_id] || [];
                 const averageRating = getAverageRating(placeReviewsData);
@@ -314,19 +317,20 @@ const SavedPlacesPage = () => {
                         src={`https://source.unsplash.com/random/400x300?restaurant,${place.restaurant.name}`}
                         alt={place.restaurant.name} 
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                     
-                    <CardHeader className="py-3">
+                    <CardHeader className="py-2 md:py-3">
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{place.restaurant.name}</CardTitle>
+                        <CardTitle className="text-base md:text-lg">{place.restaurant.name}</CardTitle>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 text-saboris-primary"
+                          className="h-7 w-7 md:h-8 md:w-8 text-saboris-primary"
                           onClick={() => handleRemoveFromWishlist(place.place_id)}
                         >
-                          <Heart className="h-5 w-5 fill-saboris-primary" />
+                          <Heart className="h-4 w-4 md:h-5 md:w-5 fill-saboris-primary" />
                         </Button>
                       </div>
                       
@@ -339,30 +343,30 @@ const SavedPlacesPage = () => {
                       {averageRating > 0 && (
                         <div className="mt-1 flex items-center gap-1">
                           {renderStars(averageRating)}
-                          <span className="text-sm text-gray-500 ml-1">
+                          <span className="text-xs md:text-sm text-gray-500 ml-1">
                             ({placeReviewsData.length} {placeReviewsData.length === 1 ? 'review' : 'reviews'})
                           </span>
                         </div>
                       )}
                     </CardHeader>
                     
-                    <CardContent className="py-2">
+                    <CardContent className="py-1 md:py-2">
                       {place.restaurant.description && (
-                        <p className="text-sm text-gray-600 mb-2">{place.restaurant.description}</p>
+                        <p className="text-xs md:text-sm text-gray-600 mb-2 line-clamp-2">{place.restaurant.description}</p>
                       )}
                       
                       {place.note && (
-                        <div className="mt-2 text-sm italic text-gray-500 p-2 bg-gray-50 rounded-md">"{place.note}"</div>
+                        <div className="mt-1 md:mt-2 text-xs md:text-sm italic text-gray-500 p-2 bg-gray-50 rounded-md line-clamp-2">"{place.note}"</div>
                       )}
                       
                       {/* Friend reviews section */}
                       {placeReviewsData.length > 0 && (
-                        <div className="mt-3">
-                          <h4 className="text-sm font-semibold mb-1">Reviews from friends:</h4>
-                          <div className="space-y-3 mt-2">
+                        <div className="mt-2 md:mt-3">
+                          <h4 className="text-xs md:text-sm font-semibold mb-1">Reviews from friends:</h4>
+                          <div className="space-y-2 md:space-y-3 mt-1 md:mt-2">
                             {placeReviewsData.slice(0, 2).map((review) => (
-                              <div key={review.id} className="flex gap-2 p-2 bg-gray-50 rounded-md">
-                                <Avatar className="h-8 w-8">
+                              <div key={review.id} className="flex gap-2 p-1.5 md:p-2 bg-gray-50 rounded-md">
+                                <Avatar className="h-6 w-6 md:h-8 md:w-8">
                                   <AvatarImage src={review.users?.avatar_url || undefined} />
                                   <AvatarFallback>{review.users?.name?.charAt(0) || '?'}</AvatarFallback>
                                 </Avatar>
@@ -383,27 +387,27 @@ const SavedPlacesPage = () => {
                       )}
                       
                       {place.restaurant.tags && place.restaurant.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {place.restaurant.tags.slice(0, 5).map((tag, index) => (
+                        <div className="flex flex-wrap gap-1 mt-2 md:mt-3">
+                          {place.restaurant.tags.slice(0, isMobile ? 3 : 5).map((tag, index) => (
                             <span 
                               key={index} 
-                              className="text-xs px-2 py-1 bg-gray-100 rounded-full"
+                              className="text-xs px-1.5 py-0.5 md:px-2 md:py-1 bg-gray-100 rounded-full"
                             >
                               {tag}
                             </span>
                           ))}
-                          {place.restaurant.tags.length > 5 && (
-                            <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
-                              +{place.restaurant.tags.length - 5} more
+                          {place.restaurant.tags.length > (isMobile ? 3 : 5) && (
+                            <span className="text-xs px-1.5 py-0.5 md:px-2 md:py-1 bg-gray-100 rounded-full">
+                              +{place.restaurant.tags.length - (isMobile ? 3 : 5)} more
                             </span>
                           )}
                         </div>
                       )}
                     </CardContent>
                     
-                    <CardFooter className="pt-0 pb-3">
-                      <Button variant="outline" size="sm" className="w-full text-saboris-primary border-saboris-primary">
-                        <MapPin className="h-4 w-4 mr-1" />
+                    <CardFooter className="pt-0 pb-2 md:pb-3">
+                      <Button variant="outline" size={isMobile ? "sm" : "default"} className="w-full text-saboris-primary border-saboris-primary text-xs md:text-sm py-1 md:py-2">
+                        <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                         <span>View on Map</span>
                       </Button>
                     </CardFooter>
@@ -412,17 +416,17 @@ const SavedPlacesPage = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white rounded-lg border border-gray-100">
-              <Heart className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-xl font-medium mb-2">No saved places match your filters</h3>
+            <div className="text-center py-8 md:py-12 bg-white rounded-lg border border-gray-100">
+              <Heart className="h-12 w-12 md:h-16 md:w-16 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-lg md:text-xl font-medium mb-2">No saved places match your filters</h3>
               {showFilters ? (
-                <p className="text-gray-600 mb-4">Try adjusting your filters to see more results</p>
+                <p className="text-gray-600 mb-3 md:mb-4">Try adjusting your filters to see more results</p>
               ) : (
-                <p className="text-gray-600 mb-4">Start exploring and save your favorite restaurants</p>
+                <p className="text-gray-600 mb-3 md:mb-4">Start exploring and save your favorite restaurants</p>
               )}
-              <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
+              <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90 text-sm md:text-base">
                 <Link to="/map">
-                  <MapPin className="h-4 w-4 mr-1" />
+                  <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                   Explore Map
                 </Link>
               </Button>
