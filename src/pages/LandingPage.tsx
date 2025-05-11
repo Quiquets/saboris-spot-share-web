@@ -47,7 +47,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Explore</h3>
               <p className="text-saboris-gray mb-4 flex-grow">
-                Discover new places — recommended by your friends. Filter by cuisine — vibe — or rating to find the perfect spot.
+                Discover new places recommended by your friends – filter by cuisine, vibe, or rating to find the perfect spot.
               </p>
               <Button 
                 className="mt-auto bg-saboris-primary hover:bg-saboris-primary/90"
@@ -63,7 +63,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-xl font-semibold mb-2 text-saboris-gray">Profile</h3>
               <p className="text-saboris-gray mb-4 flex-grow">
-                Create your personalized profile — follow friends — and keep track of places you've saved and shared.
+                Create your personalized profile – follow friends and keep track of places you've saved and shared.
               </p>
               <Button 
                 className="mt-auto bg-saboris-primary hover:bg-saboris-primary/90"
