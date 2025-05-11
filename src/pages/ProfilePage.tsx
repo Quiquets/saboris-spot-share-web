@@ -53,7 +53,7 @@ const ProfilePage = () => {
     },
     { 
       id: '5', 
-      name: 'Joe's Shanghai', 
+      name: "Joe's Shanghai", 
       description: 'Famous for soup dumplings',
       category: 'Chinese',
       photo: 'https://images.unsplash.com/photo-1541696490-8744a5dc0228?q=80&w=200'
