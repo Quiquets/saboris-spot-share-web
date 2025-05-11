@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { useLoadScript } from '@react-google-maps/api';
+import { loadGoogleMapsScript } from '../../utils/mapUtils';
 
 // Define the props interface
 export interface GoogleMapViewProps {
@@ -9,8 +9,6 @@ export interface GoogleMapViewProps {
   onCenterChanged: (center: { lat: number; lng: number }) => void;
   placeImages?: Record<string, string>;
 }
-
-const libraries: ("places" | "drawing" | "geometry" | "localContext" | "visualization")[] = ["places"];
 
 const GoogleMapView: React.FC<GoogleMapViewProps> = ({ 
   places, 
@@ -22,30 +20,47 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<Error | null>(null);
   
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
-    libraries,
-  });
+  // Load Google Maps script
+  useEffect(() => {
+    const loadMap = async () => {
+      try {
+        await loadGoogleMapsScript();
+        setIsLoaded(true);
+      } catch (error) {
+        console.error("Failed to load Google Maps:", error);
+        setLoadError(error as Error);
+      }
+    };
+    
+    loadMap();
+  }, []);
 
   // Initialize map
   useEffect(() => {
-    if (isLoaded && !map) {
-      const newMap = new google.maps.Map(document.getElementById("map") as HTMLElement, {
-        center,
-        zoom: 13,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-      });
-      
-      mapRef.current = newMap;
-      setMap(newMap);
-      
-      // Create InfoWindow instance
-      setInfoWindow(new google.maps.InfoWindow());
-      
-      console.info("Map created successfully");
+    if (isLoaded && !map && window.google) {
+      try {
+        const newMap = new google.maps.Map(document.getElementById("map") as HTMLElement, {
+          center,
+          zoom: 13,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+        });
+        
+        mapRef.current = newMap;
+        setMap(newMap);
+        
+        // Create InfoWindow instance
+        setInfoWindow(new google.maps.InfoWindow());
+        
+        console.info("Map created successfully");
+      } catch (error) {
+        console.error("Error initializing map:", error);
+        setLoadError(error as Error);
+      }
     }
   }, [isLoaded, map, center]);
 

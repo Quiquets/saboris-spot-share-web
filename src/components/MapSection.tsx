@@ -2,14 +2,26 @@
 import React, { useState, useEffect } from 'react';
 import GoogleMapView from './map/GoogleMapView';
 import MapFilters from './map/MapFilters';
-import { FilterOptions } from './map/FilterOptions';
+import { filterOptions } from './map/FilterOptions';
 
 interface MapSectionProps {
   placeImagesData?: Record<string, string>;
 }
 
+// Define interface for active filters to match the expected type
+interface ActiveFilters {
+  category: string;
+  items: string[];
+  people?: any[];
+  occasion?: any[];
+  foodType?: any[];
+  vibe?: any[];
+  priceRange?: any[];
+  starRating?: number | null;
+}
+
 const MapSection: React.FC<MapSectionProps> = ({ placeImagesData = {} }) => {
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [filters, setFilters] = useState({
     foodTypes: [],
     vibes: [],
     occasions: [],
@@ -18,10 +30,7 @@ const MapSection: React.FC<MapSectionProps> = ({ placeImagesData = {} }) => {
     starRating: null,
   });
   
-  const [activeFilters, setActiveFilters] = useState<{
-    category: string;
-    items: string[];
-  }[]>([]);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters[]>([]);
   
   const [mapCenter, setMapCenter] = useState<{
     lat: number;
@@ -67,11 +76,11 @@ const MapSection: React.FC<MapSectionProps> = ({ placeImagesData = {} }) => {
     },
   ]);
   
-  const handleFilterChange = (newFilters: FilterOptions) => {
+  const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
     
     // Calculate active filters
-    const newActiveFilters = [];
+    const newActiveFilters: ActiveFilters[] = [];
     
     if (newFilters.foodTypes.length > 0) {
       newActiveFilters.push({
@@ -97,7 +106,7 @@ const MapSection: React.FC<MapSectionProps> = ({ placeImagesData = {} }) => {
     if (newFilters.priceRanges.length > 0) {
       newActiveFilters.push({
         category: 'Price',
-        items: newFilters.priceRanges.map((range) => `${'$'.repeat(range)}`),
+        items: newFilters.priceRanges.map((range: number) => `${'$'.repeat(range)}`),
       });
     }
     

@@ -1,3 +1,3 @@
 
-import Index from './LandingPage';
-export default Index;
+import LandingPage from './LandingPage';
+export default LandingPage;
