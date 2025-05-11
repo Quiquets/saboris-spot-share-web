@@ -3,7 +3,7 @@ import { Instagram } from 'lucide-react';
 
 const HeroSection = () => {
   return (
-    <section className="relative flex flex-col items-center justify-center px-0 py-12 bg-white overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center px-0 py-12 bg-white overflow-hidden w-full">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[60%] -right-10 w-72 h-72 bg-saboris-primary/10 rounded-full blur-xl"></div>
@@ -13,15 +13,15 @@ const HeroSection = () => {
         <div className="absolute left-0 right-0 h-24 top-1/2 -translate-y-1/2 bg-[#FFDEE2] z-0"></div>
       </div>
       
-      <div className="relative z-10 text-center max-w-3xl mx-auto">
+      <div className="relative z-10 text-center w-full mx-auto">
         <h1 className="text-saboris-primary text-6xl font-extrabold text-center mb-2">Saboris</h1>
         <h2 className="text-saboris-gray text-2xl font-medium text-center mb-4">
           Taste, Share, Explore
         </h2>
         
         {/* Phone mockups displayed horizontally across full width */}
-        <div className="mt-10 mb-8 w-screen max-w-none relative z-10">
-          <div className="flex justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4">
+        <div className="mt-10 mb-8 w-full relative z-10">
+          <div className="flex justify-center items-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 max-w-[100vw] overflow-hidden">
             {/* First phone mockup */}
             <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
@@ -51,7 +51,7 @@ const HeroSection = () => {
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
-                  src="/lovable-uploads/2b9b1fe6-b1cb-4844-854b-480e5b719231.png" 
+                  src="/lovable-uploads/2ecb9839-a017-43ff-a988-cb3000277b50.png" 
                   alt="Saboris Reviews Screenshot" 
                   className="h-full w-full object-cover"
                 />

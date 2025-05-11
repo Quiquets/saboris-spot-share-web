@@ -12,7 +12,7 @@ const LandingPage = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col w-full">
       {/* Include Header for consistency across all pages */}
       <Header />
       
