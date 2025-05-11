@@ -17,14 +17,15 @@ const MapPage = () => {
     };
   }, []);
 
+  // Add a key to prevent React reconciliation issues with Google Maps
+  // This ensures the map container is completely unmounted and remounted
+  // rather than trying to update it in place, which can cause DOM conflicts
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow">
-        {/* Use key and suppressHydrationWarning to prevent React from
-            trying to remount and diff the map container, which causes
-            the "removeChild" error when Google Maps manipulates the DOM */}
-        <div key="map-section-wrapper" suppressHydrationWarning>
+        {/* Use key with timestamp to force fresh DOM nodes on each render */}
+        <div key={`map-container-${Date.now()}`}>
           <MapSection />
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
   const [gateFeature, setGateFeature] = useState<string>('');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();

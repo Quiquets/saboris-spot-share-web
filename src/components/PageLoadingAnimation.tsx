@@ -1,20 +1,28 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 const PageLoadingAnimation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
+  const timerRef = useRef<number>();
   
   useEffect(() => {
     // Show loading animation for 400ms
     setIsLoading(true);
-    const timer = setTimeout(() => {
+    
+    // Use ref to store timeout ID for proper cleanup
+    timerRef.current = window.setTimeout(() => {
       setIsLoading(false);
     }, 400);
     
-    return () => clearTimeout(timer);
+    return () => {
+      // Clear timeout when component unmounts or route changes
+      if (timerRef.current) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
   }, [location.pathname]);
   
   if (!isLoading) {
