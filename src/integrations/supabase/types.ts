@@ -264,6 +264,7 @@ export type Database = {
           rating_atmosphere: number | null
           rating_food: number | null
           rating_service: number | null
+          rating_value: number | null
           text: string | null
           user_id: string
         }
@@ -275,6 +276,7 @@ export type Database = {
           rating_atmosphere?: number | null
           rating_food?: number | null
           rating_service?: number | null
+          rating_value?: number | null
           text?: string | null
           user_id: string
         }
@@ -286,6 +288,7 @@ export type Database = {
           rating_atmosphere?: number | null
           rating_food?: number | null
           rating_service?: number | null
+          rating_value?: number | null
           text?: string | null
           user_id?: string
         }

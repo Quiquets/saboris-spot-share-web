@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -84,11 +83,28 @@ const ProfilePage = () => {
       // Get reviews created by this user
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, rating_value, text, photo_url, photo_urls, places:place_id(id, name, description, category, address, tags, created_by)')
+        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, text, photo_url, places:place_id(id, name, description, category, address, tags, created_by)')
         .eq('user_id', userId);
       
-      if (reviewsError) throw reviewsError;
-
+      if (reviewsError) {
+        console.error("Error fetching reviews:", reviewsError);
+        // Return only places data if reviews query fails
+        const createdPlaces: SharedPlace[] = (placesData || []).map(place => ({
+          id: place.id,
+          place_id: place.id,
+          created_at: new Date(),
+          created_by: place.created_by,
+          place: {
+            name: place.name,
+            description: place.description,
+            tags: place.tags,
+            category: place.category,
+            address: place.address
+          }
+        }));
+        return createdPlaces;
+      }
+      
       // Combine both types of shared content
       const createdPlaces: SharedPlace[] = (placesData || []).map(place => ({
         id: place.id,
@@ -105,12 +121,15 @@ const ProfilePage = () => {
       }));
       
       const reviewedPlaces: SharedPlace[] = (reviewsData || []).map(review => {
-        // Use rating_value if available, otherwise calculate the average
-        const avgRating = review.rating_value !== null ? 
-          review.rating_value : 
-          (review.rating_food && review.rating_service && review.rating_atmosphere) ?
-            Math.round((review.rating_food + review.rating_service + review.rating_atmosphere) / 3) :
-            undefined;
+        // Calculate average rating from available rating fields
+        const ratings: number[] = [];
+        if (review.rating_food) ratings.push(review.rating_food);
+        if (review.rating_service) ratings.push(review.rating_service); 
+        if (review.rating_atmosphere) ratings.push(review.rating_atmosphere);
+        
+        const avgRating = ratings.length > 0 
+          ? Math.round(ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length) 
+          : undefined;
             
         return {
           id: review.id,
@@ -120,7 +139,7 @@ const ProfilePage = () => {
           place: review.places || { name: 'Unknown Place' },
           rating: avgRating,
           review_text: review.text,
-          photo_urls: review.photo_urls || (review.photo_url ? [review.photo_url] : [])
+          photo_urls: review.photo_url ? [review.photo_url] : []
         };
       });
       
