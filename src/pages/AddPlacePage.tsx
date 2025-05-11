@@ -80,7 +80,7 @@ const AddPlacePage = () => {
   // Check if form is valid (all required fields filled)
   const isFormValid = () => {
     const values = form.getValues();
-    return (
+    return !!(
       values.place_name &&
       values.address &&
       values.lat !== 0 &&
