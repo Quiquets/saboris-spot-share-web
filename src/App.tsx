@@ -1,63 +1,45 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Index from '@/pages';
+import TermsPage from '@/pages/TermsPage';
+import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
+import About from '@/pages/About';
+import MapPage from '@/pages/MapPage';
+import ProfilePage from '@/pages/ProfilePage';
+import SavedPlacesPage from '@/pages/SavedPlacesPage';
+import AddPlacePage from '@/pages/AddPlacePage';
+import Dashboard from '@/pages/Dashboard';
+import NotFound from '@/pages/NotFound';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from 'sonner'
+import ProtectedRoute from '@/components/ProtectedRoute';
+import FindFriendsPage from '@/pages/FindFriendsPage';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import MapPage from "./pages/MapPage";
-import AddPlacePage from "./pages/AddPlacePage";
-import SavedPlacesPage from "./pages/SavedPlacesPage";
-import ProfilePage from "./pages/ProfilePage";
-import NotFound from "./pages/NotFound";
-import TermsPage from "./pages/TermsPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import SearchUsersPage from "./pages/SearchUsersPage";
-import { AuthProvider } from "./contexts/AuthContext";
-import PageLoadingAnimation from "./components/PageLoadingAnimation";
-import ProtectedRoute from "./components/ProtectedRoute";
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <PageLoadingAnimation />
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/add" element={
-              <ProtectedRoute featureName="Add Place">
-                <AddPlacePage />
-              </ProtectedRoute>
-            } />
-            <Route path="/search" element={
-              <ProtectedRoute featureName="Search Users">
-                <SearchUsersPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/saved" element={
-              <ProtectedRoute featureName="Saved Places">
-                <SavedPlacesPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute featureName="User Profile">
-                <ProfilePage />
-              </ProtectedRoute>
-            } />
+            <Route path="/" element={<Index />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/profile/:id" element={<ProfilePage />} />
+            <Route path="/saved" element={<ProtectedRoute><SavedPlacesPage /></ProtectedRoute>} />
+            <Route path="/add" element={<ProtectedRoute><AddPlacePage /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/find-friends" element={<FindFriendsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+          <Toaster position="bottom-right" />
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;

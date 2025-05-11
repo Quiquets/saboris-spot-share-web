@@ -46,6 +46,13 @@ export interface UserSettings {
   is_private: boolean;
 }
 
+export interface PlaceImage {
+  place_id: string;
+  photo_url: string;
+  created_at: string;
+  review_id?: string;
+}
+
 class SupabaseService {
   async signIn(email: string, password: string): Promise<AuthUser | null> {
     try {
@@ -529,6 +536,44 @@ class SupabaseService {
     } catch (error) {
       console.error("Get profile stats error:", error);
       return null;
+    }
+  }
+  
+  async getRecentPlaceImages(): Promise<{ data: PlaceImage[] | null, error: any }> {
+    try {
+      // Query to get the most recent photo for each place from reviews
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, place_id, created_at, photo_url')
+        .not('photo_url', 'is', null)
+        .order('created_at', { ascending: false });
+      
+      // Create a map to keep track of the most recent photo for each place
+      const placeImageMap = new Map<string, PlaceImage>();
+      
+      if (data) {
+        data.forEach(review => {
+          // Only add this review's image if we don't already have one for this place,
+          // or if this review is more recent than what we already have
+          const existingImage = placeImageMap.get(review.place_id);
+          if (!existingImage || new Date(review.created_at) > new Date(existingImage.created_at)) {
+            placeImageMap.set(review.place_id, {
+              place_id: review.place_id,
+              photo_url: review.photo_url,
+              created_at: review.created_at,
+              review_id: review.id
+            });
+          }
+        });
+      }
+      
+      // Convert the map back to an array
+      const placeImages = Array.from(placeImageMap.values());
+      
+      return { data: placeImages, error };
+    } catch (error) {
+      console.error("Error fetching recent place images:", error);
+      return { data: null, error };
     }
   }
 }
