@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -105,7 +104,7 @@ export default {
                 'float': 'float 3s ease-in-out infinite'
 			},
             fontFamily: {
-                sans: ['Inter', 'sans-serif']
+                sans: ['Poppins', 'Inter', 'sans-serif']
             }
 		}
 	},

@@ -11,6 +11,7 @@ import MapPage from "./pages/MapPage";
 import AddPlacePage from "./pages/AddPlacePage";
 import SavedPlacesPage from "./pages/SavedPlacesPage";
 import NotFound from "./pages/NotFound";
+import TermsPage from "./pages/TermsPage";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/add" element={<AddPlacePage />} />
           <Route path="/saved" element={<SavedPlacesPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/terms" element={<TermsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

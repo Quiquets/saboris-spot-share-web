@@ -1,87 +1,93 @@
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Instagram, ArrowRight } from 'lucide-react';
+import AuthModal from '@/components/AuthModal';
+import Footer from '@/components/Footer';
 
 const LandingPage = () => {
-  useEffect(() => {
-    document.title = 'Saboris - Discover Real Food Recommendations';
-  }, []);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
     <main className="min-h-screen flex flex-col">
       {/* Simple header for landing page */}
-      <header className="w-full py-4 px-6 md:px-8 flex items-center justify-between">
+      <header className="w-full py-4 px-6 md:px-8 bg-saboris-primary flex items-center justify-between">
         <Link to="/" className="flex items-center">
           <img 
             src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
             alt="Saboris Logo" 
             className="h-8 w-auto"
           />
-          <span className="ml-2 text-xl font-bold text-saboris-primary">
+          <span className="ml-2 text-xl font-bold text-white">
             Saboris
           </span>
         </Link>
         
-        <Link to="/about" className="text-sm font-medium text-gray-600 hover:text-saboris-primary">
-          About Us
-        </Link>
+        <Button 
+          variant="outline" 
+          className="text-white border-white hover:bg-white hover:text-saboris-primary"
+          onClick={() => setIsAuthModalOpen(true)}
+        >
+          Sign in
+        </Button>
       </header>
       
       {/* Hero section */}
-      <section className="flex-grow flex flex-col items-center justify-center px-4 md:px-8 py-12 text-center">
-        <div className="max-w-3xl mx-auto">
-          {/* Logo */}
-          <div className="mb-6 flex justify-center">
-            <img 
-              src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
-              alt="Saboris Logo" 
-              className="h-24 w-auto"
-            />
-          </div>
-          
-          {/* Tagline */}
-          <h1 className="text-5xl font-extrabold text-center mb-2">Saboris</h1>
-          <p className="text-xl text-center mt-2 mb-8">🍣 Real food. Real friends. Zero BS.</p>
-          
-          {/* Description */}
-          <p className="text-lg text-gray-700 mb-10 max-w-xl mx-auto">
-            Discover and share hidden gems with your trusted circle.
-            No fake reviews, no ads — just food you'd recommend to your best friend.
+      <section className="flex-grow flex flex-col md:flex-row items-center">
+        {/* Left side - Text */}
+        <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center">
+          <h1 className="text-5xl md:text-6xl font-black text-saboris-primary leading-tight">
+            Share Spots.<br />Trust Friends.
+          </h1>
+          <p className="mt-4 text-lg max-w-lg text-gray-700">
+            Discover local food gems through personal recommendations from people you actually know. No fake reviews. No algorithms. Just real spots, shared by real friends.
           </p>
-          
-          {/* Call to action */}
-          <div className="space-y-4">
+          <div className="mt-8">
             <Button 
               size="lg" 
-              className="bg-saboris-primary hover:bg-saboris-primary/90 text-white px-8 py-6 text-lg flex items-center gap-2"
-              asChild
+              className="bg-saboris-primary hover:bg-saboris-primary/90 text-white px-8 py-6 text-lg"
+              onClick={() => setIsAuthModalOpen(true)}
             >
-              <Link to="/map">
-                Log in or Sign up to explore <ArrowRight className="ml-1" />
-              </Link>
+              Get Started
             </Button>
-            
-            <div className="mt-4">
-              <a 
-                href="https://www.instagram.com/saboris.places/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-saboris-primary transition-colors"
-              >
-                <Instagram size={18} />
-                <span>Follow us on Instagram</span>
-              </a>
+          </div>
+        </div>
+
+        {/* Right side - Image */}
+        <div className="w-full md:w-1/2 p-8 bg-saboris-light flex justify-center items-center">
+          <div className="relative w-full max-w-md aspect-square">
+            {/* Food collage elements - stylized with shadows and rotations */}
+            <div className="absolute top-[10%] left-[15%] w-32 h-32 bg-white rounded-2xl shadow-lg transform -rotate-6 flex items-center justify-center text-4xl">
+              🍣
+            </div>
+            <div className="absolute top-[25%] right-[10%] w-36 h-36 bg-white rounded-2xl shadow-lg transform rotate-3 flex items-center justify-center text-4xl">
+              🌮
+            </div>
+            <div className="absolute bottom-[15%] left-[20%] w-28 h-28 bg-white rounded-2xl shadow-lg transform rotate-6 flex items-center justify-center text-4xl">
+              ☕
+            </div>
+            <div className="absolute bottom-[25%] right-[15%] w-32 h-32 bg-white rounded-2xl shadow-lg transform -rotate-3 flex items-center justify-center text-4xl">
+              🍜
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
+                alt="Saboris" 
+                className="w-24 h-24 rounded-full shadow-xl bg-white p-3"
+              />
             </div>
           </div>
         </div>
       </section>
       
-      {/* Simple footer */}
-      <footer className="py-4 px-6 text-center text-sm text-gray-500">
-        <p>&copy; {new Date().getFullYear()} Saboris. All rights reserved.</p>
-      </footer>
+      {/* Footer */}
+      <Footer />
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </main>
   );
 };

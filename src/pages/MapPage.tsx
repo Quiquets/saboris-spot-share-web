@@ -21,8 +21,10 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow">
-        {/* Wrap MapSection in a stable div to prevent remounting */}
-        <div key="map-section-wrapper">
+        {/* Use key and suppressHydrationWarning to prevent React from
+            trying to remount and diff the map container, which causes
+            the "removeChild" error when Google Maps manipulates the DOM */}
+        <div key="map-section-wrapper" suppressHydrationWarning>
           <MapSection />
         </div>
       </div>

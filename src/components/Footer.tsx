@@ -1,5 +1,6 @@
 
 import { Instagram } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -15,6 +16,9 @@ const Footer = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Link to="/terms" className="text-gray-500 hover:text-saboris-primary transition-colors">
+              Terms & Conditions
+            </Link>
             <a 
               href="https://www.instagram.com/saboris.places/" 
               target="_blank" 
