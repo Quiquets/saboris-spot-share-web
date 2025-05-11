@@ -505,27 +505,27 @@ const MapSection = () => {
           <h2 className="text-3xl font-bold text-center text-saboris-gray">Explore</h2>
         </div>
         
-        <div className="mb-4 flex flex-col items-start">
+        <div className="mb-4 flex flex-col items-start w-full">
           {/* People filter tabs */}
           <Tabs 
             value={activeFilters.people} 
             className="w-full mb-4"
             onValueChange={handlePeopleFilterChange}
           >
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList className="grid grid-cols-3 mb-4 w-full">
               {filterOptions.people.map(option => (
-                <TabsTrigger key={option.id} value={option.id}>{option.label}</TabsTrigger>
+                <TabsTrigger key={option.id} value={option.id} className="flex-1 whitespace-nowrap">{option.label}</TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
 
           {/* Horizontal filter bar with evenly distributed filters */}
-          <div className="flex items-center justify-between w-full mb-4 gap-2 overflow-x-auto">
+          <div className="grid grid-cols-5 w-full mb-4 gap-2">
             {/* Occasion Filter (First) */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" 
-                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
                   <Filter className="h-3 w-3 text-saboris-primary" /> 
                   Occasion
                 </Button>
@@ -557,7 +557,7 @@ const MapSection = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" 
-                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
                   <Filter className="h-3 w-3 text-saboris-primary" /> 
                   Food Type
                 </Button>
@@ -589,7 +589,7 @@ const MapSection = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" 
-                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
                   <Filter className="h-3 w-3 text-saboris-primary" /> 
                   Vibe
                 </Button>
@@ -621,7 +621,7 @@ const MapSection = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" 
-                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
                   <Filter className="h-3 w-3 text-saboris-primary" /> 
                   Price
                 </Button>
@@ -653,7 +653,7 @@ const MapSection = () => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" 
-                  className="gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+                  className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
                   <Sliders className="h-3 w-3 text-saboris-primary" /> 
                   More
                 </Button>
