@@ -176,17 +176,17 @@ const MapSection = () => {
   useEffect(() => {
     initializeMap();
     
-    // Cleanup function
+    // Cleanup function with safety checks to prevent removeChild errors
     return () => {
-      // Clear all markers when unmounting
-      if (markersRef.current) {
+      // Clear all markers when unmounting - safely
+      if (markersRef.current && markersRef.current.length > 0) {
         markersRef.current.forEach(marker => {
           if (marker) marker.setMap(null);
         });
         markersRef.current = [];
       }
       
-      // Clear user marker
+      // Clear user marker - safely
       if (userMarkerRef.current) {
         userMarkerRef.current.setMap(null);
         userMarkerRef.current = null;
@@ -194,6 +194,9 @@ const MapSection = () => {
       
       // Reset map instance
       mapInstanceRef.current = null;
+      
+      // We don't call cleanupGoogleMapsScript() here to avoid DOM removal issues
+      // The script can remain in the DOM without causing problems
     };
   }, [initializeMap]);
   
@@ -204,7 +207,7 @@ const MapSection = () => {
     }
   }, [mapLoaded, addMarkersToMap]);
   
-  // Safe geolocation handler
+  // Safe geolocation handler with improved error handling
   const handleGetUserLocation = useCallback(() => {
     if (!mapLoaded || !mapInstanceRef.current || !window.google?.maps) {
       toast({
@@ -216,57 +219,71 @@ const MapSection = () => {
     }
     
     safeGetUserLocation(
-      // Success callback
+      // Success callback with safety checks
       (position) => {
-        const userCoords = { 
-          lat: position.coords.latitude, 
-          lng: position.coords.longitude 
-        };
-        
-        // Store user location in state
-        setUserLocation(userCoords);
-        
-        // Get safe reference to map instance
-        const mapInstance = mapInstanceRef.current;
-        if (!mapInstance) return;
-        
-        // Pan to user location 
-        mapInstance.panTo(userCoords);
-        
-        // Remove previous user marker if exists
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setMap(null);
-          userMarkerRef.current = null;
-        }
-        
-        // Add new user location marker
         try {
-          const userMarker = new window.google.maps.Marker({
-            position: userCoords,
-            map: mapInstance,
-            title: "Your Location",
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: '#4285F4',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            }
-          });
+          const userCoords = { 
+            lat: position.coords.latitude, 
+            lng: position.coords.longitude 
+          };
           
-          // Store reference to user marker
-          userMarkerRef.current = userMarker;
+          // Store user location in state
+          setUserLocation(userCoords);
           
-          toast({
-            title: "Location found",
-            description: "Showing recommendations near you!",
-          });
+          // Get safe reference to map instance
+          const mapInstance = mapInstanceRef.current;
+          if (!mapInstance) return;
+          
+          // Pan to user location 
+          mapInstance.panTo(userCoords);
+          
+          // Remove previous user marker if exists - safely
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setMap(null);
+            userMarkerRef.current = null;
+          }
+          
+          // Add new user location marker - safely within try/catch
+          try {
+            const userMarker = new window.google.maps.Marker({
+              position: userCoords,
+              map: mapInstance,
+              title: "Your Location",
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 2,
+              }
+            });
+            
+            // Store reference to user marker
+            userMarkerRef.current = userMarker;
+            
+            toast({
+              title: "Location found",
+              description: "Showing recommendations near you!",
+            });
+          } catch (markerError) {
+            console.error("Error creating user marker:", markerError);
+            toast({
+              title: "Error",
+              description: "Found your location but couldn't display it on the map.",
+              variant: "destructive"
+            });
+          }
         } catch (error) {
-          console.error("Error creating user marker:", error);
+          console.error("Error handling geolocation result:", error);
+          toast({
+            title: "Error",
+            description: "Something went wrong with geolocation.",
+            variant: "destructive"
+          });
         }
       },
-      // Error callback
+      // Error callback with user feedback
       (error) => {
         console.warn("Could not get user location:", error);
         toast({
