@@ -39,8 +39,15 @@ const Header = () => {
     return location.pathname === path;
   };
 
-  // Handle protected route navigation
+  // Handle protected route navigation - Map is no longer protected
   const navigateProtected = (path: string, featureName: string) => {
+    // If it's the map path, navigate directly without authentication
+    if (path === '/map') {
+      navigate(path);
+      return;
+    }
+    
+    // For other protected routes, require authentication
     if (user) {
       navigate(path);
     } else {
@@ -97,7 +104,7 @@ const Header = () => {
         </button>
         
         <button 
-          onClick={() => navigateProtected('/map', 'the Map')} 
+          onClick={() => navigate('/map')} 
           className={cn(
             "px-3 py-2 rounded-md font-medium flex items-center text-white",
             isActive('/map') 
@@ -192,7 +199,7 @@ const Header = () => {
               </button>
               
               <button 
-                onClick={() => navigateProtected('/map', 'the Map')}
+                onClick={() => navigate('/map')}
                 className={cn(
                   "px-4 py-2 font-medium rounded-md flex items-center",
                   isActive('/map') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"

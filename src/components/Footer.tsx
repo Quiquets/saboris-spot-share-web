@@ -70,14 +70,14 @@ const Footer = () => {
           </div>
         </div>
         
-        {/* Footer links - horizontally aligned to match reference */}
+        {/* Footer links - horizontally aligned with consistent height */}
         <div className="border-t pt-6">
-          <div className="flex justify-center space-x-12 mb-6">
+          <div className="flex justify-center flex-wrap md:flex-nowrap md:space-x-12 mb-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10"
                 >
                   Contact Us
                 </Button>
@@ -168,7 +168,7 @@ const Footer = () => {
               href="https://www.instagram.com/saboris.places/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10 flex items-center"
               aria-label="Instagram"
             >
               Follow Us
@@ -176,14 +176,14 @@ const Footer = () => {
             
             <Link 
               to="/terms" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10 flex items-center"
             >
               Terms & Conditions
             </Link>
             
             <Link 
               to="/privacy" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10 flex items-center"
             >
               Privacy Policy
             </Link>

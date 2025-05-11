@@ -54,6 +54,18 @@ const HeroSection = () => {
                 />
               </div>
             </div>
+            
+            {/* Fourth phone mockup */}
+            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                <img 
+                  src="/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png" 
+                  alt="Saboris Profile Screenshot" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
         
