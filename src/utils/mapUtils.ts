@@ -44,12 +44,13 @@ export const communityRecommendations: Location[] = [
 // Script loading management
 const SCRIPT_ID = 'google-maps-script';
 let scriptLoadPromise: Promise<void> | null = null;
+let scriptElement: HTMLScriptElement | null = null;
 
 /**
  * Loads the Google Maps API script safely
  */
 export const loadGoogleMapsScript = (): Promise<void> => {
-  // Check if script is already loading
+  // If promise exists, return it
   if (scriptLoadPromise) {
     return scriptLoadPromise;
   }
@@ -60,15 +61,18 @@ export const loadGoogleMapsScript = (): Promise<void> => {
     return Promise.resolve();
   }
   
-  // Check if script element already exists
+  // Check if script element already exists but remove it first to avoid issues
   const existingScript = document.getElementById(SCRIPT_ID);
   if (existingScript) {
-    // Remove existing script first to avoid duplicates
-    existingScript.parentNode?.removeChild(existingScript);
+    try {
+      existingScript.parentNode?.removeChild(existingScript);
+    } catch (e) {
+      console.warn("Failed to remove existing script:", e);
+    }
   }
   
   // Create a new promise for script loading
-  scriptLoadPromise = new Promise((resolve, reject) => {
+  scriptLoadPromise = new Promise<void>((resolve, reject) => {
     try {
       // Create unique callback name to avoid conflicts
       const callbackName = `initGoogleMap${Date.now()}`;
@@ -82,23 +86,24 @@ export const loadGoogleMapsScript = (): Promise<void> => {
       };
       
       // Create script element
-      const script = document.createElement('script');
-      script.id = SCRIPT_ID;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=${callbackName}`;
-      script.async = true;
-      script.defer = true;
+      scriptElement = document.createElement('script');
+      scriptElement.id = SCRIPT_ID;
+      scriptElement.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBuq7aCWMYJQwiSJxN7u-DRX-2xHAeVQeo&libraries=places&v=beta&callback=${callbackName}`;
+      scriptElement.async = true;
+      scriptElement.defer = true;
       
-      script.onerror = (e) => {
+      scriptElement.onerror = (e) => {
         console.error('Google Maps failed to load:', e);
         reject(new Error('Google Maps failed to load. Check API key or network connection.'));
         cleanupGoogleMapsScript();
       };
       
-      // Append to document body
-      document.body.appendChild(script);
+      // Append to document head for better practice
+      document.head.appendChild(scriptElement);
     } catch (error) {
       reject(error);
       scriptLoadPromise = null;
+      scriptElement = null;
     }
   });
   
@@ -112,13 +117,23 @@ export const cleanupGoogleMapsScript = (): void => {
   // Reset load promise
   scriptLoadPromise = null;
   
-  // Find and remove script if it exists
-  const scriptElement = document.getElementById(SCRIPT_ID);
+  // Only attempt to remove if we have a reference to the script we added
   if (scriptElement && scriptElement.parentNode) {
     try {
       scriptElement.parentNode.removeChild(scriptElement);
+      scriptElement = null;
     } catch (error) {
       console.warn("Error removing Google Maps script:", error);
+    }
+  }
+  
+  // Find and remove script if it exists by ID as a fallback
+  const scriptById = document.getElementById(SCRIPT_ID);
+  if (scriptById && scriptById.parentNode) {
+    try {
+      scriptById.parentNode.removeChild(scriptById);
+    } catch (error) {
+      console.warn("Error removing Google Maps script by ID:", error);
     }
   }
 };
@@ -143,4 +158,23 @@ export const getUserLocation = (): Promise<GeolocationPosition> => {
       );
     }
   });
+};
+
+/**
+ * Safe wrapper for geolocation that handles errors properly
+ */
+export const safeGetUserLocation = (
+  onSuccess: (position: GeolocationPosition) => void,
+  onError: (error: GeolocationPositionError | Error) => void
+): void => {
+  if (!navigator.geolocation) {
+    onError(new Error('Geolocation is not supported by your browser'));
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    onSuccess,
+    onError,
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
 };

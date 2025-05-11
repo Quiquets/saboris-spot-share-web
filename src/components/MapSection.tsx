@@ -3,8 +3,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { loadGoogleMapsScript, getUserLocation, communityRecommendations, cleanupGoogleMapsScript } from '@/utils/mapUtils';
-import { MapPin, Navigation } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { 
+  loadGoogleMapsScript, 
+  safeGetUserLocation, 
+  communityRecommendations, 
+  cleanupGoogleMapsScript 
+} from '@/utils/mapUtils';
+import { MapPin, Navigation, Target } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const mapStyles = [
@@ -76,8 +82,9 @@ const MapSection = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const userMarkerRef = useRef<google.maps.Marker | null>(null);
   
-  // Separate useEffect for script loading and map initialization
+  // Initialize map separately from adding markers
   useEffect(() => {
     let isMounted = true;
     
@@ -88,7 +95,7 @@ const MapSection = () => {
         // Load Google Maps script
         await loadGoogleMapsScript();
         
-        // Check if component is still mounted and if window.google exists
+        // Check if component is still mounted
         if (!isMounted || !window.google || !mapRef.current) return;
         
         // Create map with default location
@@ -128,138 +135,157 @@ const MapSection = () => {
     return () => {
       isMounted = false;
       
-      // Clear Google Maps setup
-      if (googleMapRef.current) {
-        googleMapRef.current = null;
-      }
+      // Clear Google Maps setup when component unmounts
+      clearAllMarkers();
+      
+      // Clean up map reference
+      googleMapRef.current = null;
     };
-  }, []);
+  }, []); // Empty dependency array - only run on mount
   
-  // Separate useEffect for user location and markers
-  useEffect(() => {
-    let isMounted = true;
-    
-    const setupMapFeatures = async () => {
-      // Only proceed if map is loaded
-      if (!mapLoaded || !googleMapRef.current || !window.google) return;
-      
-      const map = googleMapRef.current;
-      
-      // Clear any existing markers
+  // Function to clear all markers
+  const clearAllMarkers = () => {
+    // Clear community markers
+    if (markersRef.current) {
       markersRef.current.forEach(marker => {
         marker.setMap(null);
       });
       markersRef.current = [];
-      
-      // Add community recommendations
-      communityRecommendations.forEach(location => {
-        try {
-          const marker = new window.google.maps.Marker({
-            position: { lat: location.lat, lng: location.lng },
-            map,
-            title: location.title,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              fillColor: "#EE8C80",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-              scale: 8,
-            }
-          });
-          
-          markersRef.current.push(marker);
-          
-          // Create info window with location details
-          if (location.description) {
-            const infoContent = `
-              <div style="padding: 8px; max-width: 200px;">
-                <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
-                <p style="margin-top: 4px;">${location.description}</p>
-                ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
-              </div>
-            `;
-            
-            const infoWindow = new window.google.maps.InfoWindow({
-              content: infoContent
-            });
-            
-            marker.addListener('click', () => {
-              infoWindow.open(map, marker);
-            });
-          }
-        } catch (markerError) {
-          console.error("Error creating recommendation marker:", markerError);
-        }
-      });
-      
-      // Try to get user location
+    }
+    
+    // Clear user marker
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setMap(null);
+      userMarkerRef.current = null;
+    }
+  };
+  
+  // Add markers when map is loaded
+  useEffect(() => {
+    if (!mapLoaded || !googleMapRef.current || !window.google) return;
+    
+    const map = googleMapRef.current;
+    
+    // Add community recommendations
+    communityRecommendations.forEach(location => {
       try {
-        const position = await getUserLocation();
-        if (!isMounted || !map) return;
-        
-        const { latitude, longitude } = position.coords;
-        const userCoords = { lat: latitude, lng: longitude };
-        setUserLocation(userCoords);
-        
-        // Pan to user location
-        map.panTo(userCoords);
-        
-        // Add user location marker
-        const userMarker = new window.google.maps.Marker({
-          position: userCoords,
+        const marker = new window.google.maps.Marker({
+          position: { lat: location.lat, lng: location.lng },
           map,
-          title: "Your Location",
+          title: location.title,
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#4285F4',
+            fillColor: "#EE8C80",
             fillOpacity: 1,
-            strokeColor: '#ffffff',
+            strokeColor: "#ffffff",
             strokeWeight: 2,
+            scale: 8,
           }
         });
         
-        markersRef.current.push(userMarker);
+        markersRef.current.push(marker);
         
-        if (isMounted) {
+        // Create info window with location details
+        if (location.description) {
+          const infoContent = `
+            <div style="padding: 8px; max-width: 200px;">
+              <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
+              <p style="margin-top: 4px;">${location.description}</p>
+              ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
+            </div>
+          `;
+          
+          const infoWindow = new window.google.maps.InfoWindow({
+            content: infoContent
+          });
+          
+          marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+          });
+        }
+      } catch (markerError) {
+        console.error("Error creating recommendation marker:", markerError);
+      }
+    });
+    
+  }, [mapLoaded]);
+  
+  // Handle getting user location
+  const handleGetUserLocation = () => {
+    if (!mapLoaded || !googleMapRef.current || !window.google) {
+      toast({
+        title: "Map not ready",
+        description: "Please wait for the map to load completely.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const map = googleMapRef.current;
+    
+    safeGetUserLocation(
+      // Success callback
+      (position) => {
+        const userCoords = { 
+          lat: position.coords.latitude, 
+          lng: position.coords.longitude 
+        };
+        
+        // Store user location in state
+        setUserLocation(userCoords);
+        
+        // Pan to user location if map exists
+        if (map) {
+          map.panTo(userCoords);
+        
+          // Remove previous user marker if exists
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setMap(null);
+          }
+          
+          // Add new user location marker
+          const userMarker = new window.google.maps.Marker({
+            position: userCoords,
+            map,
+            title: "Your Location",
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#4285F4',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 2,
+            }
+          });
+          
+          // Store reference to user marker
+          userMarkerRef.current = userMarker;
+          
           toast({
             title: "Location found",
             description: "Showing recommendations near you!",
           });
         }
-      } catch (locationError) {
-        console.warn("Could not get user location:", locationError);
-        if (isMounted) {
-          toast({
-            title: "Location access denied",
-            description: "We're showing our New York recommendations instead.",
-            variant: "destructive"
-          });
-        }
-        // Keep using the default location we already set
+      },
+      // Error callback
+      (error) => {
+        console.warn("Could not get user location:", error);
+        toast({
+          title: "Location access denied",
+          description: "We're showing our New York recommendations instead.",
+          variant: "destructive"
+        });
       }
-    };
-    
-    if (mapLoaded) {
-      setupMapFeatures();
-    }
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [mapLoaded]);
+    );
+  };
   
   // Final cleanup when component unmounts
   useEffect(() => {
     return () => {
       // Clear all markers when unmounting
-      markersRef.current.forEach(marker => {
-        marker.setMap(null);
-      });
-      markersRef.current = [];
+      clearAllMarkers();
       
-      // Clean up script
+      // Clean up script properly
       cleanupGoogleMapsScript();
     };
   }, []);
@@ -272,7 +298,7 @@ const MapSection = () => {
           <h2 className="text-3xl font-bold text-center">Discover Great Places</h2>
         </div>
         
-        <Card className="overflow-hidden shadow-lg">
+        <Card className="overflow-hidden shadow-lg relative">
           <div ref={mapRef} className="map-container h-[400px] w-full">
             {!mapLoaded && (
               <div className="h-full w-full flex items-center justify-center bg-gray-100">
@@ -282,6 +308,17 @@ const MapSection = () => {
                 </div>
               </div>
             )}
+          </div>
+          
+          <div className="absolute bottom-4 right-4">
+            <Button 
+              onClick={handleGetUserLocation}
+              variant="secondary" 
+              className="shadow-md flex items-center gap-2"
+            >
+              <Target className="h-4 w-4" />
+              <span>Find Me</span>
+            </Button>
           </div>
         </Card>
       </div>
