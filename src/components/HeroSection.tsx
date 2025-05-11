@@ -45,11 +45,11 @@ const HeroSection = () => {
         
         {/* Coral pink horizontal line across the middle */}
         <div className="absolute left-0 right-0 h-24 top-1/2 -translate-y-1/2 bg-[#FFDEE2] z-0">
-          {/* Scrolling text banner - moved inside the pink background */}
+          {/* Scrolling text banner - centered within the pink background */}
           <div className="relative w-full h-full overflow-hidden">
             <div 
               ref={scrollTextRef}
-              className="whitespace-nowrap text-white font-bold text-xl absolute top-1/2 -translate-y-1/2"
+              className="whitespace-nowrap text-white font-bold text-xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
               style={{ width: 'fit-content', display: 'flex' }}
             >
               {/* Repeat the text multiple times to create continuous scroll effect */}

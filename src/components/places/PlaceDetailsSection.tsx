@@ -12,13 +12,25 @@ import { SelectDropdown } from '@/components/places/SelectDropdown';
 
 interface PlaceDetailsSectionProps {
   form: UseFormReturn<FormValues>;
-  cuisineOptions: { value: string; label: string }[];
+  cuisineOptions?: { value: string; label: string }[];
   occasionOptions?: { value: string; label: string }[];
   vibeOptions?: { value: string; label: string }[];
 }
 
-export function PlaceDetailsSection({ form, cuisineOptions, occasionOptions = [], vibeOptions = [] }: PlaceDetailsSectionProps) {
+export function PlaceDetailsSection({ 
+  form, 
+  cuisineOptions = [], 
+  occasionOptions = [], 
+  vibeOptions = [] 
+}: PlaceDetailsSectionProps) {
   const [openCuisine, setOpenCuisine] = useState(false);
+  
+  // Debug logs
+  console.log('cuisineOptions', cuisineOptions);
+  console.log('selectedCuisine', form.watch('cuisine'));
+  
+  // Safe version of cuisineOptions that's guaranteed to be an array
+  const cuisineOptionsSafe = cuisineOptions || [];
   
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -44,9 +56,9 @@ export function PlaceDetailsSection({ form, cuisineOptions, occasionOptions = []
                       className="justify-between w-full border-2 rounded-xl bg-white"
                     >
                       {field.value
-                        ? cuisineOptions.find(
+                        ? cuisineOptionsSafe.find(
                             (cuisine) => cuisine.value === field.value
-                          )?.label
+                          )?.label || "Unknown cuisine"
                         : "Select cuisine..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -57,7 +69,7 @@ export function PlaceDetailsSection({ form, cuisineOptions, occasionOptions = []
                     <CommandInput placeholder="Search cuisine..." />
                     <CommandEmpty>No cuisine found.</CommandEmpty>
                     <CommandGroup className="max-h-64 overflow-y-auto">
-                      {cuisineOptions.map((cuisine) => (
+                      {cuisineOptionsSafe.map((cuisine) => (
                         <CommandItem
                           key={cuisine.value}
                           value={cuisine.label}
