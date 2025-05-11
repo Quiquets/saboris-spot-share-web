@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { FormLabel } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
@@ -34,18 +33,21 @@ export function SelectDropdown({
   const handleSelect = (value: string) => {
     // If already selected, remove it
     if (selectedValues.includes(value)) {
-      onChange(selectedValues.filter((v) => v !== value));
+      const newValues = selectedValues.filter(v => v !== value);
+      onChange(newValues);
       return;
     }
     
     // If at max selection, remove the first one
     if (maxSelection && selectedValues.length >= maxSelection) {
-      onChange([...selectedValues.slice(1), value]);
+      const newValues = [...selectedValues.slice(1), value];
+      onChange(newValues);
       return;
     }
     
     // Otherwise add it
-    onChange([...selectedValues, value]);
+    const newValues = [...selectedValues, value];
+    onChange(newValues);
   };
 
   const handleRemove = (valueToRemove: string, e?: React.MouseEvent) => {
@@ -54,7 +56,7 @@ export function SelectDropdown({
       e.stopPropagation();
     }
     
-    // Ensure we're creating a new array to trigger state update
+    // Create a new array without the removed value to ensure state update triggers
     const newValues = selectedValues.filter((value) => value !== valueToRemove);
     onChange(newValues);
   };
