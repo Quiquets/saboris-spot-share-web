@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { User as AuthUser, Session } from '@supabase/supabase-js';
+import { User as AuthUser, Session, Provider } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 export interface User {
@@ -100,7 +99,9 @@ class SupabaseService {
         return null;
       }
       
-      return data.user;
+      // Fix: The OAuth call doesn't immediately return a user,
+      // it redirects the browser, so we return null here
+      return null;
     } catch (error) {
       console.error(`${provider} sign in error:`, error);
       toast.error(`Failed to sign in with ${provider}. Please try again.`);
@@ -157,7 +158,15 @@ class SupabaseService {
         return null;
       }
       
-      return data;
+      // Fix: Add email to the user object since our User interface requires it
+      // We use username as email if it's in email format, otherwise leave it empty
+      // and let the app handle it
+      const email = data.username.includes('@') ? data.username : '';
+      
+      return {
+        ...data,
+        email
+      };
     } catch (error) {
       console.error("Get user profile error:", error);
       return null;
@@ -166,9 +175,12 @@ class SupabaseService {
   
   async updateUserProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     try {
+      // Remove email from updates if it exists since it's not in the database schema
+      const { email, ...dbUpdates } = updates;
+      
       const { data, error } = await supabase
         .from('users')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', userId)
         .select()
         .single();
@@ -179,7 +191,14 @@ class SupabaseService {
       }
       
       toast.success("Profile updated successfully");
-      return data;
+      
+      // Fix: Add email to returned user object
+      const userEmail = email || (data.username.includes('@') ? data.username : '');
+      
+      return {
+        ...data,
+        email: userEmail
+      };
     } catch (error) {
       console.error("Update user profile error:", error);
       toast.error("Failed to update profile. Please try again.");
