@@ -10,14 +10,6 @@ import MapFilters from './map/MapFilters';
 import GoogleMapView from './map/GoogleMapView';
 import { ActiveFilters } from './map/FilterOptions';
 
-// Define the mapping between option.id and state property keys
-const directionKeyMap: Record<string, string> = {
-  'value': 'valueSortDirection',
-  'food-quality': 'foodSortDirection',
-  'service': 'serviceSortDirection',
-  'atmosphere': 'atmosphereSortDirection'
-};
-
 const MapSection = () => {
   const { user, setShowAuthModal, setFeatureName } = useAuth();
   
@@ -63,12 +55,20 @@ const MapSection = () => {
     toast.success("Filters applied. Map data would be refreshed based on your filters.");
   };
   
+  // Define the mapping between option.id and state property keys
+  const directionKeyMap: Record<string, keyof ActiveFilters> = {
+    'value': 'valueSortDirection',
+    'food-quality': 'foodSortDirection',
+    'service': 'serviceSortDirection',
+    'atmosphere': 'atmosphereSortDirection'
+  };
+  
   const toggleSortDirection = (category: string) => {
     // Use the mapping to get the correct state property key
     const directionKey = directionKeyMap[category];
     if (!directionKey) return;
     
-    const currentDirection = activeFilters[directionKey as keyof ActiveFilters] as "asc" | "desc";
+    const currentDirection = activeFilters[directionKey] as "asc" | "desc";
     const newDirection = currentDirection === "desc" ? "asc" : "desc";
     
     handleFilterChange(category, { direction: newDirection, category });
