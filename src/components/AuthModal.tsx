@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -121,7 +120,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-saboris-primary hover:bg-saboris-primary/90 text-white"
+                className="w-full bg-white text-saboris-primary border border-saboris-primary hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
                 disabled={loading}
               >
                 {loading ? 'Signing In...' : 'Sign In'}
@@ -198,7 +197,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-saboris-primary hover:bg-saboris-primary/90 text-white"
+                className="w-full bg-white text-saboris-primary border border-saboris-primary hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
                 disabled={loading}
               >
                 {loading ? 'Signing Up...' : 'Sign Up'}

@@ -89,7 +89,7 @@ const Header = () => {
           </Link>
         ) : (
           <Button 
-            className="bg-[#EE8C80] text-white border-[#EE8C80] px-4 hover:bg-[#EE8C80] hover:text-white hover:border-[#EE8C80]"
+            className="bg-white text-saboris-primary border border-saboris-primary px-4 hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
             onClick={() => window.location.href = '/'}
           >
             <span>Sign In</span>
@@ -149,7 +149,7 @@ const Header = () => {
               ) : (
                 <Link 
                   to="/" 
-                  className="px-4 py-2 font-medium bg-saboris-primary text-white rounded-md flex items-center"
+                  className="px-4 py-2 font-medium bg-white text-saboris-primary border border-saboris-primary rounded-md flex items-center"
                 >
                   <User className="h-4 w-4 mr-2" /> Sign In
                 </Link>
