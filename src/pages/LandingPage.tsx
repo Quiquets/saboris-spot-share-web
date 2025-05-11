@@ -16,7 +16,7 @@ const LandingPage = () => {
       {/* Include Header for consistency across all pages */}
       <Header />
       
-      {/* Hero section - Updated to all white */}
+      {/* Hero section - All white */}
       <section className="flex-grow flex flex-col md:flex-row items-stretch">
         {/* Left side - Text */}
         <div className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-white">
@@ -50,10 +50,10 @@ const LandingPage = () => {
 
         {/* Right side - White background with Phone Mockups */}
         <div className="w-full md:w-1/2 p-8 bg-white flex flex-col items-center justify-center">
-          {/* Vertically aligned phone mockups */}
+          {/* Vertically stacked phone mockups */}
           <div className="flex flex-col space-y-6 max-w-full justify-center">
             {/* First phone mockup */}
-            <div className="flex-shrink-0 relative w-44 h-88 bg-black rounded-3xl border-8 border-black shadow-xl mx-auto">
+            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl mx-auto">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -65,7 +65,7 @@ const LandingPage = () => {
             </div>
             
             {/* Second phone mockup */}
-            <div className="flex-shrink-0 relative w-44 h-88 bg-black rounded-3xl border-8 border-black shadow-xl mx-auto">
+            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl mx-auto">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -77,7 +77,7 @@ const LandingPage = () => {
             </div>
             
             {/* Third phone mockup */}
-            <div className="flex-shrink-0 relative w-44 h-88 bg-black rounded-3xl border-8 border-black shadow-xl mx-auto">
+            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl mx-auto">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -91,65 +91,59 @@ const LandingPage = () => {
         </div>
       </section>
       
-      {/* Feature Cards Section */}
+      {/* Feature Cards Section - Updated with circular icons instead of cards */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Taste, Share, Explore</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="rounded-full bg-saboris-peach p-4 mb-4 text-white">
-                  <PlusCircle className="h-8 w-8 text-saboris-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Share</h3>
-                <p className="text-gray-600">
-                  Share your favorite spots with friends. No fake reviews, just genuine recommendations from people you trust.
-                </p>
-                <Button 
-                  className="mt-6 bg-saboris-primary hover:bg-saboris-primary/90"
-                  asChild
-                >
-                  <Link to="/add">Share Places</Link>
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="rounded-full bg-saboris-peach p-6 mb-4">
+                <PlusCircle className="h-10 w-10 text-saboris-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Share</h3>
+              <p className="text-gray-600 mb-4">
+                Share your favorite spots with friends. No fake reviews, just genuine recommendations from people you trust.
+              </p>
+              <Button 
+                className="mt-auto bg-saboris-primary hover:bg-saboris-primary/90"
+                asChild
+              >
+                <Link to="/add">Share</Link>
+              </Button>
+            </div>
             
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="rounded-full bg-saboris-light p-4 mb-4 text-saboris-primary">
-                  <MapPin className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Explore</h3>
-                <p className="text-gray-600">
-                  Discover new places recommended by your friends. Filter by cuisine, vibe, or rating to find the perfect spot.
-                </p>
-                <Button 
-                  className="mt-6 bg-saboris-primary hover:bg-saboris-primary/90"
-                  asChild
-                >
-                  <Link to="/map">View Map</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center text-center">
+              <div className="rounded-full bg-saboris-light p-6 mb-4">
+                <MapPin className="h-10 w-10 text-saboris-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Explore</h3>
+              <p className="text-gray-600 mb-4">
+                Discover new places recommended by your friends. Filter by cuisine, vibe, or rating to find the perfect spot.
+              </p>
+              <Button 
+                className="mt-auto bg-saboris-primary hover:bg-saboris-primary/90"
+                asChild
+              >
+                <Link to="/map">Explore</Link>
+              </Button>
+            </div>
             
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="rounded-full bg-saboris-orange p-4 mb-4 text-white">
-                  <User className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Profile</h3>
-                <p className="text-gray-600">
-                  Create your personalized profile, follow friends, and keep track of places you've saved and shared.
-                </p>
-                <Button 
-                  className="mt-6 bg-saboris-primary hover:bg-saboris-primary/90"
-                  asChild
-                >
-                  <Link to="/profile">View Profile</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center text-center">
+              <div className="rounded-full bg-saboris-orange p-6 mb-4">
+                <User className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Profile</h3>
+              <p className="text-gray-600 mb-4">
+                Create your personalized profile, follow friends, and keep track of places you've saved and shared.
+              </p>
+              <Button 
+                className="mt-auto bg-saboris-primary hover:bg-saboris-primary/90"
+                asChild
+              >
+                <Link to="/profile">Profile</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

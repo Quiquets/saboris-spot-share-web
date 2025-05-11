@@ -1,5 +1,5 @@
 
-import { Instagram, Coffee, Pizza, Sandwich, IceCream } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 const HeroSection = () => {
   return (
@@ -8,12 +8,6 @@ const HeroSection = () => {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[60%] -right-10 w-72 h-72 bg-saboris-primary/10 rounded-full blur-xl"></div>
         <div className="absolute top-[20%] -left-10 w-96 h-96 bg-saboris-primary/10 rounded-full blur-xl"></div>
-        
-        {/* Food-themed icons as background elements */}
-        <Coffee className="absolute top-[15%] right-[15%] text-saboris-primary/20 w-16 h-16" />
-        <Pizza className="absolute bottom-[20%] left-[10%] text-saboris-primary/20 w-20 h-20" />
-        <Sandwich className="absolute top-[30%] left-[15%] text-saboris-primary/20 w-14 h-14" />
-        <IceCream className="absolute bottom-[25%] right-[20%] text-saboris-primary/20 w-16 h-16" />
       </div>
       
       <div className="relative z-10 text-center max-w-3xl mx-auto">
@@ -22,7 +16,7 @@ const HeroSection = () => {
           Taste, Share, Explore
         </h2>
         
-        {/* Phone mockups displayed vertically as in the screenshot */}
+        {/* Phone mockups displayed vertically */}
         <div className="mt-10 mb-8 flex justify-center">
           <div className="flex flex-col space-y-6 max-w-full">
             {/* First phone mockup */}

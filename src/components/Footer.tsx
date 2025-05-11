@@ -57,7 +57,7 @@ const Footer = () => {
   return (
     <footer className="bg-white py-10 px-4 md:px-8 border-t w-full">
       <div className="max-w-7xl mx-auto">
-        {/* Logo and description at the top */}
+        {/* Logo at the top */}
         <div className="flex justify-center mb-10">
           <div className="flex items-center flex-col">
             <img 
@@ -71,14 +71,14 @@ const Footer = () => {
           </div>
         </div>
         
-        {/* Footer links at the bottom */}
-        <div className="border-t pt-6 flex flex-col md:flex-row justify-center items-center md:space-x-16 space-y-4 md:space-y-0">
-          <div className="flex space-x-4 md:space-x-8">
+        {/* Footer links at the bottom - consistent text size and alignment */}
+        <div className="border-t pt-6 flex flex-col items-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-3xl mb-6 text-center">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
                 >
                   Contact Us
                 </Button>
@@ -169,24 +169,22 @@ const Footer = () => {
               href="https://www.instagram.com/saboris.places/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
               aria-label="Instagram"
             >
               Follow Us
             </a>
-          </div>
-          
-          <div className="flex space-x-4 md:space-x-8">
+            
             <Link 
               to="/terms" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
             >
               Terms & Conditions
             </Link>
             
             <Link 
               to="/privacy" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm font-normal"
             >
               Privacy Policy
             </Link>
