@@ -6,7 +6,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import AuthModal from '@/components/AuthModal';
 import Footer from '@/components/Footer';
 import { MapPin, PlusCircle, User, Instagram } from 'lucide-react';
-import HeroSection from '@/components/HeroSection';
 
 const LandingPage = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -44,7 +43,13 @@ const LandingPage = () => {
           <ul className="mt-6 space-y-3 text-lg">
             {['Discover local food gems', 'No fake reviews', 'Just real spots'].map((item, index) => (
               <li key={index} className="flex items-start">
-                <div className="flex-shrink-0 w-5 h-5 mt-1 bg-saboris-primary rounded-full"></div>
+                <div className="flex-shrink-0 w-5 h-5 mt-1">
+                  <img 
+                    src="/lovable-uploads/494f1510-61a8-4b13-96ec-985e5bad6e0d.png" 
+                    alt="Saboris Icon" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <span className="ml-3">{item}</span>
               </li>
             ))}
@@ -82,13 +87,25 @@ const LandingPage = () => {
               </div>
             </div>
             
-            {/* Second phone mockup - Only visible on larger screens */}
+            {/* Second phone mockup */}
             <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
                   src="/lovable-uploads/7f8c4ae2-dcfb-475a-a590-cdde712f4fc0.png" 
                   alt="Saboris Map Screenshot" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+            
+            {/* Third phone mockup */}
+            <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                <img 
+                  src="/lovable-uploads/b5d4f98b-2f75-4fd2-a36a-bd9a11fe677d.png" 
+                  alt="Saboris Reviews Screenshot" 
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -156,18 +173,6 @@ const LandingPage = () => {
                 </Button>
               </CardContent>
             </Card>
-          </div>
-          
-          <div className="mt-16 text-center">
-            <a 
-              href="https://www.instagram.com/saboris.places/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-saboris-primary/10 rounded-full text-saboris-primary hover:bg-saboris-primary/20 transition-all duration-300"
-            >
-              <Instagram size={20} />
-              <span>Follow us on Instagram</span>
-            </a>
           </div>
         </div>
       </section>

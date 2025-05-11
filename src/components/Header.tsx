@@ -1,12 +1,14 @@
+
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, MapPin, PlusCircle, Heart, User, LogOut, Search, UsersRound } from 'lucide-react';
+import { Menu, MapPin, PlusCircle, Heart, User, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessGateModal from './AccessGateModal';
+import AuthModal from './AuthModal';
 import { toast } from 'sonner';
 
 const Header = () => {
@@ -108,19 +110,6 @@ const Header = () => {
         </button>
         
         <button 
-          onClick={() => navigateProtected('/saved', 'Saved Places')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/saved') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <Heart className="h-4 w-4 mr-1" />
-          <span>Saved</span>
-        </button>
-        
-        <button 
           onClick={() => navigateProtected('/add', 'Add Place')} 
           className={cn(
             "px-3 py-2 rounded-md font-medium flex items-center text-white",
@@ -131,6 +120,19 @@ const Header = () => {
         >
           <PlusCircle className="h-4 w-4 mr-1" />
           <span>Share</span>
+        </button>
+        
+        <button 
+          onClick={() => navigateProtected('/saved', 'Saved Places')} 
+          className={cn(
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
+            isActive('/saved') 
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
+          )}
+        >
+          <Heart className="h-4 w-4 mr-1" />
+          <span>Saved</span>
         </button>
         
         {user ? (
@@ -200,16 +202,6 @@ const Header = () => {
               </button>
               
               <button 
-                onClick={() => navigateProtected('/saved', 'Saved Places')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/saved') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <Heart className="h-4 w-4 mr-2" /> Saved
-              </button>
-              
-              <button 
                 onClick={() => navigateProtected('/add', 'Add Place')}
                 className={cn(
                   "px-4 py-2 font-medium rounded-md flex items-center",
@@ -217,6 +209,16 @@ const Header = () => {
                 )}
               >
                 <PlusCircle className="h-4 w-4 mr-2" /> Share
+              </button>
+              
+              <button 
+                onClick={() => navigateProtected('/saved', 'Saved Places')}
+                className={cn(
+                  "px-4 py-2 font-medium rounded-md flex items-center",
+                  isActive('/saved') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                )}
+              >
+                <Heart className="h-4 w-4 mr-2" /> Saved
               </button>
               
               {user ? (
@@ -258,6 +260,12 @@ const Header = () => {
         isOpen={showGateModal} 
         onClose={() => setShowGateModal(false)} 
         featureName={gateFeature}
+      />
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </header>
   );

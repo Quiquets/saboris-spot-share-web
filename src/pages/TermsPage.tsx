@@ -1,89 +1,92 @@
 
-import { useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useEffect } from 'react';
 
 const TermsPage = () => {
   useEffect(() => {
-    document.title = 'Saboris - Terms & Conditions';
+    document.title = 'Terms & Conditions - Saboris';
+    window.scrollTo(0, 0);
   }, []);
 
   return (
-    <main className="min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <Header />
-      
-      <div className="flex-grow container mx-auto px-4 py-12 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-6">Terms and Conditions – Saboris</h1>
+      <main className="flex-1 max-w-3xl mx-auto py-10 px-4 md:px-6">
+        <h1 className="text-3xl font-bold mb-6">Terms & Conditions</h1>
         
-        <div className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-2">1. Introduction</h2>
-            <p>Welcome to Saboris ("we", "our", "us"). By using our website and services, you agree to be bound by these Terms.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">2. Definitions</h2>
-            <p>"Platform" refers to our site and related services.</p>
-            <p>"You" refers to our users.</p>
-            <p>"Content" means all materials shared on the platform.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">3. Account Registration</h2>
-            <p>You agree to provide accurate data and keep your credentials safe.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">4. Usage</h2>
-            <p>You may not use the platform unlawfully, impersonate anyone, or restrict others' use.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">5. IP Rights</h2>
-            <p>All platform content is property of Saboris or its licensors.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">6. User Content</h2>
-            <p>You retain rights to your submissions but allow us to display them.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">7. Privacy</h2>
-            <p>See our Privacy Policy (link it once ready).</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">8. Limitation of Liability</h2>
-            <p>Saboris is not liable for indirect or consequential damages.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">9. Termination</h2>
-            <p>We may suspend access for violations at our discretion.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">10. Changes to Terms</h2>
-            <p>We may revise these at any time.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">11. Law</h2>
-            <p>These terms follow the laws of our operating country.</p>
-          </section>
-          
-          <section>
-            <h2 className="text-xl font-semibold mb-2">12. Contact</h2>
-            <p>Email us at <a href="mailto:hello@saboris.app" className="text-saboris-primary hover:underline">hello@saboris.app</a>.</p>
-          </section>
-          
-          <p className="text-sm text-gray-500">Last updated: May 11, 2025</p>
-        </div>
-      </div>
-      
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">1. Acceptance of Terms</h2>
+          <p className="mb-4">
+            Welcome to Saboris. By accessing or using our website, mobile application, or any Saboris services, 
+            you agree to be bound by these Terms & Conditions. If you do not agree to these terms, please do not 
+            use our services.
+          </p>
+        </section>
+        
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">2. User Accounts</h2>
+          <p className="mb-4">
+            When you create an account with us, you must provide accurate and complete information. You are 
+            responsible for safeguarding your account and for all activities that occur under your account.
+          </p>
+        </section>
+        
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">3. User Content</h2>
+          <p className="mb-4">
+            You retain ownership of any content you submit, post, or display on or through our services. 
+            By posting content, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, 
+            modify, and display such content within our services.
+          </p>
+        </section>
+        
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">4. Prohibited Activities</h2>
+          <p className="mb-4">
+            You agree not to engage in any of the following prohibited activities:
+          </p>
+          <ul className="list-disc pl-6 mb-4 space-y-2">
+            <li>Violating any applicable laws or regulations</li>
+            <li>Posting false or misleading content</li>
+            <li>Using the service for any illegal purpose</li>
+            <li>Attempting to interfere with or compromise the system integrity or security</li>
+          </ul>
+        </section>
+        
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">5. Termination</h2>
+          <p className="mb-4">
+            We reserve the right to terminate or suspend your access to our services immediately, without prior 
+            notice or liability, for any reason, including breach of these Terms.
+          </p>
+        </section>
+        
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">6. Disclaimer of Warranties</h2>
+          <p className="mb-4">
+            Our services are provided on an "as is" and "as available" basis. We make no warranties, express or 
+            implied, regarding the operation or availability of our services.
+          </p>
+        </section>
+        
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">7. Contact</h2>
+          <p className="mb-4">
+            For questions about these Terms, please contact us at:
+            <br />
+            <a href="mailto:saboris.app@gmail.com" className="text-saboris-primary hover:underline">
+              saboris.app@gmail.com
+            </a>
+          </p>
+        </section>
+        
+        <p className="text-sm text-gray-500 mt-10">
+          Last updated: May 11, 2025
+        </p>
+      </main>
       <Footer />
-    </main>
+    </div>
   );
 };
 

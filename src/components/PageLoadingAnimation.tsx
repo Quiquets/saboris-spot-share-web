@@ -5,20 +5,27 @@ import { Loader2 } from 'lucide-react';
 
 const PageLoadingAnimation = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isFading, setIsFading] = useState(false);
   const location = useLocation();
   const timerRef = useRef<number>();
   
   useEffect(() => {
-    // Show loading animation for 400ms
+    // Show loading animation immediately when route changes
     setIsLoading(true);
+    setIsFading(false);
     
-    // Use ref to store timeout ID for proper cleanup
+    // Start fading out after a short delay
     timerRef.current = window.setTimeout(() => {
-      setIsLoading(false);
+      setIsFading(true);
+      
+      // Hide completely after fade animation completes
+      timerRef.current = window.setTimeout(() => {
+        setIsLoading(false);
+      }, 300); // Match this to the CSS transition duration
     }, 400);
     
     return () => {
-      // Clear timeout when component unmounts or route changes
+      // Clear all timeouts when component unmounts or route changes
       if (timerRef.current) {
         window.clearTimeout(timerRef.current);
       }
@@ -30,10 +37,14 @@ const PageLoadingAnimation = () => {
   }
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-saboris-primary transition-opacity duration-300">
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-saboris-primary transition-opacity duration-300 ${
+        isFading ? "opacity-0" : "opacity-100"
+      }`}
+    >
       <div className="flex flex-col items-center">
         <img
-          src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png"
+          src="/lovable-uploads/494f1510-61a8-4b13-96ec-985e5bad6e0d.png"
           alt="Saboris Logo"
           className="h-16 w-auto animate-bounce"
         />

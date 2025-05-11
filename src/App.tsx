@@ -11,6 +11,7 @@ import SavedPlacesPage from "./pages/SavedPlacesPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import TermsPage from "./pages/TermsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SearchUsersPage from "./pages/SearchUsersPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import PageLoadingAnimation from "./components/PageLoadingAnimation";
@@ -30,6 +31,7 @@ const AppWithProviders = () => (
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/search" element={<SearchUsersPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </AuthProvider>
