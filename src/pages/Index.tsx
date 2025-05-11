@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 
 const Index = () => {
   useEffect(() => {
-    document.title = 'Saboris - Real Food, Real Friends, Zero BS';
+    document.title = 'Saboris - Taste, Share, Explore';
   }, []);
 
   return (

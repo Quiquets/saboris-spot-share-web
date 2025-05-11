@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-saboris-primary overflow-hidden">
+    <section className="relative min-h-[75vh] flex flex-col items-center justify-center px-4 bg-saboris-primary overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[60%] -right-10 w-72 h-72 bg-white/10 rounded-full blur-xl"></div>
         <div className="absolute top-[20%] -left-10 w-96 h-96 bg-white/10 rounded-full blur-xl"></div>
@@ -28,7 +28,11 @@ const HeroSection = () => {
           <span>Follow us on Instagram</span>
         </a>
         
-        <div className="mt-20 animate-float">
+        <div className="mt-14 pb-4">
+          <p className="text-white font-light text-xl italic">Taste, Share, Explore</p>
+        </div>
+        
+        <div className="mt-6 animate-float">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 5L12 19M12 19L19 12M12 19L5 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>

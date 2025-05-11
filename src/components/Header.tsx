@@ -26,8 +26,14 @@ const Header = () => {
         <img 
           src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
           alt="Saboris Logo" 
-          className="h-10 w-auto"
+          className="h-12 w-auto" // Increased size from h-10 to h-12
         />
+        <span className={cn(
+          "ml-2 text-xl font-bold transition-colors",
+          isScrolled ? "text-saboris-primary" : "text-white"
+        )}>
+          Saboris
+        </span>
       </div>
       <div className="text-sm font-medium">
         <span className={cn(
