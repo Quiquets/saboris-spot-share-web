@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,20 +7,67 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MapPin, PlusCircle, User as UserIcon, Loader2, UsersRound, UserCheck, UserPlus } from 'lucide-react';
+import { 
+  Heart, 
+  MapPin, 
+  PlusCircle, 
+  UserIcon, 
+  Loader2, 
+  UsersRound, 
+  UserCheck, 
+  UserPlus, 
+  Filter, 
+  Globe,
+  Lock,
+  Trash2,
+  Camera,
+  Save
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SavedRestaurant, ProfileStats, UserSettings, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
+
+interface SharedPlace {
+  id: string;
+  place_id: string;
+  created_at: Date;
+  place: {
+    name: string;
+    description?: string;
+    tags?: string[];
+    category?: string;
+    address?: string;
+  };
+  rating?: number;
+}
 
 const ProfilePage = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUserData } = useAuth();
+  const [sharedPlaces, setSharedPlaces] = useState<SharedPlace[]>([]);
   const [savedPlaces, setSavedPlaces] = useState<SavedRestaurant[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPrivate, setIsPrivate] = useState(false);
   const [followers, setFollowers] = useState<any[]>([]);
   const [showFollowers, setShowFollowers] = useState(false);
+  const [editBioOpen, setEditBioOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [bio, setBio] = useState('');
+  const [username, setUsername] = useState('');
+  const [userLocation, setUserLocation] = useState('');
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('shared');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState('all');
 
   useEffect(() => {
     document.title = 'Saboris - Profile';
@@ -29,15 +77,26 @@ const ProfilePage = () => {
       
       try {
         setLoading(true);
-        const places = await supabaseService.getSavedRestaurants(user.id);
+        
+        // Get places shared by this user
+        const sharedPlacesData = await fetchSharedPlaces(user.id);
+        const savedPlacesData = await supabaseService.getSavedRestaurants(user.id);
         const stats = await supabaseService.getProfileStats(user.id);
         
         // Get user profile to check if account is private
         const userProfile = await supabaseService.getUserProfile(user.id);
         
-        setSavedPlaces(places);
+        setSharedPlaces(sharedPlacesData);
+        setSavedPlaces(savedPlacesData);
         setProfileStats(stats);
         setIsPrivate(userProfile?.is_private || false);
+        
+        // Set the existing profile data
+        setBio(userProfile?.bio || '');
+        setUsername(userProfile?.username || '');
+        setUserLocation(userProfile?.location || '');
+        setProfileImageUrl(userProfile?.avatar_url || null);
+        
       } catch (error) {
         console.error("Error fetching profile data:", error);
         toast.error("Failed to load profile data");
@@ -51,6 +110,64 @@ const ProfilePage = () => {
     }
   }, [user]);
 
+  const fetchSharedPlaces = async (userId: string): Promise<SharedPlace[]> => {
+    try {
+      // Get places created by this user
+      const { data: placesData, error: placesError } = await supabase
+        .from('places')
+        .select('id, name, description, category, address, tags')
+        .eq('created_by', userId);
+      
+      if (placesError) throw placesError;
+      
+      // Get reviews created by this user
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('reviews')
+        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, places:place_id(name, description, category, address, tags)')
+        .eq('user_id', userId);
+      
+      if (reviewsError) throw reviewsError;
+
+      // Combine both types of shared content
+      const createdPlaces: SharedPlace[] = (placesData || []).map(place => ({
+        id: place.id,
+        place_id: place.id,
+        created_at: new Date(),
+        place: {
+          name: place.name,
+          description: place.description,
+          tags: place.tags,
+          category: place.category,
+          address: place.address
+        }
+      }));
+      
+      const reviewedPlaces: SharedPlace[] = (reviewsData || []).map(review => {
+        const avgRating = review.rating_food && review.rating_service && review.rating_atmosphere
+          ? Math.round((review.rating_food + review.rating_service + review.rating_atmosphere) / 3)
+          : undefined;
+          
+        return {
+          id: review.id,
+          place_id: review.place_id,
+          created_at: new Date(review.created_at),
+          place: review.places || { name: 'Unknown Place' },
+          rating: avgRating
+        };
+      });
+      
+      // Combine all places and sort by date (newest first)
+      const allSharedPlaces = [...createdPlaces, ...reviewedPlaces]
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      
+      return allSharedPlaces;
+    } catch (error) {
+      console.error("Error fetching shared places:", error);
+      toast.error("Failed to load shared places");
+      return [];
+    }
+  };
+
   const handleRemoveFromWishlist = async (placeId: string) => {
     if (!user) return;
     
@@ -59,6 +176,7 @@ const ProfilePage = () => {
       setSavedPlaces(currentPlaces => 
         currentPlaces.filter(place => place.place_id !== placeId)
       );
+      toast.success("Place removed from your saved list");
     } catch (error) {
       console.error("Error removing from wishlist:", error);
       toast.error("Failed to remove from wishlist");
@@ -92,6 +210,114 @@ const ProfilePage = () => {
     }
   };
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // First check if username is already taken (if changed)
+      if (username !== user.username && username.trim() !== '') {
+        const { data: usernameCheck } = await supabase
+          .from('users')
+          .select('id')
+          .eq('username', username)
+          .neq('id', user.id)
+          .single();
+          
+        if (usernameCheck) {
+          toast.error("Username is already taken");
+          return;
+        }
+      }
+      
+      // Upload profile image if new one is selected
+      let avatarUrl = user.avatar_url;
+      if (profileImage) {
+        const fileExt = profileImage.name.split('.').pop();
+        const filePath = `${user.id}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, profileImage);
+          
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          toast.error("Failed to upload profile image");
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+            
+          avatarUrl = urlData.publicUrl;
+          setProfileImageUrl(avatarUrl);
+        }
+      }
+      
+      // Update user profile
+      const updates = {
+        bio: bio.trim(),
+        username: username.trim() || user.username,
+        location: userLocation.trim(),
+        avatar_url: avatarUrl
+      };
+      
+      await supabaseService.updateUserProfile(user.id, updates);
+      
+      // Refresh user data in auth context
+      await refreshUserData();
+      
+      toast.success("Profile updated successfully");
+      setIsEditProfileOpen(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    try {
+      // Delete the user's account from Supabase Auth
+      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Sign out the user after successful deletion
+      await supabaseService.signOut();
+      toast.success("Your account has been deleted");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account. Please contact support.");
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 2 * 1024 * 1024) { // 2MB max
+        toast.error("Image too large. Please select an image less than 2MB");
+        return;
+      }
+      
+      setProfileImage(file);
+      // Create a preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setProfileImageUrl(objectUrl);
+    }
+  };
+
+  const handleFilterChange = (filter: string) => {
+    setCurrentFilter(filter);
+    setFilterDialogOpen(false);
+    // Apply filtering logic here
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -112,7 +338,7 @@ const ProfilePage = () => {
           <div className="max-w-md mx-auto text-center">
             <UserIcon className="h-16 w-16 mx-auto text-gray-300 mb-4" />
             <h1 className="text-2xl font-bold mb-4">Sign In Required</h1>
-            <p className="text-gray-600 mb-8">Please sign in to view your profile and saved places.</p>
+            <p className="text-gray-600 mb-8">Please sign in to view your profile and shared places.</p>
             <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
               <Link to="/">Go to Home</Link>
             </Button>
@@ -130,11 +356,11 @@ const ProfilePage = () => {
       <div className="flex-grow container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
           {/* Profile Header */}
-          <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm mb-8">
             <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-              <Avatar className="h-24 w-24 border-4 border-saboris-primary">
-                <AvatarImage src={user.avatar_url || "https://i.pravatar.cc/150?img=23"} alt={user.name} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+              <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-saboris-primary">
+                <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
+                <AvatarFallback className="bg-saboris-primary/20 text-saboris-primary">{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
               
               <div className="flex-1 text-center md:text-left">
@@ -142,7 +368,7 @@ const ProfilePage = () => {
                 <p className="text-gray-500">@{user.username}</p>
                 {user.bio && <p className="mt-2">{user.bio}</p>}
                 {user.location && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 mt-1 flex items-center justify-center md:justify-start">
                     <MapPin className="inline h-4 w-4 mr-1" />
                     {user.location}
                   </p>
@@ -150,7 +376,7 @@ const ProfilePage = () => {
                 
                 {/* User Stats */}
                 {profileStats && (
-                  <div className="flex gap-4 mt-3 justify-center md:justify-start">
+                  <div className="flex gap-6 mt-3 justify-center md:justify-start flex-wrap">
                     <div className="text-center">
                       <p className="font-semibold">{profileStats.posts_count || 0}</p>
                       <p className="text-xs text-gray-500">Posts</p>
@@ -192,12 +418,132 @@ const ProfilePage = () => {
               </div>
               
               <div>
-                <Button variant="outline" className="border-saboris-primary text-saboris-primary">
+                <Button 
+                  variant="outline" 
+                  className="border-saboris-primary text-saboris-primary"
+                  onClick={() => setIsEditProfileOpen(true)}
+                >
                   Edit Profile
                 </Button>
               </div>
             </div>
           </div>
+          
+          {/* Edit Profile Dialog */}
+          <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Your Profile</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-5 py-4">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <Avatar className="h-24 w-24 border-4 border-saboris-primary">
+                      <AvatarImage src={profileImageUrl || undefined} />
+                      <AvatarFallback className="bg-saboris-primary/20 text-saboris-primary">
+                        {user.name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <label 
+                      htmlFor="profile-photo" 
+                      className="absolute bottom-0 right-0 bg-saboris-primary hover:bg-saboris-primary/90 p-1.5 rounded-full cursor-pointer text-white"
+                    >
+                      <Camera className="h-4 w-4" />
+                      <input 
+                        id="profile-photo" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input 
+                    id="username" 
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input 
+                    id="location" 
+                    value={userLocation} 
+                    onChange={(e) => setUserLocation(e.target.value)}
+                    className="mt-1"
+                    placeholder="City, Country"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea 
+                    id="bio" 
+                    value={bio} 
+                    onChange={(e) => setBio(e.target.value)}
+                    className="mt-1 resize-none"
+                    placeholder="Tell others about yourself..."
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between border-t pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="flex items-center gap-1">
+                        <Trash2 className="h-4 w-4" />
+                        <span>Delete Account</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete your
+                          account and all your data from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteAccount}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Delete Account
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  
+                  <div className="flex items-center gap-2">
+                    <DialogClose asChild>
+                      <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button 
+                      className="bg-saboris-primary hover:bg-saboris-primary/90 text-white flex items-center gap-1"
+                      onClick={handleSaveProfile}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      <span>Save Changes</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           
           {/* Followers Modal (Simplified for now) */}
           {showFollowers && followers.length > 0 && (
@@ -219,7 +565,9 @@ const ProfilePage = () => {
                       <div className="flex items-center">
                         <Avatar className="h-12 w-12 mr-3">
                           <AvatarImage src={follower.avatar_url || undefined} />
-                          <AvatarFallback>{follower.name?.charAt(0) || '?'}</AvatarFallback>
+                          <AvatarFallback className="bg-saboris-primary/10">
+                            {follower.name?.charAt(0) || '?'}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{follower.name}</p>
@@ -233,112 +581,254 @@ const ProfilePage = () => {
             </div>
           )}
           
-          {/* Saved Places Section */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Heart className="text-saboris-primary" />
-                <span>My Saved Places</span>
-              </h2>
+          {/* Content Tabs */}
+          <Tabs defaultValue="shared" onValueChange={(value) => setActiveTab(value)}>
+            <div className="flex items-center justify-between mb-4">
+              <TabsList className="bg-gray-100 p-1">
+                <TabsTrigger value="shared" className="px-4 py-2 data-[state=active]:bg-white">
+                  Shared Places
+                </TabsTrigger>
+                <TabsTrigger value="saved" className="px-4 py-2 data-[state=active]:bg-white">
+                  Saved Places
+                </TabsTrigger>
+              </TabsList>
               
-              <Link to="/map">
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>View on Map</span>
-                </Button>
-              </Link>
-            </div>
-            
-            {loading ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-saboris-primary" />
-                <p className="text-gray-600">Loading your saved places...</p>
-              </div>
-            ) : savedPlaces.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {savedPlaces.map((place) => (
-                  <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                      {/* Placeholder image for now - would use actual restaurant images */}
-                      <img 
-                        src={`https://source.unsplash.com/random/400x300?food&${place.restaurant.name}`}
-                        alt={place.restaurant.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    
-                    <CardHeader className="py-3">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{place.restaurant.name}</CardTitle>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-saboris-primary"
-                          onClick={() => handleRemoveFromWishlist(place.place_id)}
-                        >
-                          <Heart className="h-5 w-5 fill-saboris-primary" />
-                        </Button>
-                      </div>
-                      {place.restaurant.category && (
-                        <span className="inline-block px-2 py-1 bg-saboris-light text-saboris-primary text-xs rounded-full">
-                          {place.restaurant.category}
-                        </span>
-                      )}
-                    </CardHeader>
-                    
-                    <CardContent className="py-2">
-                      {place.restaurant.description && (
-                        <p className="text-sm text-gray-600">{place.restaurant.description}</p>
-                      )}
-                      {place.note && (
-                        <div className="mt-2 text-sm italic text-gray-500">"{place.note}"</div>
-                      )}
-                      {place.restaurant.tags && place.restaurant.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {place.restaurant.tags.map((tag, index) => (
-                            <span 
-                              key={index} 
-                              className="text-xs px-2 py-1 bg-gray-100 rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                    
-                    <CardFooter className="pt-0 pb-3">
-                      <Button variant="outline" size="sm" className="w-full text-saboris-primary border-saboris-primary">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span>View Details</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setFilterDialogOpen(true)}
+              >
+                <Filter className="h-4 w-4" />
+                <span>Filter</span>
+              </Button>
+              
+              <Dialog open={filterDialogOpen} onOpenChange={setFilterDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Filter Places</DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="flex flex-col gap-2 py-4">
+                    <div className="font-medium">Sort by</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant={currentFilter === 'all' ? "default" : "outline"}
+                        onClick={() => handleFilterChange('all')}
+                        className={currentFilter === 'all' ? "bg-saboris-primary" : ""}
+                      >
+                        All
                       </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
-                <Heart className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-xl font-medium mb-2">No saved places yet</h3>
-                <p className="text-gray-600 mb-4">Start exploring and save your favorite restaurants</p>
-                <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
-                  <Link to="/map">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    Explore Map
-                  </Link>
-                </Button>
-              </div>
-            )}
-            
-            {/* Add Place CTA */}
-            <div className="mt-10 text-center">
-              <Link to="/add">
-                <Button className="bg-saboris-primary hover:bg-saboris-primary/90 flex items-center gap-1">
-                  <PlusCircle className="h-4 w-4" />
-                  Add a New Place
-                </Button>
-              </Link>
+                      <Button 
+                        variant={currentFilter === 'ratings' ? "default" : "outline"}
+                        onClick={() => handleFilterChange('ratings')}
+                        className={currentFilter === 'ratings' ? "bg-saboris-primary" : ""}
+                      >
+                        Highest Rated
+                      </Button>
+                      <Button 
+                        variant={currentFilter === 'newest' ? "default" : "outline"}
+                        onClick={() => handleFilterChange('newest')}
+                        className={currentFilter === 'newest' ? "bg-saboris-primary" : ""}
+                      >
+                        Newest First
+                      </Button>
+                      <Button 
+                        variant={currentFilter === 'oldest' ? "default" : "outline"}
+                        onClick={() => handleFilterChange('oldest')}
+                        className={currentFilter === 'oldest' ? "bg-saboris-primary" : ""}
+                      >
+                        Oldest First
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
+            
+            <TabsContent value="shared">
+              {loading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-saboris-primary" />
+                  <p className="text-gray-600">Loading your shared places...</p>
+                </div>
+              ) : sharedPlaces.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sharedPlaces.map((place) => (
+                    <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                        <img 
+                          src={`https://source.unsplash.com/random/400x300?food&${place.place.name}`}
+                          alt={place.place.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      <CardHeader className="py-3">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{place.place.name}</CardTitle>
+                        </div>
+                        {place.place.category && (
+                          <span className="inline-block px-2 py-1 bg-saboris-light text-saboris-primary text-xs rounded-full">
+                            {place.place.category}
+                          </span>
+                        )}
+                        {place.rating && (
+                          <div className="flex items-center mt-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span key={i} className={`text-lg ${i < place.rating ? 'text-yellow-500' : 'text-gray-300'}`}>★</span>
+                            ))}
+                          </div>
+                        )}
+                      </CardHeader>
+                      
+                      <CardContent className="py-2">
+                        {place.place.description && (
+                          <p className="text-sm text-gray-600">{place.place.description}</p>
+                        )}
+                        {place.place.tags && place.place.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {place.place.tags.map((tag, index) => (
+                              <span 
+                                key={index} 
+                                className="text-xs px-2 py-1 bg-gray-100 rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                      
+                      <CardFooter className="pt-0 pb-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-saboris-primary border-saboris-primary"
+                          asChild
+                        >
+                          <Link to={`/map?place=${place.place_id}`}>
+                            <MapPin className="h-4 w-4 mr-1" />
+                            <span>View Details</span>
+                          </Link>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
+                  <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-xl font-medium mb-2">No shared places yet</h3>
+                  <p className="text-gray-600 mb-4">Start adding your favorite places to share with others</p>
+                  <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
+                    <Link to="/add">
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Add a New Place
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="saved">
+              {loading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-saboris-primary" />
+                  <p className="text-gray-600">Loading your saved places...</p>
+                </div>
+              ) : savedPlaces.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {savedPlaces.map((place) => (
+                    <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="aspect-video w-full overflow-hidden bg-gray-100">
+                        <img 
+                          src={`https://source.unsplash.com/random/400x300?food&${place.restaurant.name}`}
+                          alt={place.restaurant.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      <CardHeader className="py-3">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{place.restaurant.name}</CardTitle>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-saboris-primary"
+                            onClick={() => handleRemoveFromWishlist(place.place_id)}
+                          >
+                            <Heart className="h-5 w-5 fill-saboris-primary" />
+                          </Button>
+                        </div>
+                        {place.restaurant.category && (
+                          <span className="inline-block px-2 py-1 bg-saboris-light text-saboris-primary text-xs rounded-full">
+                            {place.restaurant.category}
+                          </span>
+                        )}
+                      </CardHeader>
+                      
+                      <CardContent className="py-2">
+                        {place.restaurant.description && (
+                          <p className="text-sm text-gray-600">{place.restaurant.description}</p>
+                        )}
+                        {place.note && (
+                          <div className="mt-2 text-sm italic text-gray-500">"{place.note}"</div>
+                        )}
+                        {place.restaurant.tags && place.restaurant.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {place.restaurant.tags.map((tag, index) => (
+                              <span 
+                                key={index} 
+                                className="text-xs px-2 py-1 bg-gray-100 rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                      
+                      <CardFooter className="pt-0 pb-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full text-saboris-primary border-saboris-primary"
+                          asChild
+                        >
+                          <Link to={`/map?place=${place.place_id}`}>
+                            <MapPin className="h-4 w-4 mr-1" />
+                            <span>View Details</span>
+                          </Link>
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
+                  <Heart className="h-16 w-16 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-xl font-medium mb-2">No saved places yet</h3>
+                  <p className="text-gray-600 mb-4">Start exploring and save your favorite restaurants</p>
+                  <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
+                    <Link to="/map">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      Explore Map
+                    </Link>
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+          
+          {/* Add Place CTA */}
+          <div className="mt-10 text-center">
+            <Link to="/add">
+              <Button className="bg-saboris-primary hover:bg-saboris-primary/90 flex items-center gap-1">
+                <PlusCircle className="h-4 w-4" />
+                Add a New Place
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

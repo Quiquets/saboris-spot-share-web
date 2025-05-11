@@ -24,6 +24,8 @@ interface AuthContextType {
   followers: any[];
   following: any[];
   refreshUserData: () => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => Promise<User | null>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,7 +81,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to refresh user data
   const refreshUserData = async () => {
     if (authUser) {
-      await fetchUserData(authUser.id);
+      try {
+        const profile = await supabaseService.getUserProfile(authUser.id);
+        setUser(profile);
+        await fetchUserData(authUser.id);
+        return profile;
+      } catch (error) {
+        console.error("Error refreshing user data:", error);
+        toast.error("Failed to refresh user data");
+      }
+    }
+  };
+  
+  // Function to update user profile
+  const updateUserProfile = async (updates: Partial<User>) => {
+    if (!authUser) {
+      toast.error("You must be signed in to update your profile");
+      return null;
+    }
+    
+    try {
+      const updatedProfile = await supabaseService.updateUserProfile(authUser.id, updates);
+      if (updatedProfile) {
+        setUser(updatedProfile);
+        return updatedProfile;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+      return null;
+    }
+  };
+  
+  // Function to delete user account
+  const deleteAccount = async () => {
+    if (!authUser) {
+      toast.error("You must be signed in to delete your account");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(authUser.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Sign out after account deletion
+      await signOut();
+      toast.success("Your account has been deleted");
+      navigate('/');
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account. Please try again later.");
     }
   };
 
@@ -235,6 +290,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     followers,
     following,
     refreshUserData,
+    updateUserProfile,
+    deleteAccount,
   };
 
   return (
