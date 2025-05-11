@@ -8,7 +8,7 @@ import {
   safeGetUserLocation, 
   communityRecommendations
 } from '@/utils/mapUtils';
-import { MapPin, Navigation, Target, Filter, ArrowDown, ArrowUp } from 'lucide-react';
+import { MapPin, Target, Filter, ArrowDown, ArrowUp } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessGateModal from './AccessGateModal';
@@ -158,6 +158,7 @@ const MapSection = () => {
   });
   
   const [showGateModal, setShowGateModal] = useState(false);
+  const [mapIsReady, setMapIsReady] = useState(false);
 
   useEffect(() => {
     // Update people filter based on authentication state
@@ -219,42 +220,47 @@ const MapSection = () => {
   const createMap = (centerLocation: {lat: number, lng: number}) => {
     if (!mapContainerRef.current || !window.google?.maps) return;
     
-    const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
-      center: centerLocation,
-      zoom: 14,
-      styles: mapStyles,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false
-    });
-    
-    // Store map instance in ref
-    mapInstanceRef.current = mapInstance;
-    mapLoadedRef.current = true;
-    
-    // If this is user location, add user marker
-    if (userLocationRef.current && 
-        centerLocation.lat === userLocationRef.current.lat && 
-        centerLocation.lng === userLocationRef.current.lng) {
-      addUserMarker(centerLocation);
+    try {
+      const mapInstance = new window.google.maps.Map(mapContainerRef.current, {
+        center: centerLocation,
+        zoom: 14,
+        styles: mapStyles,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      });
+      
+      // Store map instance in ref
+      mapInstanceRef.current = mapInstance;
+      mapLoadedRef.current = true;
+      setMapIsReady(true);
+      
+      // If this is user location, add user marker
+      if (userLocationRef.current && 
+          centerLocation.lat === userLocationRef.current.lat && 
+          centerLocation.lng === userLocationRef.current.lng) {
+        addUserMarker(centerLocation);
+      }
+      
+      // Add recommendation markers
+      addMarkersToMap();
+    } catch (error) {
+      console.error("Error creating map:", error);
     }
-    
-    // Add recommendation markers
-    addMarkersToMap();
   };
   
   // Add user location marker
   const addUserMarker = (position: {lat: number, lng: number}) => {
     if (!mapInstanceRef.current || !window.google?.maps) return;
     
-    // Remove previous user marker if exists
-    if (userMarkerRef.current) {
-      userMarkerRef.current.setMap(null);
-      userMarkerRef.current = null;
-    }
-    
-    // Create user marker
     try {
+      // Remove previous user marker if exists
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setMap(null);
+        userMarkerRef.current = null;
+      }
+      
+      // Create user marker
       const userMarker = new window.google.maps.Marker({
         position: position,
         map: mapInstanceRef.current,
@@ -280,51 +286,55 @@ const MapSection = () => {
   const addMarkersToMap = useCallback(() => {
     if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) return;
     
-    // Clear any existing markers first
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
-    
-    // Add community recommendations
-    communityRecommendations.forEach(location => {
-      try {
-        const marker = new window.google.maps.Marker({
-          position: { lat: location.lat, lng: location.lng },
-          map: mapInstanceRef.current,
-          title: location.title,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            fillColor: "#EE8C80",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            scale: 8,
+    try {
+      // Clear any existing markers first
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+      
+      // Add community recommendations
+      communityRecommendations.forEach(location => {
+        try {
+          const marker = new window.google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: mapInstanceRef.current,
+            title: location.title,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: "#EE8C80",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+              scale: 8,
+            }
+          });
+          
+          markersRef.current.push(marker);
+          
+          // Create info window with location details
+          if (location.description) {
+            const infoContent = `
+              <div style="padding: 8px; max-width: 200px;">
+                <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
+                <p style="margin-top: 4px;">${location.description}</p>
+                ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
+              </div>
+            `;
+            
+            const infoWindow = new window.google.maps.InfoWindow({
+              content: infoContent
+            });
+            
+            marker.addListener('click', () => {
+              infoWindow.open(mapInstanceRef.current, marker);
+            });
           }
-        });
-        
-        markersRef.current.push(marker);
-        
-        // Create info window with location details
-        if (location.description) {
-          const infoContent = `
-            <div style="padding: 8px; max-width: 200px;">
-              <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
-              <p style="margin-top: 4px;">${location.description}</p>
-              ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
-            </div>
-          `;
-          
-          const infoWindow = new window.google.maps.InfoWindow({
-            content: infoContent
-          });
-          
-          marker.addListener('click', () => {
-            infoWindow.open(mapInstanceRef.current, marker);
-          });
+        } catch (error) {
+          console.error("Error creating recommendation marker:", error);
         }
-      } catch (error) {
-        console.error("Error creating recommendation marker:", error);
-      }
-    });
+      });
+    } catch (error) {
+      console.error("Error adding markers to map:", error);
+    }
   }, []);
   
   // Initialize map on mount
@@ -334,27 +344,45 @@ const MapSection = () => {
       initializeMap();
     }
     
-    // Cleanup function
+    // Cleanup function with explicit error handling
     return () => {
-      // Clear all markers safely
-      if (markersRef.current && markersRef.current.length > 0) {
-        markersRef.current.forEach(marker => {
-          if (marker) marker.setMap(null);
-        });
-        markersRef.current = [];
+      try {
+        console.log("Cleaning up map component...");
+        
+        // Clear all markers safely
+        if (markersRef.current && markersRef.current.length > 0) {
+          markersRef.current.forEach(marker => {
+            if (marker) {
+              try {
+                marker.setMap(null);
+              } catch (e) {
+                console.error("Error clearing marker:", e);
+              }
+            }
+          });
+          markersRef.current = [];
+        }
+        
+        // Clear user marker safely
+        if (userMarkerRef.current) {
+          try {
+            userMarkerRef.current.setMap(null);
+          } catch (e) {
+            console.error("Error clearing user marker:", e);
+          }
+          userMarkerRef.current = null;
+        }
+        
+        // Don't try to remove the map from the DOM directly,
+        // just clear our references to it
+        mapInstanceRef.current = null;
+        mapLoadedRef.current = false;
+        setMapIsReady(false);
+        
+        console.log("Map cleanup complete");
+      } catch (error) {
+        console.error("Error during map cleanup:", error);
       }
-      
-      // Clear user marker safely
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setMap(null);
-        userMarkerRef.current = null;
-      }
-      
-      // Reset map instance
-      mapInstanceRef.current = null;
-      mapLoadedRef.current = false;
-      
-      // We don't call cleanupGoogleMapsScript() here to avoid DOM removal issues
     };
   }, [initializeMap]);
   
@@ -616,22 +644,22 @@ const MapSection = () => {
         </div>
         
         {/* Add key to Card to ensure stable identity */}
-        <Card key="map-card" className="overflow-hidden shadow-lg relative">
-          {/* Add suppressHydrationWarning to prevent React from modifying this DOM node */}
-          <div 
-            ref={mapContainerRef} 
-            className="map-container h-[400px] w-full"
-            suppressHydrationWarning
-          >
-            {!mapLoadedRef.current && (
-              <div className="h-full w-full flex items-center justify-center bg-gray-100">
-                <div className="flex flex-col items-center">
-                  <div className="h-8 w-8 rounded-full border-4 border-saboris-primary border-t-transparent animate-spin"></div>
-                  <p className="mt-2 text-gray-600">Loading map...</p>
-                </div>
+        <Card className="overflow-hidden shadow-lg relative">
+          {/* Only render map container if we're ready for it, with key for stability */}
+          {mapIsReady ? (
+            <div 
+              ref={mapContainerRef} 
+              className="map-container h-[400px] w-full"
+              id={`map-container-${Date.now()}`}
+            />
+          ) : (
+            <div className="h-[400px] w-full flex items-center justify-center bg-gray-100">
+              <div className="flex flex-col items-center">
+                <div className="h-8 w-8 rounded-full border-4 border-saboris-primary border-t-transparent animate-spin"></div>
+                <p className="mt-2 text-gray-600">Loading map...</p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
           <div className="absolute bottom-4 right-4">
             <Button 
