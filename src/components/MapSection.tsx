@@ -12,6 +12,7 @@ import { MapPin, Target, Filter, ArrowDown, ArrowUp, Sliders } from 'lucide-reac
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from "@/components/ui/badge";
+import AccessGateModal from '@/components/AccessGateModal';
 import {
   Popover,
   PopoverContent,
