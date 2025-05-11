@@ -2,8 +2,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import AuthModal from '@/components/AuthModal';
 import Footer from '@/components/Footer';
+import { MapPin, PlusCircle, User, Instagram } from 'lucide-react';
 
 const LandingPage = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -64,10 +66,11 @@ const LandingPage = () => {
             <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden">
-                {/* Placeholder for future image */}
-                <div className="h-full w-full flex items-center justify-center bg-gray-300">
-                  <p className="text-gray-500 text-sm">Screenshot 1</p>
-                </div>
+                <img 
+                  src="/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png" 
+                  alt="Saboris App Screenshot" 
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
             
@@ -75,10 +78,106 @@ const LandingPage = () => {
             <div className="relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl hidden md:block">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden">
-                {/* Placeholder for future image */}
-                <div className="h-full w-full flex items-center justify-center bg-gray-300">
-                  <p className="text-gray-500 text-sm">Screenshot 2</p>
+                <img 
+                  src="/lovable-uploads/7f8c4ae2-dcfb-475a-a590-cdde712f4fc0.png" 
+                  alt="Saboris Map Screenshot" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Feature Cards Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Share. Explore.</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="rounded-full bg-saboris-peach p-4 mb-4 text-white">
+                  <PlusCircle className="h-8 w-8" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Share</h3>
+                <p className="text-gray-600">
+                  Share your favorite spots with friends. No fake reviews, just genuine recommendations from people you trust.
+                </p>
+                <Button 
+                  className="mt-6 bg-saboris-primary hover:bg-saboris-primary/90"
+                  onClick={() => setIsAuthModalOpen(true)}
+                >
+                  Add Place
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="rounded-full bg-saboris-light p-4 mb-4 text-saboris-primary">
+                  <MapPin className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Explore</h3>
+                <p className="text-gray-600">
+                  Discover new places recommended by your friends. Filter by cuisine, vibe, or rating to find the perfect spot.
+                </p>
+                <Button 
+                  className="mt-6 bg-saboris-primary hover:bg-saboris-primary/90"
+                  asChild
+                >
+                  <Link to="/map">View Map</Link>
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="rounded-full bg-saboris-orange p-4 mb-4 text-white">
+                  <User className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Profile</h3>
+                <p className="text-gray-600">
+                  Create your personalized profile, follow friends, and keep track of places you've saved and shared.
+                </p>
+                <Button 
+                  className="mt-6 bg-saboris-primary hover:bg-saboris-primary/90"
+                  onClick={() => setIsAuthModalOpen(true)}
+                >
+                  Sign Up
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <a 
+              href="https://www.instagram.com/saboris.places/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-saboris-primary/10 rounded-full text-saboris-primary hover:bg-saboris-primary/20 transition-all duration-300"
+            >
+              <Instagram size={20} />
+              <span>Follow us on Instagram</span>
+            </a>
+          </div>
+        </div>
+      </section>
+      
+      {/* Third Profile Section */}
+      <section className="py-16 px-4 bg-saboris-light/30">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Meet Your Friends</h2>
+          
+          <div className="flex justify-center">
+            <div className="relative w-64 h-[500px] bg-black rounded-3xl border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden">
+                <img 
+                  src="/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png" 
+                  alt="Saboris Profile Screenshot" 
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
           </div>

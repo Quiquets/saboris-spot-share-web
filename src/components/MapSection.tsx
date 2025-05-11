@@ -1,7 +1,6 @@
-
 /// <reference types="@types/google.maps" />
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -9,8 +8,50 @@ import {
   safeGetUserLocation, 
   communityRecommendations
 } from '@/utils/mapUtils';
-import { MapPin, Navigation, Target } from 'lucide-react';
+import { MapPin, Navigation, Target, Filter, Coffee, Pizza, Sandwich, Drumstick, Salad } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import AccessGateModal from './AccessGateModal';
+import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+
+const filterOptions = {
+  people: [
+    { id: 'friends', label: 'Friends' },
+    { id: 'friends-of-friends', label: 'Friends of Friends' },
+    { id: 'community', label: 'Saboris Community' },
+  ],
+  foodType: [
+    { id: 'sushi', label: 'Sushi 🍣' },
+    { id: 'indian', label: 'Indian 🥘' },
+    { id: 'italian', label: 'Italian 🍝' },
+    { id: 'burgers', label: 'Burgers 🍔' },
+    { id: 'coffee', label: 'Coffee ☕' },
+    { id: 'street-food', label: 'Street Food 🌮' },
+    { id: 'healthy', label: 'Healthy 🥗' },
+    { id: 'dessert', label: 'Dessert 🍰' },
+  ],
+  vibe: [
+    { id: 'romantic', label: 'Romantic' },
+    { id: 'casual', label: 'Casual' },
+    { id: 'lively', label: 'Lively' },
+    { id: 'business', label: 'Business' },
+    { id: 'solo-friendly', label: 'Solo Friendly' },
+    { id: 'family-friendly', label: 'Family Friendly' },
+    { id: 'outdoor', label: 'Outdoor Seating' },
+    { id: 'local', label: 'Local Favorite' },
+  ],
+};
 
 const mapStyles = [
   {
@@ -82,6 +123,29 @@ const MapSection = () => {
   const markersRef = useRef<google.maps.Marker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
+  const { user } = useAuth();
+  
+  const [activeFilters, setActiveFilters] = useState<{
+    people: string;
+    foodType: string[];
+    vibe: string[];
+    rating: number;
+  }>({
+    people: user ? 'friends' : 'community',
+    foodType: [],
+    vibe: [],
+    rating: 0,
+  });
+  
+  const [showGateModal, setShowGateModal] = useState(false);
+
+  useEffect(() => {
+    // Update people filter based on authentication state
+    setActiveFilters(prev => ({
+      ...prev,
+      people: user ? 'friends' : 'community'
+    }));
+  }, [user]);
   
   // Auto-center map on user's location when loaded
   const initializeMap = useCallback(async () => {
@@ -332,12 +396,146 @@ const MapSection = () => {
     );
   }, []);
   
+  const handleFilterChange = (type: string, value: string | string[]) => {
+    if (!user) {
+      setShowGateModal(true);
+      return;
+    }
+    
+    setActiveFilters(prev => ({
+      ...prev,
+      [type]: value
+    }));
+    
+    // In a real app, we would refresh the map data based on filters here
+    toast({
+      title: "Filters applied",
+      description: "Map data would be refreshed based on your filters.",
+    });
+  };
+  
   return (
     <section id="map-section" className="py-16 px-4 md:px-8 bg-white">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-center mb-8 gap-2">
           <MapPin className="text-saboris-primary h-6 w-6" />
           <h2 className="text-3xl font-bold text-center">Discover Great Places</h2>
+        </div>
+        
+        <div className="mb-4 flex flex-wrap justify-center gap-2">
+          <Tabs 
+            value={activeFilters.people} 
+            className="w-full"
+            onValueChange={(value) => handleFilterChange('people', value)}
+          >
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="friends" disabled={!user}>Friends</TabsTrigger>
+              <TabsTrigger value="friends-of-friends" disabled={!user}>Friends of Friends</TabsTrigger>
+              <TabsTrigger value="community">Saboris Community</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" /> Food Type
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="grid grid-cols-2 gap-2">
+                  {filterOptions.foodType.map(option => (
+                    <Button 
+                      key={option.id}
+                      variant={activeFilters.foodType.includes(option.id) ? "default" : "outline"}
+                      className="justify-start"
+                      onClick={() => {
+                        if (!user) {
+                          setShowGateModal(true);
+                          return;
+                        }
+                        const newFilters = activeFilters.foodType.includes(option.id)
+                          ? activeFilters.foodType.filter(id => id !== option.id)
+                          : [...activeFilters.foodType, option.id];
+                        handleFilterChange('foodType', newFilters);
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" /> Vibe
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="grid grid-cols-2 gap-2">
+                  {filterOptions.vibe.map(option => (
+                    <Button 
+                      key={option.id}
+                      variant={activeFilters.vibe.includes(option.id) ? "default" : "outline"}
+                      className="justify-start"
+                      onClick={() => {
+                        if (!user) {
+                          setShowGateModal(true);
+                          return;
+                        }
+                        const newFilters = activeFilters.vibe.includes(option.id)
+                          ? activeFilters.vibe.filter(id => id !== option.id)
+                          : [...activeFilters.vibe, option.id];
+                        handleFilterChange('vibe', newFilters);
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          {activeFilters.foodType.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {activeFilters.foodType.map(filter => (
+                <Badge 
+                  key={filter} 
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const newFilters = activeFilters.foodType.filter(id => id !== filter);
+                    handleFilterChange('foodType', newFilters);
+                  }}
+                >
+                  {filterOptions.foodType.find(o => o.id === filter)?.label}
+                  <span className="ml-1">×</span>
+                </Badge>
+              ))}
+            </div>
+          )}
+          
+          {activeFilters.vibe.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {activeFilters.vibe.map(filter => (
+                <Badge 
+                  key={filter} 
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const newFilters = activeFilters.vibe.filter(id => id !== filter);
+                    handleFilterChange('vibe', newFilters);
+                  }}
+                >
+                  {filterOptions.vibe.find(o => o.id === filter)?.label}
+                  <span className="ml-1">×</span>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Add key to Card to ensure stable identity */}
@@ -351,7 +549,7 @@ const MapSection = () => {
             {!mapLoadedRef.current && (
               <div className="h-full w-full flex items-center justify-center bg-gray-100">
                 <div className="flex flex-col items-center">
-                  <Navigation className="h-8 w-8 text-saboris-primary animate-spin" />
+                  <div className="h-8 w-8 rounded-full border-4 border-saboris-primary border-t-transparent animate-spin"></div>
                   <p className="mt-2 text-gray-600">Loading map...</p>
                 </div>
               </div>
@@ -370,6 +568,12 @@ const MapSection = () => {
           </div>
         </Card>
       </div>
+      
+      <AccessGateModal 
+        isOpen={showGateModal} 
+        onClose={() => setShowGateModal(false)}
+        featureName="customize map filters"
+      />
     </section>
   );
 };

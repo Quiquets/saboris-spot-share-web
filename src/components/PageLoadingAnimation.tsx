@@ -21,14 +21,14 @@ const PageLoadingAnimation = () => {
   }
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white transition-opacity duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-saboris-primary transition-opacity duration-300">
       <div className="flex flex-col items-center">
         <img
           src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png"
           alt="Saboris Logo"
           className="h-16 w-auto animate-pulse"
         />
-        <span className="mt-3 text-xl font-bold text-saboris-primary">
+        <span className="mt-3 text-xl font-bold text-white">
           Saboris
         </span>
       </div>

@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import Dashboard from "./pages/Dashboard";
 import MapPage from "./pages/MapPage";
 import AddPlacePage from "./pages/AddPlacePage";
 import SavedPlacesPage from "./pages/SavedPlacesPage";
@@ -30,8 +29,9 @@ const AppWithProviders = () => (
       <Route path="/saved" element={<SavedPlacesPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/search" element={<SearchUsersPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/terms" element={<TermsPage />} />
+      {/* Redirect /dashboard to / */}
+      <Route path="/dashboard" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </AuthProvider>

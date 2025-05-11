@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -69,7 +68,7 @@ const Header = () => {
       )}
     >
       <div className="flex items-center">
-        <Link to="/dashboard" className="flex items-center">
+        <Link to="/" className="flex items-center">
           <img 
             src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
             alt="Saboris Logo" 
@@ -92,7 +91,7 @@ const Header = () => {
           )}
         >
           <MapPin className="h-4 w-4 mr-1" />
-          <span>Map</span>
+          <span>Explore</span>
         </button>
         
         <button 
@@ -105,7 +104,7 @@ const Header = () => {
           )}
         >
           <PlusCircle className="h-4 w-4 mr-1" />
-          <span>Add Place</span>
+          <span>Share</span>
         </button>
         
         <button 
@@ -184,7 +183,7 @@ const Header = () => {
                   isActive('/map') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
                 )}
               >
-                <MapPin className="h-4 w-4 mr-2" /> Map
+                <MapPin className="h-4 w-4 mr-2" /> Explore
               </button>
               
               <button 
@@ -194,7 +193,7 @@ const Header = () => {
                   isActive('/add') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
                 )}
               >
-                <PlusCircle className="h-4 w-4 mr-2" /> Add Place
+                <PlusCircle className="h-4 w-4 mr-2" /> Share
               </button>
               
               <button 
