@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -82,6 +83,18 @@ const Header = () => {
 
       <div className="hidden md:flex items-center space-x-2">
         <button 
+          onClick={() => navigate('/')} 
+          className={cn(
+            "px-3 py-2 rounded-md font-medium flex items-center text-white",
+            isActive('/') 
+              ? "bg-white/20" 
+              : "hover:bg-white/10"
+          )}
+        >
+          <span>Home</span>
+        </button>
+        
+        <button 
           onClick={() => navigateProtected('/map', 'the Map')} 
           className={cn(
             "px-3 py-2 rounded-md font-medium flex items-center text-white",
@@ -92,19 +105,6 @@ const Header = () => {
         >
           <MapPin className="h-4 w-4 mr-1" />
           <span>Explore</span>
-        </button>
-        
-        <button 
-          onClick={() => navigateProtected('/add', 'Add Place')} 
-          className={cn(
-            "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/add') 
-              ? "bg-white/20" 
-              : "hover:bg-white/10"
-          )}
-        >
-          <PlusCircle className="h-4 w-4 mr-1" />
-          <span>Share</span>
         </button>
         
         <button 
@@ -121,22 +121,25 @@ const Header = () => {
         </button>
         
         <button 
-          onClick={() => navigateProtected('/search', 'Search Users')} 
+          onClick={() => navigateProtected('/add', 'Add Place')} 
           className={cn(
             "px-3 py-2 rounded-md font-medium flex items-center text-white",
-            isActive('/search') 
+            isActive('/add') 
               ? "bg-white/20" 
               : "hover:bg-white/10"
           )}
         >
-          <UsersRound className="h-4 w-4 mr-1" />
-          <span>Find Friends</span>
+          <PlusCircle className="h-4 w-4 mr-1" />
+          <span>Share</span>
         </button>
         
         {user ? (
           <Button 
             onClick={() => navigate('/profile')}
-            className="ml-2 p-0 w-9 h-9 rounded-full border border-white overflow-hidden bg-transparent hover:bg-white/10"
+            className={cn(
+              "ml-2 p-0 w-9 h-9 rounded-full border border-white overflow-hidden",
+              isActive('/profile') ? "bg-white/20" : "bg-transparent hover:bg-white/10"
+            )}
           >
             <Avatar className="h-full w-full">
               <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
@@ -148,7 +151,7 @@ const Header = () => {
         ) : (
           <Button 
             className="bg-white text-saboris-primary border border-saboris-primary px-4 hover:bg-white hover:text-saboris-primary hover:border-saboris-primary"
-            onClick={() => navigate('/')}
+            onClick={() => setIsAuthModalOpen(true)}
           >
             <span>Sign In</span>
           </Button>
@@ -177,6 +180,16 @@ const Header = () => {
               )}
               
               <button 
+                onClick={() => navigate('/')}
+                className={cn(
+                  "px-4 py-2 font-medium rounded-md flex items-center",
+                  isActive('/') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                )}
+              >
+                <span>Home</span>
+              </button>
+              
+              <button 
                 onClick={() => navigateProtected('/map', 'the Map')}
                 className={cn(
                   "px-4 py-2 font-medium rounded-md flex items-center",
@@ -184,16 +197,6 @@ const Header = () => {
                 )}
               >
                 <MapPin className="h-4 w-4 mr-2" /> Explore
-              </button>
-              
-              <button 
-                onClick={() => navigateProtected('/add', 'Add Place')}
-                className={cn(
-                  "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/add') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                )}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" /> Share
               </button>
               
               <button 
@@ -207,13 +210,13 @@ const Header = () => {
               </button>
               
               <button 
-                onClick={() => navigateProtected('/search', 'Search Users')}
+                onClick={() => navigateProtected('/add', 'Add Place')}
                 className={cn(
                   "px-4 py-2 font-medium rounded-md flex items-center",
-                  isActive('/search') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                  isActive('/add') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
                 )}
               >
-                <Search className="h-4 w-4 mr-2" /> Find Friends
+                <PlusCircle className="h-4 w-4 mr-2" /> Share
               </button>
               
               {user ? (
@@ -239,7 +242,7 @@ const Header = () => {
                 </>
               ) : (
                 <button 
-                  onClick={() => navigate('/')}
+                  onClick={() => setIsAuthModalOpen(true)}
                   className="px-4 py-2 font-medium bg-white text-saboris-primary border border-saboris-primary rounded-md flex items-center"
                 >
                   <User className="h-4 w-4 mr-2" /> Sign In

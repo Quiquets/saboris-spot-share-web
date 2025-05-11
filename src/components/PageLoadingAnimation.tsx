@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 const PageLoadingAnimation = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -26,11 +27,11 @@ const PageLoadingAnimation = () => {
         <img
           src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png"
           alt="Saboris Logo"
-          className="h-16 w-auto animate-pulse"
+          className="h-16 w-auto animate-bounce"
         />
-        <span className="mt-3 text-xl font-bold text-white">
-          Saboris
-        </span>
+        <div className="mt-4 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 text-white animate-spin" />
+        </div>
       </div>
     </div>
   );
