@@ -71,47 +71,45 @@ const mapStyles = [
 
 const MapSection = () => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const googleMapRef = useRef<google.maps.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   
-  // Separate useEffect for script loading
+  // Separate useEffect for script loading and map initialization
   useEffect(() => {
     let isMounted = true;
     
-    const loadMap = async () => {
+    const initializeMap = async () => {
+      if (!mapRef.current) return;
+      
       try {
+        // Load Google Maps script
         await loadGoogleMapsScript();
         
-        // Only proceed if component is still mounted
-        if (!isMounted || !mapRef.current || !window.google) return;
+        // Check if component is still mounted and if window.google exists
+        if (!isMounted || !window.google || !mapRef.current) return;
         
-        try {
-          // Create map with default location first
-          const defaultLocation = { lat: 40.758, lng: -73.985 }; // NYC default
-          
-          const map = new window.google.maps.Map(mapRef.current, {
-            center: defaultLocation,
-            zoom: 14,
-            styles: mapStyles,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false
-          });
-          
-          // Store the map instance in ref for later use
-          mapInstanceRef.current = map;
+        // Create map with default location
+        const defaultLocation = { lat: 40.758, lng: -73.985 }; // NYC default
+        
+        const mapInstance = new window.google.maps.Map(mapRef.current, {
+          center: defaultLocation,
+          zoom: 14,
+          styles: mapStyles,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false
+        });
+        
+        // Store map instance in ref
+        googleMapRef.current = mapInstance;
+        
+        // Set map as loaded successfully
+        if (isMounted) {
           setMapLoaded(true);
-        } catch (mapError) {
-          console.error("Error creating map:", mapError);
-          toast({
-            title: "Map Error",
-            description: "Could not initialize Google Maps. Please refresh the page.",
-            variant: "destructive"
-          });
         }
-      } catch (scriptError) {
-        console.error("Error loading Google Maps script:", scriptError);
+      } catch (error) {
+        console.error("Error initializing map:", error);
         if (isMounted) {
           toast({
             title: "Map Error",
@@ -122,24 +120,27 @@ const MapSection = () => {
       }
     };
     
-    loadMap();
+    initializeMap();
     
     // Clean up function
     return () => {
       isMounted = false;
-      cleanupGoogleMapsScript();
+      
+      // Clear Google Maps setup
+      googleMapRef.current = null;
     };
   }, []);
   
   // Separate useEffect for user location and markers
   useEffect(() => {
     let isMounted = true;
+    const markers: google.maps.Marker[] = [];
     
     const setupMapFeatures = async () => {
       // Only proceed if map is loaded
-      if (!mapLoaded || !mapInstanceRef.current || !window.google) return;
+      if (!mapLoaded || !googleMapRef.current || !window.google) return;
       
-      const map = mapInstanceRef.current;
+      const map = googleMapRef.current;
       
       // Add community recommendations
       communityRecommendations.forEach(location => {
@@ -157,6 +158,8 @@ const MapSection = () => {
               scale: 8,
             }
           });
+          
+          markers.push(marker);
           
           // Create info window with location details
           if (location.description) {
@@ -194,7 +197,7 @@ const MapSection = () => {
         map.panTo(userCoords);
         
         // Add user location marker
-        new window.google.maps.Marker({
+        const userMarker = new window.google.maps.Marker({
           position: userCoords,
           map,
           title: "Your Location",
@@ -208,10 +211,14 @@ const MapSection = () => {
           }
         });
         
-        toast({
-          title: "Location found",
-          description: "Showing recommendations near you!",
-        });
+        markers.push(userMarker);
+        
+        if (isMounted) {
+          toast({
+            title: "Location found",
+            description: "Showing recommendations near you!",
+          });
+        }
       } catch (locationError) {
         console.warn("Could not get user location:", locationError);
         if (isMounted) {
@@ -229,10 +236,23 @@ const MapSection = () => {
       setupMapFeatures();
     }
     
+    // Clean up function - remove markers when unmounting
     return () => {
       isMounted = false;
+      
+      // Clear all markers
+      markers.forEach(marker => {
+        marker.setMap(null);
+      });
     };
   }, [mapLoaded]);
+  
+  // Final cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupGoogleMapsScript();
+    };
+  }, []);
   
   return (
     <section id="map-section" className="py-16 px-4 md:px-8 bg-white">
