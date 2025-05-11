@@ -13,8 +13,27 @@ import SavedPlacesPage from "./pages/SavedPlacesPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import TermsPage from "./pages/TermsPage";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
+
+// Create a wrapper component that includes the AuthProvider
+// This is necessary because AuthProvider needs the Router context
+const AppWithProviders = () => (
+  <AuthProvider>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/map" element={<MapPage />} />
+      <Route path="/add" element={<AddPlacePage />} />
+      <Route path="/saved" element={<SavedPlacesPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </AuthProvider>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,17 +41,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/add" element={<AddPlacePage />} />
-          <Route path="/saved" element={<SavedPlacesPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppWithProviders />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

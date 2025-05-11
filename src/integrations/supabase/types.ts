@@ -9,6 +9,303 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      feed_posts: {
+        Row: {
+          created_at: string
+          id: string
+          place_id: string | null
+          review_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          place_id?: string | null
+          review_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          place_id?: string | null
+          review_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_posts_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_posts_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          place_id: string
+          recipient_id: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          place_id: string
+          recipient_id: string
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          place_id?: string
+          recipient_id?: string
+          sender_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          place_id: string | null
+          review_id: string | null
+          seen: boolean
+          sender_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          place_id?: string | null
+          review_id?: string | null
+          seen?: boolean
+          sender_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          place_id?: string | null
+          review_id?: string | null
+          seen?: boolean
+          sender_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      places: {
+        Row: {
+          address: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          lat: number
+          lng: number
+          name: string
+          tags: string[] | null
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          tags?: string[] | null
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "places_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          id: string
+          photo_url: string | null
+          place_id: string
+          rating_atmosphere: number | null
+          rating_food: number | null
+          rating_service: number | null
+          text: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          place_id: string
+          rating_atmosphere?: number | null
+          rating_food?: number | null
+          rating_service?: number | null
+          text?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          place_id?: string
+          rating_atmosphere?: number | null
+          rating_food?: number | null
+          rating_service?: number | null
+          text?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Saborisauth: {
         Row: {
           created_at: string
@@ -24,12 +321,92 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          location: string | null
+          name: string
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id: string
+          location?: string | null
+          name: string
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          location?: string | null
+          name?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          place_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          place_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          place_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlists_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_followers_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      get_following_count: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
+      is_following: {
+        Args: { follower_uuid: string; following_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

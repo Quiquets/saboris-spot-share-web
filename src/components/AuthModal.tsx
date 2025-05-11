@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -18,64 +20,64 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const { signIn, signUp, signInWithGoogle } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!email || !password) {
+      toast.error("Please enter your email and password");
+      return;
+    }
+
+    setLoading(true);
+    
     try {
-      // Here we would connect to Supabase for auth
-      toast({
-        title: "Sign In",
-        description: "This would connect to Supabase for authentication.",
-      });
-      
-      // Simulate success and redirect
-      setTimeout(() => {
+      const user = await signIn(email, password);
+      if (user) {
         onClose();
-        window.location.href = '/map';
-      }, 1500);
+        toast.success("Signed in successfully!");
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign in. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Sign in error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!name || !email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    
     try {
-      // Here we would connect to Supabase for registration
-      toast({
-        title: "Sign Up",
-        description: "This would connect to Supabase for registration and send a verification email.",
-      });
-      
-      // Simulate success
-      setTimeout(() => {
-        onClose();
-        toast({
-          title: "Verification Email Sent",
-          description: "Please check your inbox to verify your account.",
-        });
-      }, 1500);
+      await signUp(email, password, name);
+      // Don't close modal - user should verify email
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sign up. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Sign up error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSocialAuth = (provider: string) => {
-    toast({
-      title: `${provider} Authentication`,
-      description: `This would connect to ${provider} OAuth via Supabase.`,
-    });
+  const handleGoogleAuth = async () => {
+    try {
+      await signInWithGoogle();
+      // Modal will close automatically on redirect
+    } catch (error) {
+      console.error("Google sign in error:", error);
+    }
   };
 
   return (
@@ -100,6 +102,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
+                  disabled={loading}
                 />
               </div>
               
@@ -112,11 +115,16 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  disabled={loading}
                 />
               </div>
               
-              <Button type="submit" className="w-full bg-saboris-primary hover:bg-saboris-primary/90 text-white">
-                Sign In
+              <Button 
+                type="submit" 
+                className="w-full bg-saboris-primary hover:bg-saboris-primary/90 text-white"
+                disabled={loading}
+              >
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
               
               <div className="relative my-4">
@@ -130,7 +138,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 </div>
               </div>
               
-              <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
+              <Button 
+                variant="outline" 
+                type="button" 
+                onClick={handleGoogleAuth}
+                className="w-full" 
+                disabled={loading}
+              >
                 <img 
                   src="/lovable-uploads/81b9365f-22f1-4778-aaab-1fa027d316c1.png" 
                   alt="Google" 
@@ -152,6 +166,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
                   required
+                  disabled={loading}
                 />
               </div>
               
@@ -164,6 +179,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
+                  disabled={loading}
                 />
               </div>
               
@@ -176,11 +192,16 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  disabled={loading}
                 />
               </div>
               
-              <Button type="submit" className="w-full bg-saboris-primary hover:bg-saboris-primary/90 text-white">
-                Sign Up
+              <Button 
+                type="submit" 
+                className="w-full bg-saboris-primary hover:bg-saboris-primary/90 text-white"
+                disabled={loading}
+              >
+                {loading ? 'Signing Up...' : 'Sign Up'}
               </Button>
               
               <div className="relative my-4">
@@ -194,7 +215,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 </div>
               </div>
               
-              <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
+              <Button 
+                variant="outline" 
+                type="button" 
+                onClick={handleGoogleAuth}
+                className="w-full" 
+                disabled={loading}
+              >
                 <img 
                   src="/lovable-uploads/81b9365f-22f1-4778-aaab-1fa027d316c1.png" 
                   alt="Google" 
