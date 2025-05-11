@@ -8,6 +8,7 @@ import { ChevronDown } from 'lucide-react';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '@/types/place';
+import { SelectDropdown } from '@/components/places/SelectDropdown';
 
 interface PlaceDetailsSectionProps {
   form: UseFormReturn<FormValues>;
