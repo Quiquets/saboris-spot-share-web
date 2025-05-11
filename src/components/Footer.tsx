@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -56,28 +55,24 @@ const Footer = () => {
   return (
     <footer className="bg-white py-10 px-4 md:px-8 border-t w-full">
       <div className="max-w-7xl mx-auto">
-        {/* Logo aligned to the left */}
-        <div className="flex justify-start mb-10">
-          <div className="flex items-center flex-col sm:flex-row sm:items-start">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+          <div className="flex items-center mb-4 md:mb-0">
             <img 
               src="/lovable-uploads/18c42043-5ae2-456f-9437-ccfbe067f1da.png" 
               alt="Saboris Logo" 
-              className="h-16 w-auto"
+              className="h-10 w-auto"
             />
-            <p className="text-gray-600 mt-4 sm:mt-0 sm:ml-4 text-center sm:text-left max-w-md">
+            <p className="text-gray-600 ml-4 text-sm">
               Connecting people through trusted food recommendations.
             </p>
           </div>
-        </div>
-        
-        {/* Footer links - horizontally aligned with consistent height */}
-        <div className="border-t pt-6">
-          <div className="flex justify-center md:justify-start flex-row flex-wrap gap-6 md:gap-12 mb-6">
+          
+          <div className="flex flex-wrap gap-4 md:gap-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10"
+                  className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8"
                 >
                   Contact Us
                 </Button>
@@ -168,7 +163,7 @@ const Footer = () => {
               href="https://www.instagram.com/saboris.places/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10 flex items-center"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
               aria-label="Instagram"
             >
               Follow Us
@@ -176,14 +171,14 @@ const Footer = () => {
             
             <Link 
               to="/terms" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10 flex items-center"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
             >
               Terms & Conditions
             </Link>
             
             <Link 
               to="/privacy" 
-              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-10 flex items-center"
+              className="text-gray-500 hover:text-saboris-primary transition-colors text-sm h-8 flex items-center"
             >
               Privacy Policy
             </Link>
