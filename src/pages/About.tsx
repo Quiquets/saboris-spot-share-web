@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Coffee, Pizza, Sandwich } from 'lucide-react';
+import { Coffee, Pizza, Sandwich, Instagram } from 'lucide-react';
 
 const About = () => {
   useEffect(() => {
