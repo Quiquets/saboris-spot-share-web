@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Google, Apple } from 'lucide-react';
+import { Github, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthModalProps {
@@ -132,11 +132,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
-                  <Google className="mr-2 h-4 w-4" />
+                  <Github className="mr-2 h-4 w-4" />
                   Google
                 </Button>
                 <Button variant="outline" type="button" onClick={() => handleSocialAuth("Apple")} className="w-full">
-                  <Apple className="mr-2 h-4 w-4" />
+                  <Mail className="mr-2 h-4 w-4" />
                   Apple
                 </Button>
               </div>
@@ -198,11 +198,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
-                  <Google className="mr-2 h-4 w-4" />
+                  <Github className="mr-2 h-4 w-4" />
                   Google
                 </Button>
                 <Button variant="outline" type="button" onClick={() => handleSocialAuth("Apple")} className="w-full">
-                  <Apple className="mr-2 h-4 w-4" />
+                  <Mail className="mr-2 h-4 w-4" />
                   Apple
                 </Button>
               </div>
