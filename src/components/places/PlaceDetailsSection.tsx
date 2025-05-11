@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Command, CommandInput, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Search } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { UseFormReturn } from 'react-hook-form';
 import { FormValues } from '@/types/place';
@@ -38,14 +38,14 @@ export function PlaceDetailsSection({ form, cuisineOptions }: PlaceDetailsSectio
                       variant="outline"
                       role="combobox"
                       aria-expanded={openCuisine}
-                      className="justify-between w-full border-2 rounded-xl"
+                      className="justify-between w-full border-2 rounded-xl bg-white"
                     >
                       {field.value
                         ? cuisineOptions.find(
                             (cuisine) => cuisine.value === field.value
                           )?.label
                         : "Select cuisine..."}
-                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>

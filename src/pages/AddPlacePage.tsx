@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -261,15 +262,15 @@ const AddPlacePage = () => {
                 cuisineOptions={cuisineOptions} 
               />
               
-              <PlaceRatingsSection form={form} />
-              
-              <PlacePhotosSection form={form} googleMapPhoto={googleMapPhoto} />
-              
               <PlaceTagsSection 
                 form={form} 
                 occasionOptions={occasionOptions} 
                 vibeOptions={vibeOptions} 
               />
+              
+              <PlaceRatingsSection form={form} />
+              
+              <PlacePhotosSection form={form} googleMapPhoto={googleMapPhoto} />
               
               <PlaceExperienceSection form={form} isSubmitting={isSubmitting} />
               

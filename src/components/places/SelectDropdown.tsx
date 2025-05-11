@@ -1,14 +1,8 @@
+
 import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FormLabel } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +48,10 @@ export function SelectDropdown({
     onChange([...selectedValues, value]);
   };
 
-  const handleRemove = (valueToRemove: string) => {
+  const handleRemove = (valueToRemove: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     onChange(selectedValues.filter((value) => value !== valueToRemove));
   };
 
@@ -75,48 +72,55 @@ export function SelectDropdown({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-start font-normal border-2 h-auto py-2 px-3"
+            className="w-full justify-between font-normal border-2 h-auto py-2 px-3 bg-white"
+            onClick={(e) => {
+              e.preventDefault();
+              setIsOpen(!isOpen);
+            }}
           >
-            {selectedValues.length === 0 ? (
-              <span className="text-muted-foreground">{placeholder}</span>
-            ) : (
-              <div className="flex flex-wrap gap-1">
-                {selectedLabels.map((label, index) => (
-                  <Badge key={index} variant="secondary" className="mr-1">
-                    {label}
-                    <button
-                      className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(selectedValues[index]);
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-1 items-center flex-grow justify-start">
+              {selectedValues.length === 0 ? (
+                <span className="text-muted-foreground">{placeholder}</span>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {selectedLabels.map((label, index) => (
+                    <Badge key={index} variant="secondary" className="mr-1">
+                      {label}
+                      <button
+                        className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemove(selectedValues[index]);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+            <ChevronDown className="h-4 w-4 opacity-50 ml-2 shrink-0" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-full" align="start">
+        <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)]" align="start">
           <ScrollArea className="h-[200px]">
             <div className="p-1">
               {options.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
-                  className={`flex items-center space-x-2 ${
-                    selectedValues.includes(option.value) ? "bg-secondary" : ""
+                  className={`flex items-center justify-between space-x-2 ${
+                    selectedValues.includes(option.value) ? "bg-muted" : ""
                   }`}
-                  onSelect={(e) => {
-                    e.preventDefault();
+                  onSelect={(event) => {
+                    event.preventDefault();
                     handleSelect(option.value);
                   }}
                 >
+                  <span>{option.label}</span>
                   {selectedValues.includes(option.value) && (
                     <span className="h-2 w-2 bg-primary rounded-full"></span>
                   )}
-                  <span>{option.label}</span>
                 </DropdownMenuItem>
               ))}
             </div>
