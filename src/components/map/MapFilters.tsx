@@ -136,7 +136,7 @@ const MapFilters: React.FC<MapFiltersProps> = ({
                     : "border-saboris-primary text-saboris-gray"}`}
                   onClick={() => {
                     const newFilters = activeFilters.vibe.includes(option.id)
-                      ? activeFilters.vibe.filter(id => id !== option.id)
+                      ? activeFilters.vibe.filter(id => id !== filter.id)
                       : [...activeFilters.vibe, option.id];
                     handleFilterChange('vibe', newFilters);
                   }}
