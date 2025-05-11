@@ -48,7 +48,7 @@ const UserMenu = () => {
             )}
           >
             <Avatar className="h-full w-full">
-              <AvatarImage src={user.avatar_url || undefined} alt={user.name} />
+              <AvatarImage src={user.avatar_url || undefined} alt={user.name} className="object-cover h-full w-full" />
               <AvatarFallback className="bg-white/50 text-saboris-primary">
                 {user.name?.charAt(0) || '?'}
               </AvatarFallback>
@@ -58,7 +58,7 @@ const UserMenu = () => {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{user.name}</p>
+              <p className="text-sm font-medium leading-none text-gray-800">{user.name}</p>
               <p className="text-xs leading-none text-muted-foreground">@{user.username}</p>
             </div>
           </DropdownMenuLabel>
