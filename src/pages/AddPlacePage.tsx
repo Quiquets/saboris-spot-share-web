@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from "@/components/ui/switch";
-import { Loader2, MapPin, PlusCircle, Share } from 'lucide-react';
+import { Loader2, MapPin, PlusCircle, Share, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -40,6 +40,7 @@ import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { TagSelector } from '@/components/places/TagSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
 import { FriendSelector } from '@/components/places/FriendSelector';
+import { filterOptions } from '@/components/map/FilterOptions';
 
 // Form schema with Zod validation
 const formSchema = z.object({
@@ -48,7 +49,7 @@ const formSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   place_id: z.string(),
-  place_type: z.enum(["restaurant", "bar"]),
+  place_type: z.enum(["restaurant", "bar", "cafe"]),
   rating_food: z.number().min(1, "Food rating is required"),
   rating_service: z.number().min(1, "Service rating is required"),
   rating_atmosphere: z.number().min(1, "Atmosphere rating is required"),
@@ -56,6 +57,7 @@ const formSchema = z.object({
   cuisine: z.string().optional(),
   price_range: z.string().min(1, "Price range is required"),
   occasions: z.array(z.string()).optional(),
+  vibes: z.array(z.string()).optional(),
   description: z.string().optional(),
   ordered_items: z.string().optional(),
   photo_urls: z.array(z.string()).optional(),
@@ -65,13 +67,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// Cuisine options
-const cuisineOptions = [
-  "American", "Italian", "Mexican", "Chinese", "Japanese", "Thai", 
-  "Indian", "French", "Mediterranean", "Greek", "Spanish", "Korean", 
-  "Vietnamese", "Middle Eastern", "African", "Caribbean", "Fusion", 
-  "Seafood", "Steakhouse", "Vegetarian", "Vegan", "Bakery", "Dessert", "Other"
-];
+// Convert FilterOptions into cuisine options
+const cuisineOptions = filterOptions.foodType.map(item => item.label.replace(/\s*🍣|🥘|🍝|🍔|☕|🌮|🥗|🍰|🍜|🥡|🥞|🦞|🍕|🍖|🥬|🥕|🫒|🥙|🥐|🍲|🍱|🧆/g, '').trim());
 
 // Occasion options
 const occasionOptions = [
@@ -80,6 +77,9 @@ const occasionOptions = [
   "Friends Night Out", "Work Lunch", "Business Dinner",
   "Quick Bite", "Late Night", "Drinks Only"
 ];
+
+// Get vibe options from filter options
+const vibeOptions = filterOptions.vibe.map(item => item.label);
 
 const AddPlacePage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -104,6 +104,7 @@ const AddPlacePage = () => {
       cuisine: undefined,
       price_range: '',
       occasions: [],
+      vibes: [],
       description: '',
       ordered_items: '',
       photo_urls: [],
@@ -142,6 +143,7 @@ const AddPlacePage = () => {
   }, []);
 
   const handlePlaceSelect = (placeDetails: any) => {
+    console.log("Place selected:", placeDetails);
     form.setValue('place_name', placeDetails.name);
     form.setValue('address', placeDetails.address);
     form.setValue('lat', placeDetails.lat);
@@ -169,6 +171,7 @@ const AddPlacePage = () => {
           category: values.place_type,
           description: values.description || '',
           tags: values.occasions || [],
+          vibes: values.vibes || [],
           created_by: user.id
         })
         .select()
@@ -185,6 +188,7 @@ const AddPlacePage = () => {
           rating_food: values.rating_food,
           rating_service: values.rating_service,
           rating_atmosphere: values.rating_atmosphere,
+          rating_value: values.rating_value,
           text: values.description,
           photo_url: values.photo_urls && values.photo_urls.length > 0 ? values.photo_urls[0] : null
         })
@@ -262,29 +266,32 @@ const AddPlacePage = () => {
   }
   
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
       <div className="flex-grow container mx-auto px-4 py-12">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center mb-8 gap-2">
-            <PlusCircle className="text-saboris-primary h-6 w-6" />
-            <h1 className="text-3xl font-bold">Share a Place</h1>
+          <div className="flex items-center mb-8 gap-3">
+            <Sparkles className="text-saboris-primary h-7 w-7" />
+            <h1 className="text-3xl font-bold">Share Your Experience</h1>
           </div>
           
-          <Card className="p-6">
+          <Card className="p-8 shadow-lg border-0 rounded-xl">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
                 {/* Basic Place Information */}
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Place Information</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                    Place Information
+                  </h2>
                   
                   <FormField
                     control={form.control}
                     name="place_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Place Name</FormLabel>
+                        <FormLabel className="text-gray-700">Place Name</FormLabel>
                         <FormControl>
                           <PlaceAutocomplete 
                             value={field.value}
@@ -302,15 +309,15 @@ const AddPlacePage = () => {
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location</FormLabel>
+                        <FormLabel className="text-gray-700">Location</FormLabel>
                         <FormControl>
                           <div className="flex items-center">
-                            <MapPin className="mr-2 h-4 w-4 text-gray-400" />
+                            <MapPin className="mr-2 h-5 w-5 text-saboris-primary" />
                             <Input 
                               {...field}
                               placeholder="Address will be filled automatically"
                               disabled={true}
-                              className="bg-gray-50"
+                              className="bg-gray-50 border-2"
                             />
                           </div>
                         </FormControl>
@@ -324,7 +331,7 @@ const AddPlacePage = () => {
                     name="place_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Place Type</FormLabel>
+                        <FormLabel className="text-gray-700">Place Type</FormLabel>
                         <FormControl>
                           <PlaceTypeToggle
                             value={field.value}
@@ -339,7 +346,10 @@ const AddPlacePage = () => {
                 
                 {/* Ratings Section */}
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Ratings</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                    Ratings
+                  </h2>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
@@ -414,7 +424,10 @@ const AddPlacePage = () => {
                 
                 {/* Details Section */}
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Details</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                    Details
+                  </h2>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
@@ -422,18 +435,18 @@ const AddPlacePage = () => {
                       name="cuisine"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Cuisine</FormLabel>
+                          <FormLabel className="text-gray-700">Cuisine</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
                             disabled={isSubmitting}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="border-2 focus:border-saboris-primary">
                                 <SelectValue placeholder="Select a cuisine" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="max-h-80">
                               <SelectGroup>
                                 {cuisineOptions.map(cuisine => (
                                   <SelectItem key={cuisine} value={cuisine}>
@@ -483,23 +496,46 @@ const AddPlacePage = () => {
                       </FormItem>
                     )}
                   />
+                  
+                  <FormField
+                    control={form.control}
+                    name="vibes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <TagSelector
+                            label="Vibe"
+                            options={vibeOptions}
+                            selectedTags={field.value || []}
+                            onChange={field.onChange}
+                            maxSelection={5}
+                            searchable={true}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 
                 {/* Additional Information */}
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold">Additional Information</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                    Additional Information
+                  </h2>
                   
                   <FormField
                     control={form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>What made this place special?</FormLabel>
+                        <FormLabel className="text-gray-700">What made this place special?</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             placeholder="Share your experience..."
-                            className="min-h-[100px]"
+                            className="min-h-[100px] border-2 focus:border-saboris-primary resize-none"
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -513,11 +549,12 @@ const AddPlacePage = () => {
                     name="ordered_items"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>What did you order?</FormLabel>
+                        <FormLabel className="text-gray-700">What did you order?</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             placeholder="List the dishes you tried..."
+                            className="border-2 focus:border-saboris-primary resize-none"
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -547,9 +584,9 @@ const AddPlacePage = () => {
                     control={form.control}
                     name="is_public"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between">
+                      <FormItem className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
                         <div>
-                          <FormLabel>Post Visibility</FormLabel>
+                          <FormLabel className="text-gray-700 font-medium">Post Visibility</FormLabel>
                           <p className="text-sm text-gray-500">
                             {field.value ? "Visible to everyone" : "Visible only to your followers"}
                           </p>
@@ -569,7 +606,10 @@ const AddPlacePage = () => {
                 {/* Friend Selection (Only show after submission) */}
                 {showFriendSelector && (
                   <div className="space-y-6">
-                    <h2 className="text-xl font-semibold">Share with Friends</h2>
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                      Share with Friends
+                    </h2>
                     
                     <FormField
                       control={form.control}
@@ -592,19 +632,23 @@ const AddPlacePage = () => {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full bg-saboris-primary hover:bg-saboris-primary/90"
+                  className={`w-full py-6 text-lg rounded-xl transition-all transform hover:scale-[1.02] ${
+                    showFriendSelector 
+                      ? "bg-saboris-primary hover:bg-saboris-primary/90" 
+                      : "bg-saboris-primary hover:bg-saboris-primary/90"
+                  }`}
                   disabled={isSubmitting || (!showFriendSelector && !isFormValid())}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       {showFriendSelector ? "Sharing..." : "Adding..."}
                     </>
                   ) : (
                     <>
                       {showFriendSelector ? (
                         <>
-                          <Share className="mr-2 h-4 w-4" />
+                          <Share className="mr-2 h-5 w-5" />
                           Share with your friends!
                         </>
                       ) : (
@@ -615,12 +659,12 @@ const AddPlacePage = () => {
                 </Button>
                 
                 {showFriendSelector && (
-                  <div className="text-center text-sm text-gray-500">
+                  <div className="text-center text-sm text-gray-500 pt-2">
                     or{" "}
                     <button
                       type="button"
                       onClick={() => navigate('/profile')}
-                      className="text-saboris-primary hover:underline"
+                      className="text-saboris-primary hover:underline font-medium"
                     >
                       Skip this step
                     </button>

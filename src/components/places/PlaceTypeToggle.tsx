@@ -1,9 +1,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Utensils, Wine } from "lucide-react";
+import { Utensils, Wine, Coffee } from "lucide-react";
 
-type PlaceType = "restaurant" | "bar";
+type PlaceType = "restaurant" | "bar" | "cafe";
 
 interface PlaceTypeToggleProps {
   value: PlaceType;
@@ -12,7 +12,7 @@ interface PlaceTypeToggleProps {
 
 export function PlaceTypeToggle({ value, onChange }: PlaceTypeToggleProps) {
   return (
-    <div className="flex space-x-2">
+    <div className="flex flex-wrap gap-2">
       <Button
         type="button"
         variant={value === "restaurant" ? "default" : "outline"}
@@ -30,6 +30,15 @@ export function PlaceTypeToggle({ value, onChange }: PlaceTypeToggleProps) {
       >
         <Wine className="mr-2 h-4 w-4" />
         Bar
+      </Button>
+      <Button
+        type="button"
+        variant={value === "cafe" ? "default" : "outline"}
+        className={value === "cafe" ? "bg-saboris-primary hover:bg-saboris-primary/90" : ""}
+        onClick={() => onChange("cafe")}
+      >
+        <Coffee className="mr-2 h-4 w-4" />
+        Café
       </Button>
     </div>
   );

@@ -37,18 +37,26 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const autocompleteSessionToken = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   
+  // Initialize Google Places API services when component mounts
   useEffect(() => {
-    // Initialize Google Places services
-    if (window.google && window.google.maps) {
-      autocompleteService.current = new google.maps.places.AutocompleteService();
-      
-      // Need a DOM element for PlacesService even if we don't show the map
-      const mapDiv = document.createElement('div');
-      placesService.current = new google.maps.places.PlacesService(mapDiv);
-      
-      // Create a new session token for better pricing
-      autocompleteSessionToken.current = new google.maps.places.AutocompleteSessionToken();
-    }
+    const initGooglePlaces = () => {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        console.log("Initializing Google Places services");
+        autocompleteService.current = new window.google.maps.places.AutocompleteService();
+        
+        // Need a DOM element for PlacesService even if we don't show the map
+        const mapDiv = document.createElement('div');
+        placesService.current = new window.google.maps.places.PlacesService(mapDiv);
+        
+        // Create a new session token for better pricing
+        autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
+      } else {
+        console.warn("Google Maps API not loaded yet, retrying in 500ms");
+        setTimeout(initGooglePlaces, 500);
+      }
+    };
+    
+    initGooglePlaces();
     
     return () => {
       // Clean up
@@ -154,11 +162,11 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
           }}
           onBlur={handleClickOutside}
           disabled={disabled}
-          className="w-full"
+          className="w-full border-2 focus:border-saboris-primary"
         />
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <Loader2 className="h-4 w-4 animate-spin text-saboris-primary" />
           </div>
         )}
       </div>
@@ -169,7 +177,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
             <li
               key={prediction.place_id}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => handlePredictionClick(prediction)}
+              onMouseDown={() => handlePredictionClick(prediction)}
             >
               <div className="font-medium">
                 {prediction.structured_formatting.main_text}
