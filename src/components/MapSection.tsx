@@ -83,7 +83,7 @@ const MapSection = () => {
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
   const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
   
-  // Get user location and initialize map with it
+  // Auto-center map on user's location when loaded
   const initializeMap = useCallback(async () => {
     if (!mapContainerRef.current) return;
     
@@ -94,36 +94,33 @@ const MapSection = () => {
       // Safety check if component is still mounted and Google Maps is loaded
       if (!mapContainerRef.current || !window.google?.maps) return;
       
-      // Try to get user location first
-      try {
-        // Get user location
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const userCoords = { 
-              lat: position.coords.latitude, 
-              lng: position.coords.longitude 
-            };
-            
-            // Store user location in ref
-            userLocationRef.current = userCoords;
-            
-            // Initialize map with user location
-            createMap(userCoords);
-          },
-          // If user location fails, use default location
-          (error) => {
-            console.warn("Could not get user location:", error);
-            // Default location - NYC
-            const defaultLocation = { lat: 40.758, lng: -73.985 };
-            createMap(defaultLocation);
-          }
-        );
-      } catch (geolocationError) {
-        console.warn("Geolocation error:", geolocationError);
-        // Default location - NYC
-        const defaultLocation = { lat: 40.758, lng: -73.985 };
-        createMap(defaultLocation);
-      }
+      // Automatically try to get user location on map load
+      safeGetUserLocation(
+        (position) => {
+          const userCoords = { 
+            lat: position.coords.latitude, 
+            lng: position.coords.longitude 
+          };
+          
+          // Store user location in ref
+          userLocationRef.current = userCoords;
+          
+          // Initialize map with user location
+          createMap(userCoords);
+        },
+        // If user location fails, use default location
+        (error) => {
+          console.warn("Could not get user location:", error);
+          toast({
+            title: "Location access denied",
+            description: "We're showing our default recommendations instead.",
+            variant: "destructive"
+          });
+          // Default location - NYC
+          const defaultLocation = { lat: 40.758, lng: -73.985 };
+          createMap(defaultLocation);
+        }
+      );
     } catch (error) {
       console.error("Error initializing map:", error);
       toast({

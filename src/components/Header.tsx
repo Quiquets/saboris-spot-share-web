@@ -35,7 +35,7 @@ const Header = () => {
       <div className="flex items-center">
         <Link to="/dashboard" className="flex items-center">
           <img 
-            src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
+            src="/lovable-uploads/8fa264ad-59c9-42a1-89b0-eefa3d3d2bbf.png" 
             alt="Saboris Logo" 
             className="h-8 w-auto"
           />

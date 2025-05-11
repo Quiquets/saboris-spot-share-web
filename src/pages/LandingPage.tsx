@@ -25,10 +25,10 @@ const LandingPage = () => {
         
         <Button 
           variant="outline" 
-          className="text-white border-white hover:bg-white hover:text-saboris-primary"
+          className="text-white border-white hover:bg-white hover:text-saboris-primary px-4"
           onClick={() => setIsAuthModalOpen(true)}
         >
-          <span className="block">Sign in</span>
+          Sign in
         </Button>
       </header>
       
@@ -71,7 +71,7 @@ const LandingPage = () => {
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
               <img 
-                src="/lovable-uploads/b7b8b076-5e15-4c2b-92c0-ada36bc99a6f.png" 
+                src="/lovable-uploads/8fa264ad-59c9-42a1-89b0-eefa3d3d2bbf.png" 
                 alt="Saboris" 
                 className="w-24 h-24 rounded-full shadow-xl bg-white p-3"
               />

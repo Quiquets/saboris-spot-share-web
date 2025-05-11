@@ -132,7 +132,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
                 <img 
-                  src="/lovable-uploads/2ecb9839-a017-43ff-a988-cb3000277b50.png" 
+                  src="/lovable-uploads/81b9365f-22f1-4778-aaab-1fa027d316c1.png" 
                   alt="Google" 
                   className="mr-2 h-4 w-4" 
                 />
@@ -196,7 +196,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               
               <Button variant="outline" type="button" onClick={() => handleSocialAuth("Google")} className="w-full">
                 <img 
-                  src="/lovable-uploads/2ecb9839-a017-43ff-a988-cb3000277b50.png" 
+                  src="/lovable-uploads/81b9365f-22f1-4778-aaab-1fa027d316c1.png" 
                   alt="Google" 
                   className="mr-2 h-4 w-4" 
                 />
