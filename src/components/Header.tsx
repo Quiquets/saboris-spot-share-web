@@ -89,9 +89,7 @@ const Header = () => {
           </Link>
         ) : (
           <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1 text-white border-white hover:bg-white hover:text-saboris-primary"
+            className="bg-[#EE8C80] text-white border-[#EE8C80] px-4 hover:bg-[#EE8C80] hover:text-white hover:border-[#EE8C80]"
             onClick={() => window.location.href = '/'}
           >
             <span>Sign In</span>
@@ -128,29 +126,17 @@ const Header = () => {
               </Link>
               
               {user ? (
-                <Link 
-                  to="/profile" 
-                  className={cn(
-                    "px-4 py-2 font-medium rounded-md flex items-center",
-                    isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                  )}
-                >
-                  <User className="h-4 w-4 mr-2" /> Profile
-                </Link>
-              ) : (
-                <Link 
-                  to="/" 
-                  className={cn(
-                    "px-4 py-2 font-medium rounded-md flex items-center",
-                    isActive('/') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
-                  )}
-                >
-                  <User className="h-4 w-4 mr-2" /> Sign In
-                </Link>
-              )}
-              
-              {user && (
                 <>
+                  <Link 
+                    to="/profile" 
+                    className={cn(
+                      "px-4 py-2 font-medium rounded-md flex items-center",
+                      isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
+                    )}
+                  >
+                    <User className="h-4 w-4 mr-2" /> Profile
+                  </Link>
+                  
                   <hr className="my-2" />
                   
                   <button 
@@ -160,6 +146,13 @@ const Header = () => {
                     <LogOut className="h-4 w-4 mr-2" /> Log out
                   </button>
                 </>
+              ) : (
+                <Link 
+                  to="/" 
+                  className="px-4 py-2 font-medium bg-saboris-primary text-white rounded-md flex items-center"
+                >
+                  <User className="h-4 w-4 mr-2" /> Sign In
+                </Link>
               )}
             </div>
           </SheetContent>

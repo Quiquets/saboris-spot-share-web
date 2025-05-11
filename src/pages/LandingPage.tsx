@@ -24,8 +24,7 @@ const LandingPage = () => {
         </Link>
         
         <Button 
-          variant="outline" 
-          className="text-white border-white hover:bg-white hover:text-saboris-primary px-4"
+          className="bg-[#EE8C80] text-white border-[#EE8C80] px-4 hover:bg-[#EE8C80] hover:text-white hover:border-[#EE8C80]"
           onClick={() => setIsAuthModalOpen(true)}
         >
           <span>Sign In</span>
