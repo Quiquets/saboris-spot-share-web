@@ -1,7 +1,41 @@
 
 import { Instagram } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 const HeroSection = () => {
+  // Ref for the scrolling text container
+  const scrollTextRef = useRef<HTMLDivElement>(null);
+
+  // Effect to handle scrolling animation
+  useEffect(() => {
+    const textElement = scrollTextRef.current;
+    if (!textElement) return;
+    
+    const scrollSpeed = 1; // Controls the scrolling speed
+    let animationFrameId: number;
+    let scrollPosition = 0;
+    
+    const scrollText = () => {
+      if (!textElement) return;
+      
+      scrollPosition += scrollSpeed;
+      
+      // Reset position when text has scrolled completely
+      if (scrollPosition > textElement.scrollWidth / 2) {
+        scrollPosition = 0;
+      }
+      
+      textElement.style.transform = `translateX(-${scrollPosition}px)`;
+      animationFrameId = requestAnimationFrame(scrollText);
+    };
+    
+    animationFrameId = requestAnimationFrame(scrollText);
+    
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   return (
     <section className="relative flex flex-col items-center justify-center px-0 py-12 bg-white overflow-hidden w-full">
       {/* Background elements */}
@@ -19,8 +53,25 @@ const HeroSection = () => {
           Taste, Share, Explore
         </h2>
         
+        {/* Scrolling text banner */}
+        <div className="relative w-full overflow-hidden bg-gradient-to-r from-saboris-peach to-saboris-orange py-2 mb-4">
+          <div 
+            ref={scrollTextRef}
+            className="whitespace-nowrap text-white font-bold text-xl"
+            style={{ width: 'fit-content', display: 'flex' }}
+          >
+            {/* Repeat the text multiple times to create continuous scroll effect */}
+            {Array.from({ length: 20 }).map((_, i) => (
+              <span key={i} className="px-4">
+                APP COMING SOON
+                <span className="inline-block mx-4">•</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        
         {/* Phone mockups displayed horizontally across full width */}
-        <div className="mt-10 mb-8 w-full relative z-10">
+        <div className="mt-6 mb-8 w-full relative z-10">
           <div className="flex justify-center items-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 max-w-[100vw] overflow-hidden">
             {/* First phone mockup */}
             <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
