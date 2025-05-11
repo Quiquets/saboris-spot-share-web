@@ -16,6 +16,14 @@ import {
 } from "@/components/ui/tabs";
 import { filterOptions, ActiveFilters, FilterChangeHandler, PeopleFilterChangeHandler } from './FilterOptions';
 
+// Map option.id values to their corresponding state keys
+const directionKeyMap: Record<string, keyof ActiveFilters> = {
+  'value': 'valueSortDirection',
+  'food-quality': 'foodSortDirection',
+  'service': 'serviceSortDirection',
+  'atmosphere': 'atmosphereSortDirection'
+};
+
 interface MapFiltersProps {
   activeFilters: ActiveFilters;
   handleFilterChange: FilterChangeHandler;
@@ -136,7 +144,7 @@ const MapFilters: React.FC<MapFiltersProps> = ({
                     : "border-saboris-primary text-saboris-gray"}`}
                   onClick={() => {
                     const newFilters = activeFilters.vibe.includes(option.id)
-                      ? activeFilters.vibe.filter(id => id !== filter.id)
+                      ? activeFilters.vibe.filter(id => id !== option.id)
                       : [...activeFilters.vibe, option.id];
                     handleFilterChange('vibe', newFilters);
                   }}
@@ -194,33 +202,26 @@ const MapFilters: React.FC<MapFiltersProps> = ({
               <div>
                 <h3 className="font-medium mb-2 text-saboris-gray">Rating Criteria</h3>
                 <div className="grid grid-cols-1 gap-2">
-                  {filterOptions.additional.map(option => (
-                    <Button 
-                      key={option.id}
-                      variant="outline"
-                      className="justify-between text-xs px-2 py-1 w-full border-saboris-primary text-saboris-gray"
-                      onClick={() => toggleSortDirection(option.id)}
-                    >
-                      {option.label}
-                      {option.id === 'value' ? (
-                        activeFilters.valueSortDirection === "desc" ? 
-                        <ArrowDown className="h-3 w-3" /> : 
-                        <ArrowUp className="h-3 w-3" />
-                      ) : option.id === 'food-quality' ? (
-                        activeFilters.foodSortDirection === "desc" ? 
-                        <ArrowDown className="h-3 w-3" /> : 
-                        <ArrowUp className="h-3 w-3" />
-                      ) : option.id === 'service' ? (
-                        activeFilters.serviceSortDirection === "desc" ? 
-                        <ArrowDown className="h-3 w-3" /> : 
-                        <ArrowUp className="h-3 w-3" />
-                      ) : (
-                        activeFilters.atmosphereSortDirection === "desc" ? 
-                        <ArrowDown className="h-3 w-3" /> : 
-                        <ArrowUp className="h-3 w-3" />
-                      )}
-                    </Button>
-                  ))}
+                  {filterOptions.additional.map(option => {
+                    // Get the corresponding direction key from the mapping
+                    const directionKey = directionKeyMap[option.id] as keyof ActiveFilters;
+                    const currentDirection = activeFilters[directionKey] as "asc" | "desc";
+                    
+                    return (
+                      <Button 
+                        key={option.id}
+                        variant="outline"
+                        className="justify-between text-xs px-2 py-1 w-full border-saboris-primary text-saboris-gray"
+                        onClick={() => toggleSortDirection(option.id)}
+                      >
+                        {option.label}
+                        {currentDirection === "desc" ? 
+                          <ArrowDown className="h-3 w-3" /> : 
+                          <ArrowUp className="h-3 w-3" />
+                        }
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
