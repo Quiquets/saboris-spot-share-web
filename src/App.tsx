@@ -1,20 +1,21 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Index from '@/pages';
-import TermsPage from '@/pages/TermsPage';
-import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
-import About from '@/pages/About';
-import MapPage from '@/pages/MapPage';
-import ProfilePage from '@/pages/ProfilePage';
-import SavedPlacesPage from '@/pages/SavedPlacesPage';
-import AddPlacePage from '@/pages/AddPlacePage';
-import Dashboard from '@/pages/Dashboard';
-import NotFound from '@/pages/NotFound';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from "@/components/theme-provider"
+import Index from './pages';
+import TermsPage from './pages/TermsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import About from './pages/About';
+import MapPage from './pages/MapPage';
+import ProfilePage from './pages/ProfilePage';
+import SavedPlacesPage from './pages/SavedPlacesPage';
+import AddPlacePage from './pages/AddPlacePage';
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from 'sonner'
-import ProtectedRoute from '@/components/ProtectedRoute';
-import FindFriendsPage from '@/pages/FindFriendsPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import FindFriendsPage from './pages/FindFriendsPage';
 
 function App() {
   return (
