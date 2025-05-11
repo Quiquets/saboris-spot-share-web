@@ -67,7 +67,6 @@ const SearchUsersPage = () => {
     try {
       await supabaseService.followUser(userId);
       
-      // Update the user in the list
       setUsers(users.map(u => 
         u.id === userId 
           ? { ...u, is_following: true, followers_count: (u.followers_count || 0) + 1 } 
@@ -93,7 +92,6 @@ const SearchUsersPage = () => {
     try {
       await supabaseService.unfollowUser(userId);
       
-      // Update the user in the list
       setUsers(users.map(u => 
         u.id === userId 
           ? { ...u, is_following: false, followers_count: Math.max(0, (u.followers_count || 1) - 1) } 
@@ -115,9 +113,9 @@ const SearchUsersPage = () => {
       
       <div className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-6">Find Friends</h1>
+          <h1 className="text-2xl font-bold mb-6 text-center">Find Friends</h1>
           
-          <div className="relative">
+          <div className="relative max-w-lg mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input 
               value={searchQuery}

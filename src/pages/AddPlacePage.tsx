@@ -55,7 +55,10 @@ const AddPlacePage = () => {
   return (
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-      <AddPlaceForm />
+      <div className="container mx-auto px-4 py-8 flex-grow">
+        <h1 className="text-2xl font-bold text-center mb-8">Share a Place</h1>
+        <AddPlaceForm />
+      </div>
       <Footer />
     </main>
   );

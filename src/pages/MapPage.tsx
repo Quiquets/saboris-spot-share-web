@@ -17,7 +17,7 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow w-full">
-        <MapSection />
+        <MapSection simplified={true} />
       </div>
       <Footer />
       <AuthModal 
