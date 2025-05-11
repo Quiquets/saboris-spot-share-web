@@ -1,4 +1,3 @@
-
 /// <reference types="@types/google.maps" />
 
 import { useEffect, useRef, useState } from 'react';
@@ -81,28 +80,126 @@ const MapSection = () => {
       if (!mapRef.current || !window.google) return;
       
       try {
-        // Try to get user location
+        let map: google.maps.Map;
+        
+        // Create map with default location first
+        const defaultLocation = { lat: 40.758, lng: -73.985 }; // NYC default
+        
+        map = new window.google.maps.Map(mapRef.current, {
+          center: defaultLocation,
+          zoom: 14,
+          styles: mapStyles,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false
+        });
+        
+        // After map is loaded, try to get user location
         try {
           const position = await getUserLocation();
           const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
+          const userCoords = { lat: latitude, lng: longitude };
+          setUserLocation(userCoords);
           
-          // Create map centered on user location
-          createMap({ lat: latitude, lng: longitude });
-          toast({
-            title: "Location found",
-            description: "Showing recommendations near you!",
-          });
-        } catch (error) {
-          console.warn("Could not get user location, using default:", error);
-          // Fall back to default location
-          createMap({ lat: 40.758, lng: -73.985 });
+          // Only pan to user location if map exists
+          if (map) {
+            map.panTo(userCoords);
+            
+            // Add user location marker
+            try {
+              if (window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement) {
+                // Use the new Advanced Marker API if available
+                const userMarker = new window.google.maps.marker.AdvancedMarkerElement({
+                  position: userCoords,
+                  map,
+                  title: "Your Location",
+                });
+              } else {
+                // Fallback to regular marker with blue circle
+                const userMarker = new window.google.maps.Marker({
+                  position: userCoords,
+                  map,
+                  title: "Your Location",
+                  icon: {
+                    path: window.google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: '#4285F4',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2,
+                  }
+                });
+              }
+              
+              toast({
+                title: "Location found",
+                description: "Showing recommendations near you!",
+              });
+            } catch (markerError) {
+              console.error("Error creating user location marker:", markerError);
+            }
+          }
+        } catch (locationError) {
+          console.warn("Could not get user location:", locationError);
           toast({
             title: "Location access denied",
             description: "We're showing our New York recommendations instead.",
             variant: "destructive"
           });
+          // Keep using the default location we already set
         }
+        
+        // Add community recommendations
+        communityRecommendations.forEach(location => {
+          try {
+            if (window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement) {
+              // Use the new Advanced Marker API if available
+              const marker = new window.google.maps.marker.AdvancedMarkerElement({
+                position: { lat: location.lat, lng: location.lng },
+                map,
+                title: location.title,
+              });
+            } else {
+              // Fallback to regular marker with pink icon
+              const marker = new window.google.maps.Marker({
+                position: { lat: location.lat, lng: location.lng },
+                map,
+                title: location.title,
+                icon: {
+                  path: window.google.maps.SymbolPath.CIRCLE,
+                  fillColor: "#EE8C80",
+                  fillOpacity: 1,
+                  strokeColor: "#ffffff",
+                  strokeWeight: 2,
+                  scale: 8,
+                }
+              });
+              
+              // Create info window with location details
+              if (location.description) {
+                const infoContent = `
+                  <div style="padding: 8px; max-width: 200px;">
+                    <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
+                    <p style="margin-top: 4px;">${location.description}</p>
+                    ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
+                  </div>
+                `;
+                
+                const infoWindow = new window.google.maps.InfoWindow({
+                  content: infoContent
+                });
+                
+                marker.addListener('click', () => {
+                  infoWindow.open(map, marker);
+                });
+              }
+            }
+          } catch (markerError) {
+            console.error("Error creating recommendation marker:", markerError);
+          }
+        });
+        
+        setMapLoaded(true);
       } catch (err) {
         console.error("Error initializing map:", err);
         toast({
@@ -111,94 +208,6 @@ const MapSection = () => {
           variant: "destructive"
         });
       }
-    };
-    
-    const createMap = (center: {lat: number, lng: number}) => {
-      if (!mapRef.current || !window.google) return;
-      
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: center,
-        zoom: 14,
-        styles: mapStyles,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false
-      });
-      
-      // Add user location marker if available
-      if (userLocation) {
-        if (window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement) {
-          // Use the new Advanced Marker API if available
-          const userMarker = new window.google.maps.marker.AdvancedMarkerElement({
-            position: userLocation,
-            map,
-            title: "Your Location",
-          });
-        } else {
-          // Fallback to regular marker with blue circle
-          const userMarker = new window.google.maps.Marker({
-            position: userLocation,
-            map,
-            title: "Your Location",
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: '#4285F4',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2,
-            }
-          });
-        }
-      }
-      
-      // Add community recommendations
-      communityRecommendations.forEach(location => {
-        if (window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement) {
-          // Use the new Advanced Marker API if available
-          const marker = new window.google.maps.marker.AdvancedMarkerElement({
-            position: { lat: location.lat, lng: location.lng },
-            map,
-            title: location.title,
-          });
-        } else {
-          // Fallback to regular marker with pink icon
-          const marker = new window.google.maps.Marker({
-            position: { lat: location.lat, lng: location.lng },
-            map,
-            title: location.title,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              fillColor: "#EE8C80",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-              scale: 8,
-            }
-          });
-          
-          // Create info window with location details
-          if (location.description) {
-            const infoContent = `
-              <div style="padding: 8px; max-width: 200px;">
-                <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
-                <p style="margin-top: 4px;">${location.description}</p>
-                ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
-              </div>
-            `;
-            
-            const infoWindow = new window.google.maps.InfoWindow({
-              content: infoContent
-            });
-            
-            marker.addListener('click', () => {
-              infoWindow.open(map, marker);
-            });
-          }
-        }
-      });
-      
-      setMapLoaded(true);
     };
     
     // Define the callback for the Google Maps script
@@ -218,7 +227,7 @@ const MapSection = () => {
   }, []);
   
   return (
-    <section className="py-16 px-4 md:px-8 bg-white">
+    <section id="map-section" className="py-16 px-4 md:px-8 bg-white">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-center mb-8 gap-2">
           <MapPin className="text-saboris-primary h-6 w-6" />

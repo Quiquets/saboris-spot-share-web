@@ -3,7 +3,7 @@ import { Instagram, Coffee, Pizza, Sandwich, IceCream } from 'lucide-react';
 
 const HeroSection = () => {
   return (
-    <section className="relative flex flex-col items-center justify-center px-4 py-16 bg-saboris-primary overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center px-4 py-12 bg-saboris-primary overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[60%] -right-10 w-72 h-72 bg-white/10 rounded-full blur-xl"></div>
