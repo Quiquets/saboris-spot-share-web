@@ -16,7 +16,11 @@ export function PlaceTypeToggle({ value, onChange }: PlaceTypeToggleProps) {
       <Button
         type="button"
         variant={value === "restaurant" ? "default" : "outline"}
-        className={value === "restaurant" ? "bg-saboris-primary hover:bg-saboris-primary/90" : ""}
+        className={`px-6 py-2 rounded-full transition-all ${
+          value === "restaurant" 
+            ? "bg-saboris-primary hover:bg-saboris-primary/90 text-white" 
+            : "border-2 border-gray-200 hover:border-saboris-primary"
+        }`}
         onClick={() => onChange("restaurant")}
       >
         <Utensils className="mr-2 h-4 w-4" />
@@ -25,7 +29,11 @@ export function PlaceTypeToggle({ value, onChange }: PlaceTypeToggleProps) {
       <Button
         type="button"
         variant={value === "bar" ? "default" : "outline"}
-        className={value === "bar" ? "bg-saboris-primary hover:bg-saboris-primary/90" : ""}
+        className={`px-6 py-2 rounded-full transition-all ${
+          value === "bar" 
+            ? "bg-saboris-primary hover:bg-saboris-primary/90 text-white" 
+            : "border-2 border-gray-200 hover:border-saboris-primary"
+        }`}
         onClick={() => onChange("bar")}
       >
         <Wine className="mr-2 h-4 w-4" />
@@ -34,7 +42,11 @@ export function PlaceTypeToggle({ value, onChange }: PlaceTypeToggleProps) {
       <Button
         type="button"
         variant={value === "cafe" ? "default" : "outline"}
-        className={value === "cafe" ? "bg-saboris-primary hover:bg-saboris-primary/90" : ""}
+        className={`px-6 py-2 rounded-full transition-all ${
+          value === "cafe" 
+            ? "bg-saboris-primary hover:bg-saboris-primary/90 text-white" 
+            : "border-2 border-gray-200 hover:border-saboris-primary"
+        }`}
         onClick={() => onChange("cafe")}
       >
         <Coffee className="mr-2 h-4 w-4" />

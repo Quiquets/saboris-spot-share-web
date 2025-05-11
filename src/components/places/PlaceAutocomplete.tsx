@@ -19,6 +19,7 @@ interface PlaceDetails {
   lat: number;
   lng: number;
   place_id: string;
+  photos?: string[];
 }
 
 interface PlaceAutocompleteProps {
@@ -110,7 +111,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       placesService.current.getDetails(
         {
           placeId: prediction.place_id,
-          fields: ['name', 'formatted_address', 'geometry'],
+          fields: ['name', 'formatted_address', 'geometry', 'photos'],
           sessionToken: autocompleteSessionToken.current,
         },
         (place, status) => {
@@ -125,12 +126,19 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
           // Create a new token for the next place search
           autocompleteSessionToken.current = new google.maps.places.AutocompleteSessionToken();
           
+          // Extract photo URLs if available
+          const photoUrls: string[] = [];
+          if (place.photos && place.photos.length > 0) {
+            photoUrls.push(place.photos[0].getUrl({ maxWidth: 800, maxHeight: 600 }));
+          }
+          
           const placeDetails: PlaceDetails = {
             name: place.name || '',
             address: place.formatted_address || '',
             lat: place.geometry?.location?.lat() || 0,
             lng: place.geometry?.location?.lng() || 0,
             place_id: prediction.place_id,
+            photos: photoUrls,
           };
           
           setInput(placeDetails.name);
@@ -152,7 +160,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       <div className="relative">
         <Input
           type="text"
-          placeholder="Search for a restaurant or bar..."
+          placeholder="Search for a restaurant, bar, or café..."
           value={input}
           onChange={handleInputChange}
           onFocus={() => {
@@ -162,7 +170,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
           }}
           onBlur={handleClickOutside}
           disabled={disabled}
-          className="w-full border-2 focus:border-saboris-primary"
+          className="w-full border-2 focus:border-saboris-primary rounded-xl"
         />
         {isLoading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">

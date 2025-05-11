@@ -17,7 +17,7 @@ export function PriceRangeSelector({ value, onChange }: PriceRangeSelectorProps)
   return (
     <div className="space-y-2">
       <label className="block font-medium text-gray-700">Price Range</label>
-      <div className="flex space-x-2">
+      <div className="flex flex-wrap gap-2">
         {priceOptions.map((option) => (
           <Button
             key={option.value}

@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -22,15 +21,25 @@ import {
   SelectContent, 
   SelectGroup, 
   SelectItem, 
+  SelectLabel,
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from "@/components/ui/switch";
-import { Loader2, MapPin, PlusCircle, Share, Sparkles } from 'lucide-react';
+import { 
+  Loader2, 
+  MapPin, 
+  PlusCircle, 
+  Share, 
+  Sparkles,
+  Search
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 // Import custom components
 import { PlaceAutocomplete } from '@/components/places/PlaceAutocomplete';
@@ -41,6 +50,7 @@ import { TagSelector } from '@/components/places/TagSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
 import { FriendSelector } from '@/components/places/FriendSelector';
 import { filterOptions } from '@/components/map/FilterOptions';
+import { loadGoogleMapsScript } from '@/utils/mapUtils';
 
 // Form schema with Zod validation
 const formSchema = z.object({
@@ -68,24 +78,30 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 // Convert FilterOptions into cuisine options
-const cuisineOptions = filterOptions.foodType.map(item => item.label.replace(/\s*🍣|🥘|🍝|🍔|☕|🌮|🥗|🍰|🍜|🥡|🥞|🦞|🍕|🍖|🥬|🥕|🫒|🥙|🥐|🍲|🍱|🧆/g, '').trim());
+const cuisineOptions = filterOptions.foodType.map(item => ({
+  value: item.id,
+  label: item.label.replace(/\s*🍣|🥘|🍝|🍔|☕|🌮|🥗|🍰|🍜|🥡|🥞|🦞|🍕|🍖|🥬|🥕|🫒|🥙|🥐|🍲|🍱|🧆/g, '').trim()
+}));
 
 // Occasion options
-const occasionOptions = [
-  "Breakfast", "Brunch", "Lunch", "Dinner",
-  "Casual Date", "Special Occasion", "Family Visit", 
-  "Friends Night Out", "Work Lunch", "Business Dinner",
-  "Quick Bite", "Late Night", "Drinks Only"
-];
+const occasionOptions = filterOptions.occasion.map(item => ({
+  value: item.id,
+  label: item.label
+}));
 
 // Get vibe options from filter options
-const vibeOptions = filterOptions.vibe.map(item => item.label);
+const vibeOptions = filterOptions.vibe.map(item => ({
+  value: item.id,
+  label: item.label
+}));
 
 const AddPlacePage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFriendSelector, setShowFriendSelector] = useState(false);
+  const [googleMapPhoto, setGoogleMapPhoto] = useState<string | null>(null);
+  const [openCuisine, setOpenCuisine] = useState(false);
   
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -132,14 +148,11 @@ const AddPlacePage = () => {
   useEffect(() => {
     document.title = 'Saboris - Share a Place';
     
-    // Load Google Maps JavaScript API if not already loaded
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBB9B-Rk8go54u0Ty2z-gNS-P5_NaBcAzw&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
+    // Load Google Maps API
+    loadGoogleMapsScript().catch(err => {
+      console.error("Error loading Google Maps:", err);
+      toast.error("Failed to load location search. Please refresh and try again.");
+    });
   }, []);
 
   const handlePlaceSelect = (placeDetails: any) => {
@@ -149,6 +162,11 @@ const AddPlacePage = () => {
     form.setValue('lat', placeDetails.lat);
     form.setValue('lng', placeDetails.lng);
     form.setValue('place_id', placeDetails.place_id);
+    
+    // If we have a Google photo and no user photos yet, save it
+    if (placeDetails.photos && placeDetails.photos.length > 0) {
+      setGoogleMapPhoto(placeDetails.photos[0]);
+    }
   };
   
   const onSubmit = async (values: FormValues) => {
@@ -160,6 +178,12 @@ const AddPlacePage = () => {
     setIsSubmitting(true);
     
     try {
+      // Use Google photo if no photos were uploaded
+      let finalPhotoUrls = values.photo_urls || [];
+      if (finalPhotoUrls.length === 0 && googleMapPhoto) {
+        finalPhotoUrls = [googleMapPhoto];
+      }
+      
       // 1. Insert into places table
       const { data: placeData, error: placeError } = await supabase
         .from('places')
@@ -190,7 +214,7 @@ const AddPlacePage = () => {
           rating_atmosphere: values.rating_atmosphere,
           rating_value: values.rating_value,
           text: values.description,
-          photo_url: values.photo_urls && values.photo_urls.length > 0 ? values.photo_urls[0] : null
+          photo_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null
         })
         .select()
         .single();
@@ -269,322 +293,381 @@ const AddPlacePage = () => {
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       
-      <div className="flex-grow container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto">
+      <div className="flex-grow w-full px-4 py-12 max-w-[1440px] mx-auto">
+        <div className="mx-auto">
           <div className="flex items-center mb-8 gap-3">
             <Sparkles className="text-saboris-primary h-7 w-7" />
             <h1 className="text-3xl font-bold">Share Your Experience</h1>
           </div>
           
-          <Card className="p-8 shadow-lg border-0 rounded-xl">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
-                {/* Basic Place Information */}
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
-                    Place Information
-                  </h2>
-                  
-                  <FormField
-                    control={form.control}
-                    name="place_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700">Place Name</FormLabel>
-                        <FormControl>
-                          <PlaceAutocomplete 
-                            value={field.value}
-                            onPlaceSelect={handlePlaceSelect}
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700">Location</FormLabel>
-                        <FormControl>
-                          <div className="flex items-center">
-                            <MapPin className="mr-2 h-5 w-5 text-saboris-primary" />
-                            <Input 
-                              {...field}
-                              placeholder="Address will be filled automatically"
-                              disabled={true}
-                              className="bg-gray-50 border-2"
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="place_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700">Place Type</FormLabel>
-                        <FormControl>
-                          <PlaceTypeToggle
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                {/* Ratings Section */}
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
-                    Ratings
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="rating_food"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <StarRating
-                              label="Food Quality"
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
+              {/* Content in a two-column layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left column - Basic info */}
+                <div className="lg:col-span-1 space-y-8">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                      Place Information
+                    </h2>
                     
-                    <FormField
-                      control={form.control}
-                      name="rating_service"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <StarRating
-                              label="Service"
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="rating_atmosphere"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <StarRating
-                              label="Atmosphere"
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="rating_value"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <StarRating
-                              label="Value for Money"
-                              value={field.value}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                
-                {/* Details Section */}
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
-                    Details
-                  </h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="cuisine"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700">Cuisine</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                            disabled={isSubmitting}
-                          >
+                    <div className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="place_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 font-medium">Place Name</FormLabel>
                             <FormControl>
-                              <SelectTrigger className="border-2 focus:border-saboris-primary">
-                                <SelectValue placeholder="Select a cuisine" />
-                              </SelectTrigger>
+                              <PlaceAutocomplete 
+                                value={field.value}
+                                onPlaceSelect={handlePlaceSelect}
+                                disabled={isSubmitting}
+                              />
                             </FormControl>
-                            <SelectContent className="max-h-80">
-                              <SelectGroup>
-                                {cuisineOptions.map(cuisine => (
-                                  <SelectItem key={cuisine} value={cuisine}>
-                                    {cuisine}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 font-medium">Location</FormLabel>
+                            <FormControl>
+                              <div className="flex items-center">
+                                <MapPin className="mr-2 h-5 w-5 text-saboris-primary" />
+                                <Input 
+                                  {...field}
+                                  placeholder="Address will be filled automatically"
+                                  disabled={true}
+                                  className="bg-gray-50 border rounded-xl"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="place_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 font-medium">Place Type</FormLabel>
+                            <FormControl>
+                              <PlaceTypeToggle
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                      Details
+                    </h2>
                     
+                    <div className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="cuisine"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-gray-700 font-medium">Cuisine</FormLabel>
+                            <Popover open={openCuisine} onOpenChange={setOpenCuisine}>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openCuisine}
+                                    className="justify-between w-full border-2 rounded-xl"
+                                  >
+                                    {field.value
+                                      ? cuisineOptions.find(
+                                          (cuisine) => cuisine.value === field.value
+                                        )?.label
+                                      : "Select cuisine..."}
+                                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0" align="start">
+                                <Command>
+                                  <CommandInput placeholder="Search cuisine..." />
+                                  <CommandEmpty>No cuisine found.</CommandEmpty>
+                                  <CommandGroup className="max-h-64 overflow-y-auto">
+                                    {cuisineOptions.map((cuisine) => (
+                                      <CommandItem
+                                        key={cuisine.value}
+                                        value={cuisine.label}
+                                        onSelect={() => {
+                                          form.setValue("cuisine", cuisine.value)
+                                          setOpenCuisine(false)
+                                        }}
+                                      >
+                                        {cuisine.label}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="price_range"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <PriceRangeSelector
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Center column - Ratings & Photos */}
+                <div className="lg:col-span-1 space-y-8">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                      Your Ratings
+                    </h2>
+                    
+                    <div className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="rating_food"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <StarRating
+                                label="Food Quality"
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="rating_service"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <StarRating
+                                label="Service"
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="rating_atmosphere"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <StarRating
+                                label="Atmosphere"
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="rating_value"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <StarRating
+                                label="Value for Money"
+                                value={field.value}
+                                onChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <FormField
                       control={form.control}
-                      name="price_range"
+                      name="photo_urls"
                       render={({ field }) => (
                         <FormItem>
+                          <FormLabel className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                            <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                            Photos
+                          </FormLabel>
                           <FormControl>
-                            <PriceRangeSelector
-                              value={field.value}
+                            <ImageUpload
+                              images={field.value || []}
                               onChange={field.onChange}
+                              maxImages={3}
                             />
                           </FormControl>
                           <FormMessage />
+                          {googleMapPhoto && field.value?.length === 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm text-gray-500">Google Maps photo available:</p>
+                              <div className="mt-2 relative h-24 w-24">
+                                <img 
+                                  src={googleMapPhoto}
+                                  alt="Google Maps photo"
+                                  className="h-full w-full object-cover rounded-md opacity-70"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-400 mt-1">Will be used if no photos are uploaded</p>
+                            </div>
+                          )}
                         </FormItem>
                       )}
                     />
                   </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="occasions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <TagSelector
-                            label="Occasion"
-                            options={occasionOptions}
-                            selectedTags={field.value || []}
-                            onChange={field.onChange}
-                            maxSelection={5}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="vibes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <TagSelector
-                            label="Vibe"
-                            options={vibeOptions}
-                            selectedTags={field.value || []}
-                            onChange={field.onChange}
-                            maxSelection={5}
-                            searchable={true}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
-                
-                {/* Additional Information */}
-                <div className="space-y-6">
-                  <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
-                    Additional Information
-                  </h2>
+
+                {/* Right column - Tags & Experience */}
+                <div className="lg:col-span-1 space-y-8">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                      Tags & Occasion
+                    </h2>
+                    
+                    <div className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="occasions"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <TagSelector
+                                label="Occasion"
+                                options={occasionOptions.map(o => o.label)}
+                                selectedTags={field.value || []}
+                                onChange={field.onChange}
+                                maxSelection={5}
+                                className="rounded-full"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="vibes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <TagSelector
+                                label="Vibe"
+                                options={vibeOptions.map(v => v.label)}
+                                selectedTags={field.value || []}
+                                onChange={field.onChange}
+                                maxSelection={5}
+                                searchable={true}
+                                className="rounded-full"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700">What made this place special?</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Share your experience..."
-                            className="min-h-[100px] border-2 focus:border-saboris-primary resize-none"
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="ordered_items"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700">What did you order?</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="List the dishes you tried..."
-                            className="border-2 focus:border-saboris-primary resize-none"
-                            disabled={isSubmitting}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="photo_urls"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <ImageUpload
-                            images={field.value || []}
-                            onChange={field.onChange}
-                            maxImages={3}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                      Your Experience
+                    </h2>
+                    
+                    <div className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 font-medium">What made this place special?</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="Share your experience..."
+                                className="min-h-[100px] border-2 focus:border-saboris-primary resize-none rounded-xl"
+                                disabled={isSubmitting}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="ordered_items"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 font-medium">What did you order?</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="List the dishes you tried..."
+                                className="border-2 focus:border-saboris-primary resize-none rounded-xl"
+                                disabled={isSubmitting}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                   
                   <FormField
                     control={form.control}
                     name="is_public"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+                      <FormItem className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-gray-100">
                         <div>
                           <FormLabel className="text-gray-700 font-medium">Post Visibility</FormLabel>
                           <p className="text-sm text-gray-500">
@@ -602,37 +685,39 @@ const AddPlacePage = () => {
                     )}
                   />
                 </div>
-                
-                {/* Friend Selection (Only show after submission) */}
-                {showFriendSelector && (
-                  <div className="space-y-6">
-                    <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                      <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
-                      Share with Friends
-                    </h2>
-                    
-                    <FormField
-                      control={form.control}
-                      name="tagged_friends"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <FriendSelector
-                              selectedFriends={field.value || []}
-                              onChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-                
-                {/* Submit Button */}
+              </div>
+              
+              {/* Friend Selection (Only show after submission) */}
+              {showFriendSelector && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h2 className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
+                    <span className="inline-block w-1.5 h-6 bg-saboris-primary rounded-full"></span>
+                    Share with Friends
+                  </h2>
+                  
+                  <FormField
+                    control={form.control}
+                    name="tagged_friends"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <FriendSelector
+                            selectedFriends={field.value || []}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+              
+              {/* Submit Button */}
+              <div className="flex justify-center">
                 <Button
                   type="submit"
-                  className={`w-full py-6 text-lg rounded-xl transition-all transform hover:scale-[1.02] ${
+                  className={`py-6 text-lg rounded-xl transition-all transform hover:scale-[1.02] w-full max-w-md ${
                     showFriendSelector 
                       ? "bg-saboris-primary hover:bg-saboris-primary/90" 
                       : "bg-saboris-primary hover:bg-saboris-primary/90"
@@ -652,27 +737,30 @@ const AddPlacePage = () => {
                           Share with your friends!
                         </>
                       ) : (
-                        'Add Place'
+                        <>
+                          <PlusCircle className="mr-2 h-5 w-5" />
+                          Add Place
+                        </>
                       )}
                     </>
                   )}
                 </Button>
-                
-                {showFriendSelector && (
-                  <div className="text-center text-sm text-gray-500 pt-2">
-                    or{" "}
-                    <button
-                      type="button"
-                      onClick={() => navigate('/profile')}
-                      className="text-saboris-primary hover:underline font-medium"
-                    >
-                      Skip this step
-                    </button>
-                  </div>
-                )}
-              </form>
-            </Form>
-          </Card>
+              </div>
+              
+              {showFriendSelector && (
+                <div className="text-center text-sm text-gray-500 pt-2">
+                  or{" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/profile')}
+                    className="text-saboris-primary hover:underline font-medium"
+                  >
+                    Skip this step
+                  </button>
+                </div>
+              )}
+            </form>
+          </Form>
         </div>
       </div>
       
