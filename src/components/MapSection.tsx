@@ -8,7 +8,7 @@ import {
   safeGetUserLocation, 
   communityRecommendations
 } from '@/utils/mapUtils';
-import { MapPin, Navigation, Target, Filter, Coffee, Pizza, Sandwich, Drumstick, Salad } from 'lucide-react';
+import { MapPin, Navigation, Target, Filter, ArrowDown, ArrowUp } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessGateModal from './AccessGateModal';
@@ -50,6 +50,22 @@ const filterOptions = {
     { id: 'family-friendly', label: 'Family Friendly' },
     { id: 'outdoor', label: 'Outdoor Seating' },
     { id: 'local', label: 'Local Favorite' },
+  ],
+  price: [
+    { id: 'low', label: '€' },
+    { id: 'medium', label: '€€' },
+    { id: 'high', label: '€€€' },
+    { id: 'premium', label: '€€€€' },
+  ],
+  sort: [
+    { id: 'food-high-low', label: 'Food Rating (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
+    { id: 'food-low-high', label: 'Food Rating (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
+    { id: 'service-high-low', label: 'Service Rating (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
+    { id: 'service-low-high', label: 'Service Rating (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
+    { id: 'atmosphere-high-low', label: 'Atmosphere Rating (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
+    { id: 'atmosphere-low-high', label: 'Atmosphere Rating (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
+    { id: 'value-high-low', label: 'Value for Quality (High to Low)', icon: <ArrowDown className="h-4 w-4" /> },
+    { id: 'value-low-high', label: 'Value for Quality (Low to High)', icon: <ArrowUp className="h-4 w-4" /> },
   ],
 };
 
@@ -129,12 +145,16 @@ const MapSection = () => {
     people: string;
     foodType: string[];
     vibe: string[];
+    price: string[];
     rating: number;
+    sort: string;
   }>({
     people: user ? 'friends' : 'community',
     foodType: [],
     vibe: [],
+    price: [],
     rating: 0,
+    sort: 'food-high-low',
   });
   
   const [showGateModal, setShowGateModal] = useState(false);
@@ -396,12 +416,8 @@ const MapSection = () => {
     );
   }, []);
   
+  // Handle filter change
   const handleFilterChange = (type: string, value: string | string[]) => {
-    if (!user) {
-      setShowGateModal(true);
-      return;
-    }
-    
     setActiveFilters(prev => ({
       ...prev,
       [type]: value
@@ -419,23 +435,23 @@ const MapSection = () => {
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-center mb-8 gap-2">
           <MapPin className="text-saboris-primary h-6 w-6" />
-          <h2 className="text-3xl font-bold text-center">Discover Great Places</h2>
+          <h2 className="text-3xl font-bold text-center">Taste, Share, Explore</h2>
         </div>
         
-        <div className="mb-4 flex flex-wrap justify-center gap-2">
+        <div className="mb-4 flex flex-col items-start">
           <Tabs 
             value={activeFilters.people} 
-            className="w-full"
+            className="w-full mb-4"
             onValueChange={(value) => handleFilterChange('people', value)}
           >
             <TabsList className="grid grid-cols-3 mb-4">
-              <TabsTrigger value="friends" disabled={!user}>Friends</TabsTrigger>
-              <TabsTrigger value="friends-of-friends" disabled={!user}>Friends of Friends</TabsTrigger>
+              <TabsTrigger value="friends">Friends</TabsTrigger>
+              <TabsTrigger value="friends-of-friends">Friends of Friends</TabsTrigger>
               <TabsTrigger value="community">Saboris Community</TabsTrigger>
             </TabsList>
           </Tabs>
 
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4 w-full">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -450,10 +466,6 @@ const MapSection = () => {
                       variant={activeFilters.foodType.includes(option.id) ? "default" : "outline"}
                       className="justify-start"
                       onClick={() => {
-                        if (!user) {
-                          setShowGateModal(true);
-                          return;
-                        }
                         const newFilters = activeFilters.foodType.includes(option.id)
                           ? activeFilters.foodType.filter(id => id !== option.id)
                           : [...activeFilters.foodType, option.id];
@@ -481,16 +493,62 @@ const MapSection = () => {
                       variant={activeFilters.vibe.includes(option.id) ? "default" : "outline"}
                       className="justify-start"
                       onClick={() => {
-                        if (!user) {
-                          setShowGateModal(true);
-                          return;
-                        }
                         const newFilters = activeFilters.vibe.includes(option.id)
                           ? activeFilters.vibe.filter(id => id !== option.id)
                           : [...activeFilters.vibe, option.id];
                         handleFilterChange('vibe', newFilters);
                       }}
                     >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4 text-saboris-primary" /> Price
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60">
+                <div className="flex flex-wrap gap-2">
+                  {filterOptions.price.map(option => (
+                    <Button 
+                      key={option.id}
+                      variant={activeFilters.price.includes(option.id) ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => {
+                        const newFilters = activeFilters.price.includes(option.id)
+                          ? activeFilters.price.filter(id => id !== option.id)
+                          : [...activeFilters.price, option.id];
+                        handleFilterChange('price', newFilters);
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4 text-saboris-primary" /> Sort By
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="flex flex-col gap-1">
+                  {filterOptions.sort.map(option => (
+                    <Button 
+                      key={option.id}
+                      variant={activeFilters.sort === option.id ? "default" : "outline"}
+                      className="justify-start"
+                      onClick={() => handleFilterChange('sort', option.id)}
+                    >
+                      <span className="mr-2">{option.icon}</span>
                       {option.label}
                     </Button>
                   ))}
@@ -531,6 +589,25 @@ const MapSection = () => {
                   }}
                 >
                   {filterOptions.vibe.find(o => o.id === filter)?.label}
+                  <span className="ml-1">×</span>
+                </Badge>
+              ))}
+            </div>
+          )}
+          
+          {activeFilters.price.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {activeFilters.price.map(filter => (
+                <Badge 
+                  key={filter} 
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const newFilters = activeFilters.price.filter(id => id !== filter);
+                    handleFilterChange('price', newFilters);
+                  }}
+                >
+                  {filterOptions.price.find(o => o.id === filter)?.label}
                   <span className="ml-1">×</span>
                 </Badge>
               ))}

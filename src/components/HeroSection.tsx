@@ -16,11 +16,11 @@ const HeroSection = () => {
           Taste, Share, Explore
         </h2>
         
-        {/* Phone mockups displayed horizontally */}
-        <div className="mt-10 mb-8 flex justify-center">
-          <div className="flex flex-row space-x-4 overflow-x-auto px-4 pb-4">
+        {/* Phone mockups displayed horizontally across full width */}
+        <div className="mt-10 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
             {/* First phone mockup */}
-            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="relative w-48 h-96 mx-auto bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -32,7 +32,7 @@ const HeroSection = () => {
             </div>
             
             {/* Second phone mockup */}
-            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="relative w-48 h-96 mx-auto bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -44,7 +44,7 @@ const HeroSection = () => {
             </div>
             
             {/* Third phone mockup */}
-            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="relative w-48 h-96 mx-auto bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
@@ -56,7 +56,7 @@ const HeroSection = () => {
             </div>
             
             {/* Fourth phone mockup */}
-            <div className="flex-shrink-0 relative w-48 h-96 bg-black rounded-3xl border-8 border-black shadow-xl">
+            <div className="relative w-48 h-96 mx-auto bg-black rounded-3xl border-8 border-black shadow-xl">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-5 bg-black rounded-b-xl"></div>
               <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 

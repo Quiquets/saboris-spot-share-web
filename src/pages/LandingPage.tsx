@@ -22,7 +22,7 @@ const LandingPage = () => {
       {/* Feature Cards Section - Updated with circular icons instead of cards */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Taste, Share, Explore</h2>
+          <h2 className="text-3xl font-bold text-center text-saboris-primary mb-8">Features</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="flex flex-col items-center text-center">

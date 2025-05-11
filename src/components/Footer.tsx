@@ -56,15 +56,15 @@ const Footer = () => {
   return (
     <footer className="bg-white py-10 px-4 md:px-8 border-t w-full">
       <div className="max-w-7xl mx-auto">
-        {/* Logo at the top */}
-        <div className="flex justify-center mb-10">
-          <div className="flex items-center flex-col">
+        {/* Logo aligned to the left */}
+        <div className="flex justify-start mb-10">
+          <div className="flex items-center flex-col sm:flex-row sm:items-start">
             <img 
               src="/lovable-uploads/18c42043-5ae2-456f-9437-ccfbe067f1da.png" 
               alt="Saboris Logo" 
               className="h-16 w-auto"
             />
-            <p className="text-gray-600 mt-4 text-center max-w-md">
+            <p className="text-gray-600 mt-4 sm:mt-0 sm:ml-4 text-center sm:text-left max-w-md">
               Connecting people through trusted food recommendations.
             </p>
           </div>
@@ -72,7 +72,7 @@ const Footer = () => {
         
         {/* Footer links - horizontally aligned with consistent height */}
         <div className="border-t pt-6">
-          <div className="flex justify-center flex-wrap md:flex-nowrap md:space-x-12 mb-6">
+          <div className="flex justify-center md:justify-start flex-row flex-wrap gap-6 md:gap-12 mb-6">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
@@ -190,7 +190,7 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="text-center text-xs text-gray-400">
+        <div className="text-center md:text-left text-xs text-gray-400">
           <p>&copy; {new Date().getFullYear()} Saboris. All rights reserved.</p>
         </div>
       </div>
