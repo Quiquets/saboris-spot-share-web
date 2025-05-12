@@ -1,10 +1,11 @@
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SavedRestaurant, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
@@ -140,10 +141,8 @@ const SavedPlacesPage = () => {
       
       <div className="bg-gray-50 py-6 md:py-8 px-4 flex-grow">
         <div className="container mx-auto">
-          {/* Update title with consistent styling */}
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary">
-            Your Saved Places
-          </h1>
+          {/* Title with consistent styling */}
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">My Saved Places</h1>
           
           {/* Filter section */}
           <div className="mb-6">

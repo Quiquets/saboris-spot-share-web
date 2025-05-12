@@ -17,7 +17,7 @@ const Index = () => {
       <Header />
       <HeroSection />
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary">
+        <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
           Explore restaurants, cafes and bars near you
         </h2>
         <MapSection simplified={true} />

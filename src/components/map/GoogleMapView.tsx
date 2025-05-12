@@ -1,23 +1,17 @@
 
-/// <reference types="@types/google.maps" />
-
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { mapStyles } from './MapStyles';
-import { safeGetUserLocation } from '@/utils/mapUtils';
+import { safeGetUserLocation, communityRecommendations } from '@/utils/mapUtils';
 
 interface GoogleMapViewProps {
   className?: string;
-  peopleFilter?: string;
 }
 
-const GoogleMapView: React.FC<GoogleMapViewProps> = ({ 
-  className,
-  peopleFilter = 'community' 
-}) => {
+const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const mapLoadedRef = useRef<boolean>(false);
@@ -77,12 +71,11 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
           // Initialize map with user location
           createMap(userCoords);
         },
-        // If user location fails, use default location - but don't show NY pins
+        // If user location fails, use default location
         (error) => {
           console.warn("Could not get user location:", error);
-          toast.error("Location access denied. Please use the 'Find Me' button to share your location.");
-          
-          // Default location (with no markers)
+          toast.error("Location access denied. Showing default recommendations instead.");
+          // Default location - NYC
           const defaultLocation = { lat: 40.758, lng: -73.985 };
           createMap(defaultLocation);
         }
@@ -130,8 +123,8 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
         addUserMarker(centerLocation);
       }
       
-      // We no longer add recommendation markers by default
-      // Only show markers when user clicks "Find Me" to get their location
+      // Add recommendation markers
+      addMarkersToMap();
     } catch (error) {
       console.error("Error creating map:", error);
       setIsLoadingMap(false);
@@ -166,121 +159,65 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
       
       // Store reference to user marker
       userMarkerRef.current = userMarker;
-      
-      // Add nearby restaurants based on the selected filter
-      // This ensures we only show markers relevant to the current filter
-      addMarkersNearUserLocation(position, peopleFilter);
     } catch (error) {
       console.error("Error creating user marker:", error);
     }
   };
   
-  // Add markers near the user's location based on the filter
-  const addMarkersNearUserLocation = (userLocation: {lat: number, lng: number}, filter: string) => {
-    if (!mapInstanceRef.current || !window.google?.maps) return;
+  // Add markers to map when it's loaded
+  const addMarkersToMap = useCallback(() => {
+    if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) return;
     
-    // Clear previous markers
-    clearMarkers();
-    
-    // In a real app, we would fetch based on filter from backend
-    // For this demo, let's simulate different results for different filters
-    let placesToShow = [];
-    
-    // Add some sample data based on filter
-    // In a real app, these would come from the database filtered by the user's selection
-    if (filter === 'community') {
-      // Community recommendations near user location
-      placesToShow = [
-        {
-          title: "Community Café",
-          lat: userLocation.lat + 0.003,
-          lng: userLocation.lng + 0.002,
-          description: "Popular spot among Saboris users"
-        },
-        {
-          title: "Community Bistro",
-          lat: userLocation.lat - 0.002,
-          lng: userLocation.lng + 0.003,
-          description: "4.5 star rating from the community"
-        }
-      ];
-    } else if (filter === 'friends') {
-      // Friends' recommendations near user location
-      placesToShow = [
-        {
-          title: "Friend's Favorite",
-          lat: userLocation.lat + 0.001,
-          lng: userLocation.lng - 0.002,
-          description: "Recommended by your friend Alex"
-        }
-      ];
-    } else if (filter === 'friends-of-friends') {
-      // Friends of friends' recommendations
-      placesToShow = [
-        {
-          title: "Extended Network Spot",
-          lat: userLocation.lat - 0.001,
-          lng: userLocation.lng - 0.003,
-          description: "Popular in your extended network"
-        },
-        {
-          title: "Friend of Friend Pick",
-          lat: userLocation.lat + 0.004,
-          lng: userLocation.lng - 0.001,
-          description: "Recommended by Sam, Mia's friend"
-        }
-      ];
-    }
-    
-    // Create markers for the filtered places
-    placesToShow.forEach(place => {
-      try {
-        const marker = new window.google.maps.Marker({
-          position: { lat: place.lat, lng: place.lng },
-          map: mapInstanceRef.current,
-          title: place.title,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            fillColor: "#EE8C80",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            scale: 8,
+    try {
+      // Clear any existing markers first
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+      
+      // Add community recommendations
+      communityRecommendations.forEach(location => {
+        try {
+          const marker = new window.google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: mapInstanceRef.current,
+            title: location.title,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: "#EE8C80",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+              scale: 8,
+            }
+          });
+          
+          markersRef.current.push(marker);
+          
+          // Create info window with location details
+          if (location.description) {
+            const infoContent = `
+              <div style="padding: 8px; max-width: 200px;">
+                <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
+                <p style="margin-top: 4px;">${location.description}</p>
+                ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
+              </div>
+            `;
+            
+            const infoWindow = new window.google.maps.InfoWindow({
+              content: infoContent
+            });
+            
+            marker.addListener('click', () => {
+              infoWindow.open(mapInstanceRef.current, marker);
+            });
           }
-        });
-        
-        markersRef.current.push(marker);
-        
-        // Create info window with location details
-        if (place.description) {
-          const infoContent = `
-            <div style="padding: 8px; max-width: 200px;">
-              <h3 style="margin: 0; font-weight: bold;">${place.title}</h3>
-              <p style="margin-top: 4px;">${place.description}</p>
-            </div>
-          `;
-          
-          const infoWindow = new window.google.maps.InfoWindow({
-            content: infoContent
-          });
-          
-          marker.addListener('click', () => {
-            infoWindow.open(mapInstanceRef.current, marker);
-          });
+        } catch (error) {
+          console.error("Error creating recommendation marker:", error);
         }
-      } catch (error) {
-        console.error("Error creating recommendation marker:", error);
-      }
-    });
-  };
-  
-  // Clear all markers from the map
-  const clearMarkers = () => {
-    markersRef.current.forEach(marker => {
-      marker.setMap(null);
-    });
-    markersRef.current = [];
-  };
+      });
+    } catch (error) {
+      console.error("Error adding markers to map:", error);
+    }
+  }, []);
   
   // Safe geolocation handler with improved error handling
   const handleGetUserLocation = useCallback(() => {
@@ -308,7 +245,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
           // Pan to user location 
           mapInstance.panTo(userCoords);
           
-          // Add user marker and nearby recommendations based on filter
+          // Add user marker
           addUserMarker(userCoords);
           
           toast.success("Location found. Showing recommendations near you!");
@@ -320,10 +257,10 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
       // Error callback with user feedback
       (error) => {
         console.warn("Could not get user location:", error);
-        toast.error("Location access denied. Please check your browser settings and try again.");
+        toast.error("Location access denied. We're showing our New York recommendations instead.");
       }
     );
-  }, [peopleFilter]); // Re-create this function when peopleFilter changes
+  }, []);
 
   return (
     <Card className={`overflow-hidden shadow-lg relative ${className}`}>

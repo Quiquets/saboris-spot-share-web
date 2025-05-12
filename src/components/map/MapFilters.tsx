@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ActiveFilters, FilterChangeHandler, PeopleFilterChangeHandler } from './FilterOptions';
 import PeopleFilter from './filters/PeopleFilter';
@@ -34,27 +35,31 @@ const MapFilters: React.FC<MapFiltersProps> = ({
 
       {/* Filter grid - responsive for mobile */}
       <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-5 gap-2'} w-full mb-4`}>
-        {/* Filter buttons remain the same */}
+        {/* Occasion Filter */}
         <OccasionFilter 
           activeOccasions={activeFilters.occasion}
           handleFilterChange={handleFilterChange}
         />
         
+        {/* Food Type Filter */}
         <FoodTypeFilter 
           activeFoodTypes={activeFilters.foodType}
           handleFilterChange={handleFilterChange}
         />
 
+        {/* Vibe Filter */}
         <VibeFilter 
           activeVibes={activeFilters.vibe}
           handleFilterChange={handleFilterChange}
         />
 
+        {/* Price Filter */}
         <PriceFilter 
           activePrices={activeFilters.price}
           handleFilterChange={handleFilterChange}
         />
 
+        {/* More Filters */}
         <RatingFilters 
           activeFilters={activeFilters}
           toggleSortDirection={toggleSortDirection}
