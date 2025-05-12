@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -130,10 +131,10 @@ const SearchUsersPage = () => {
           });
         });
         
-        // Combine restaurant data with saved status and reviewer info
+        // Combine restaurant data with saved status and reviewer info - make sure to include place_id
         restaurantsWithSaveStatus = data?.map(restaurant => ({
           ...restaurant,
-          place_id: restaurant.id, // Ensure place_id is set for compatibility
+          place_id: restaurant.id, // Ensure place_id is set for the Restaurant type
           is_saved: savedPlaceIds.includes(restaurant.id),
           reviewers: reviewerData[restaurant.id] || [],
           avg_rating: calculateAvgRating(reviewerData[restaurant.id] || [])

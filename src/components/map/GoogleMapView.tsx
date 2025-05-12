@@ -1,15 +1,24 @@
+
 /// <reference types="@types/google.maps" />
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import mapStyles from './MapStyles';
+import { mapStyles } from './MapStyles';
 import { toast } from 'sonner';
-import { ActiveFilters } from './FilterOptions';
+
+// Define ActiveFilters type
+export interface ActiveFilters {
+  foodType: string[];
+  price: string[];
+  rating: number;
+  occasion: string[];
+  vibe: string[];
+}
 
 interface GoogleMapViewProps {
   peopleFilter: string;
-  activeFilters: ActiveFilters; // Added the activeFilters prop type
+  activeFilters: ActiveFilters;
 }
 
 const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {

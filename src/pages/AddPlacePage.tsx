@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -30,6 +31,7 @@ const AddPlacePage = () => {
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Use a simpler form type to avoid excessive recursion
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,7 +40,7 @@ const AddPlacePage = () => {
       lat: 0,
       lng: 0,
       place_id: "",
-      place_type: "restaurant",
+      place_type: "restaurant" as const, // Use const assertion to fix type
       rating_food: 3,
       rating_service: 3,
       rating_atmosphere: 3,
