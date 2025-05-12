@@ -9,7 +9,9 @@ import { User } from "@/types/global";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Loader2, Save, Trash2 } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -48,6 +50,27 @@ const EditProfileDialog = ({
   handleDeleteAccount,
   isSubmitting,
 }: EditProfileDialogProps) => {
+  // Check if avatars bucket exists
+  useEffect(() => {
+    const checkBucket = async () => {
+      try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(b => b.name === 'avatars');
+        
+        if (!bucketExists) {
+          await supabase.storage.createBucket('avatars', { public: true });
+          console.log("Created avatars bucket");
+        }
+      } catch (error) {
+        console.error("Error checking/creating avatars bucket:", error);
+      }
+    };
+    
+    if (isOpen) {
+      checkBucket();
+    }
+  }, [isOpen]);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">

@@ -75,7 +75,7 @@ const ProfilePage = () => {
       // Get places created by this user
       const { data: placesData, error: placesError } = await supabase
         .from('places')
-        .select('id, name, description, category, address, tags, created_by')
+        .select('id, name, description, category, address, tags, created_by, created_at')
         .eq('created_by', userId);
       
       if (placesError) throw placesError;
@@ -92,7 +92,7 @@ const ProfilePage = () => {
         const createdPlaces: SharedPlace[] = (placesData || []).map(place => ({
           id: place.id,
           place_id: place.id,
-          created_at: new Date(),
+          created_at: new Date(place.created_at),
           created_by: place.created_by,
           place: {
             name: place.name,
@@ -109,7 +109,7 @@ const ProfilePage = () => {
       const createdPlaces: SharedPlace[] = (placesData || []).map(place => ({
         id: place.id,
         place_id: place.id,
-        created_at: new Date(),
+        created_at: new Date(place.created_at),
         created_by: place.created_by,
         place: {
           name: place.name,
@@ -117,7 +117,8 @@ const ProfilePage = () => {
           tags: place.tags,
           category: place.category,
           address: place.address
-        }
+        },
+        type: 'place'
       }));
       
       const reviewedPlaces: SharedPlace[] = (reviewsData || []).map(review => {
@@ -139,11 +140,13 @@ const ProfilePage = () => {
           place: review.places || { name: 'Unknown Place' },
           rating: avgRating,
           review_text: review.text,
-          photo_urls: review.photo_url ? [review.photo_url] : []
+          photo_urls: review.photo_url ? [review.photo_url] : [],
+          type: 'review'
         };
       });
       
       // Combine all places and sort by date (newest first)
+      // Use the type property to avoid duplicates
       const allSharedPlaces = [...createdPlaces, ...reviewedPlaces]
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       
@@ -159,8 +162,21 @@ const ProfilePage = () => {
     if (!user) return;
     
     try {
-      const followers = await supabaseService.getFollowers(user.id);
-      setFollowers(followers);
+      // Get followers with additional data about whether current user follows each follower
+      const followersData = await supabaseService.getFollowers(user.id);
+      
+      // For each follower, check if the current user is following them
+      const followersWithFollowingStatus = await Promise.all(
+        followersData.map(async (follower) => {
+          const isFollowing = await supabaseService.isFollowing(user.id, follower.id);
+          return {
+            ...follower,
+            is_following: isFollowing
+          };
+        })
+      );
+      
+      setFollowers(followersWithFollowingStatus);
       setShowFollowers(true);
     } catch (error) {
       console.error("Error fetching followers:", error);

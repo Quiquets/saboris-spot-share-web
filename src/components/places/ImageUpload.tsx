@@ -33,6 +33,14 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      // Check if bucket exists, create it if it doesn't
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(b => b.name === 'place-photos');
+      
+      if (!bucketExists) {
+        await supabase.storage.createBucket('place-photos', { public: true });
+      }
+
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('place-photos')

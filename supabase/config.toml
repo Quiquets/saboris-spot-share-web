@@ -1,1 +1,9 @@
+
 project_id = "kxqekqbizrxotlqljcpr"
+
+[storage]
+[storage.place-photos]
+public = true
+
+[storage.avatars]
+public = true

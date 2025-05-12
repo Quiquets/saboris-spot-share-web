@@ -471,17 +471,18 @@ class SupabaseService {
   async isFollowing(followerId: string, followingId: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
-        .rpc('is_following', { 
-          follower_uuid: followerId, 
-          following_uuid: followingId 
-        });
+        .from('follows')
+        .select('id')
+        .eq('follower_id', followerId)
+        .eq('following_id', followingId)
+        .single();
       
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error("Is following error:", error);
         return false;
       }
       
-      return data || false;
+      return !!data;
     } catch (error) {
       console.error("Is following error:", error);
       return false;
