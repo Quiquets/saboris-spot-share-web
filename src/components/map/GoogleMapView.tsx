@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { mapStyles } from './MapStyles';
 import { toast } from 'sonner';
+import { loadGoogleMapsScript } from '@/utils/mapUtils';
 
 // Define ActiveFilters type
 export interface ActiveFilters {
@@ -25,7 +26,31 @@ const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const { user } = useAuth();
+  
+  // Load the Google Maps API script
+  useEffect(() => {
+    const initializeMap = async () => {
+      try {
+        await loadGoogleMapsScript();
+        setIsMapLoaded(true);
+        getUserLocation();
+      } catch (error) {
+        console.error("Failed to load Google Maps:", error);
+        toast.error("Failed to load map. Please try again later.");
+      }
+    };
+    
+    initializeMap();
+    
+    return () => {
+      // Clean up any map references if component unmounts
+      if (mapRef.current) {
+        mapRef.current = null;
+      }
+    };
+  }, []);
   
   useEffect(() => {
     if (!user) {
@@ -45,38 +70,64 @@ const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {
         (error) => {
           console.error("Error getting location:", error);
           toast.error("Could not retrieve your location.");
+          
+          // Set a default location (e.g., New York City) when user location can't be retrieved
+          setUserLocation({ lat: 40.7128, lng: -74.0060 });
         }
       );
     } else {
       toast.error("Geolocation is not supported by this browser.");
+      // Set a default location
+      setUserLocation({ lat: 40.7128, lng: -74.0060 });
     }
   };
   
   useEffect(() => {
-    // Initialize map only after user location is available
-    if (userLocation) {
-      initMap();
+    // Initialize map only after user location is available AND Google Maps is loaded
+    if (userLocation && isMapLoaded) {
+      if (window.google && window.google.maps) {
+        initMap();
+      } else {
+        console.error("Google Maps API not available even though load was attempted");
+        toast.error("Map couldn't be loaded properly. Please refresh the page.");
+      }
     }
-  }, [userLocation]);
+  }, [userLocation, isMapLoaded]);
   
   const initMap = () => {
-    const map = new window.google.maps.Map(document.getElementById("map") as HTMLElement, {
-      center: userLocation,
-      zoom: 15,
-      styles: mapStyles,
-      disableDefaultUI: true,
-      zoomControl: true,
-      mapTypeControl: false,
-      scaleControl: true,
-      streetViewControl: false,
-      rotateControl: false,
-      fullscreenControl: false
-    });
+    if (!window.google || !window.google.maps) {
+      console.error("Google Maps API not available");
+      return;
+    }
     
-    mapRef.current = map;
-    
-    // Add a marker at the user's location
-    addMarker(userLocation, map);
+    try {
+      const mapElement = document.getElementById("map");
+      if (!mapElement) {
+        console.error("Map container not found");
+        return;
+      }
+      
+      const map = new window.google.maps.Map(mapElement, {
+        center: userLocation,
+        zoom: 15,
+        styles: mapStyles,
+        disableDefaultUI: true,
+        zoomControl: true,
+        mapTypeControl: false,
+        scaleControl: true,
+        streetViewControl: false,
+        rotateControl: false,
+        fullscreenControl: false
+      });
+      
+      mapRef.current = map;
+      
+      // Add a marker at the user's location
+      addMarker(userLocation, map);
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      toast.error("Failed to initialize map. Please refresh the page.");
+    }
   };
   
   const addMarker = (location: google.maps.LatLngLiteral, map: google.maps.Map) => {
@@ -85,13 +136,22 @@ const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {
       markerRef.current.setMap(null);
     }
     
-    const marker = new window.google.maps.Marker({
-      position: location,
-      map: map,
-      title: "Your Location",
-    });
+    if (!window.google || !window.google.maps) {
+      console.error("Google Maps API not available for marker creation");
+      return;
+    }
     
-    markerRef.current = marker;
+    try {
+      const marker = new window.google.maps.Marker({
+        position: location,
+        map: map,
+        title: "Your Location",
+      });
+      
+      markerRef.current = marker;
+    } catch (error) {
+      console.error("Error creating marker:", error);
+    }
   };
   
   return (

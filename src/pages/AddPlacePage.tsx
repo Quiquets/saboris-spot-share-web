@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -16,15 +15,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { formSchema, FormValues, PlaceDetails } from '@/types/place';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { PlusCircle } from 'lucide-react';
-import { SelectDropdown } from '@/components/places/SelectDropdown';
+import { PlaceAutocomplete } from '@/components/places/PlaceAutocomplete';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
+import { loadGoogleMapsScript } from '@/utils/mapUtils';
 
-// Define a constant array of place types to avoid recursive typing issues
+// Define place types as a constant array to avoid recursive typing issues
 const PLACE_TYPES = ["restaurant", "bar", "cafe"] as const;
-// Create a type from the array
-type PlaceType = typeof PLACE_TYPES[number];
+type PlaceType = (typeof PLACE_TYPES)[number];
 
 const AddPlacePage = () => {
   const navigate = useNavigate();
@@ -34,6 +32,26 @@ const AddPlacePage = () => {
   const [step, setStep] = useState(1);
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
+  
+  // Load Google Maps API
+  useEffect(() => {
+    const loadGoogleMaps = async () => {
+      try {
+        await loadGoogleMapsScript();
+        setIsGoogleMapsLoaded(true);
+      } catch (error) {
+        console.error("Failed to load Google Maps:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load Google Maps. Please refresh the page.",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    loadGoogleMaps();
+  }, []);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -192,7 +210,20 @@ const AddPlacePage = () => {
         
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {step === 1 && (
-            <PlaceSearch onPlaceSelect={handlePlaceSelect} />
+            <div className="space-y-4">
+              <Label htmlFor="search">Find a Place</Label>
+              {isGoogleMapsLoaded ? (
+                <PlaceAutocomplete
+                  value={formValues.place_name}
+                  onPlaceSelect={handlePlaceSelect}
+                  disabled={isSubmitting}
+                />
+              ) : (
+                <div className="flex items-center justify-center p-6 border rounded-md">
+                  <p>Loading Google Maps...</p>
+                </div>
+              )}
+            </div>
           )}
           
           {step === 2 && (
@@ -201,7 +232,6 @@ const AddPlacePage = () => {
                 <Label htmlFor="place_type">Place Type</Label>
                 <Select 
                   onValueChange={(value) => {
-                    // Ensure type safety by checking if value is a valid PlaceType
                     if (PLACE_TYPES.includes(value as PlaceType)) {
                       form.setValue("place_type", value as PlaceType);
                     }
@@ -213,9 +243,9 @@ const AddPlacePage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {PLACE_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>{
-                        type.charAt(0).toUpperCase() + type.slice(1)
-                      }</SelectItem>
+                      <SelectItem key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -420,99 +450,6 @@ const AddPlacePage = () => {
         </DialogContent>
       </Dialog>
     </main>
-  );
-};
-
-interface PlaceSearchProps {
-  onPlaceSelect: (details: PlaceDetails) => void;
-}
-
-const PlaceSearch: React.FC<PlaceSearchProps> = ({ onPlaceSelect }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<google.maps.places.AutocompletePrediction[]>([]);
-  const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
-  
-  useEffect(() => {
-    // Load Google Maps API and Autocomplete Service
-    if (!window.google) {
-      console.error("Google Maps API not loaded");
-      return;
-    }
-    
-    setAutocompleteService(new window.google.maps.places.AutocompleteService());
-  }, []);
-  
-  useEffect(() => {
-    if (!searchQuery || !autocompleteService) {
-      setSearchResults([]);
-      return;
-    }
-    
-    autocompleteService.getPlacePredictions({
-      input: searchQuery,
-      types: ['establishment'],
-    }, (predictions) => {
-      setSearchResults(predictions || []);
-    });
-  }, [searchQuery, autocompleteService]);
-  
-  const handlePlaceSelect = (placeId: string) => {
-    if (!window.google) {
-      console.error("Google Maps API not loaded");
-      return;
-    }
-    
-    const placesService = new window.google.maps.places.PlacesService(document.createElement('div'));
-    
-    placesService.getDetails({
-      placeId: placeId,
-      fields: ['name', 'address_components', 'geometry', 'place_id'],
-    }, (place, status) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-        const address = place.address_components?.map(component => component.long_name).join(', ') || 'Address not found';
-        
-        const details: PlaceDetails = {
-          name: place.name || 'Name not found',
-          address: address,
-          lat: place.geometry?.location?.lat() || 0,
-          lng: place.geometry?.location?.lng() || 0,
-          place_id: place.place_id || 'Place ID not found',
-        };
-        
-        onPlaceSelect(details);
-        setSearchQuery('');
-        setSearchResults([]);
-      } else {
-        console.error('Could not retrieve place details:', status);
-      }
-    });
-  };
-  
-  return (
-    <div className="space-y-4">
-      <Label htmlFor="search">Find a Place</Label>
-      <Input
-        type="text"
-        id="search"
-        placeholder="Enter a place name"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-      
-      {searchResults.length > 0 && (
-        <ul className="border rounded-md bg-white shadow-md max-h-48 overflow-y-auto">
-          {searchResults.map((result) => (
-            <li
-              key={result.place_id}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => handlePlaceSelect(result.place_id)}
-            >
-              {result.description}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 };
 

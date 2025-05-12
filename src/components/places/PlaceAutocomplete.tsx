@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { getUserLocation } from "@/utils/mapUtils";
+import { getUserLocation, loadGoogleMapsScript } from "@/utils/mapUtils";
 
 // Define the interface for Google Places predictions
 interface Prediction {
@@ -42,8 +42,20 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
   
   // Initialize Google Places API services and get user location when component mounts
   useEffect(() => {
-    const initGooglePlaces = () => {
-      if (window.google && window.google.maps && window.google.maps.places) {
+    const initGooglePlaces = async () => {
+      try {
+        // Check if Google Maps API is available
+        if (!window.google || !window.google.maps || !window.google.maps.places) {
+          // Load Google Maps API if not already loaded
+          await loadGoogleMapsScript();
+        }
+
+        // If still not available, something is wrong
+        if (!window.google || !window.google.maps || !window.google.maps.places) {
+          console.error("Google Maps API failed to load");
+          return;
+        }
+
         console.log("Initializing Google Places services");
         autocompleteService.current = new window.google.maps.places.AutocompleteService();
         
@@ -55,22 +67,20 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
         autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
         
         // Get user location
-        getUserLocation()
-          .then(position => {
-            const latLng = new google.maps.LatLng(
-              position.coords.latitude,
-              position.coords.longitude
-            );
-            setUserLocation(latLng);
-            console.log("User location set:", position.coords.latitude, position.coords.longitude);
-          })
-          .catch(error => {
-            console.warn("Could not get user location:", error);
-            // Continue without user location
-          });
-      } else {
-        console.warn("Google Maps API not loaded yet, retrying in 500ms");
-        setTimeout(initGooglePlaces, 500);
+        try {
+          const position = await getUserLocation();
+          const latLng = new google.maps.LatLng(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          setUserLocation(latLng);
+          console.log("User location set:", position.coords.latitude, position.coords.longitude);
+        } catch (error) {
+          console.warn("Could not get user location:", error);
+          // Continue without user location
+        }
+      } catch (error) {
+        console.error("Error initializing Google Places:", error);
       }
     };
     
@@ -128,47 +138,56 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
   };
   
   const handlePredictionClick = (prediction: Prediction) => {
-    if (placesService.current && autocompleteSessionToken.current) {
-      setIsLoading(true);
-      
-      placesService.current.getDetails(
-        {
-          placeId: prediction.place_id,
-          fields: ['name', 'formatted_address', 'geometry', 'photos'],
-          sessionToken: autocompleteSessionToken.current,
-        },
-        (place, status) => {
-          setIsLoading(false);
-          setShowPredictions(false);
-          
-          if (status !== google.maps.places.PlacesServiceStatus.OK || !place) {
-            console.error('Error fetching place details');
-            return;
-          }
-          
-          // Create a new token for the next place search
-          autocompleteSessionToken.current = new google.maps.places.AutocompleteSessionToken();
-          
-          // Extract photo URLs if available
-          const photoUrls: string[] = [];
-          if (place.photos && place.photos.length > 0) {
-            photoUrls.push(place.photos[0].getUrl({ maxWidth: 800, maxHeight: 600 }));
-          }
-          
-          const placeDetails: PlaceDetails = {
-            name: place.name || '',
-            address: place.formatted_address || '',
-            lat: place.geometry?.location?.lat() || 0,
-            lng: place.geometry?.location?.lng() || 0,
-            place_id: prediction.place_id,
-            photos: photoUrls,
-          };
-          
-          setInput(placeDetails.name);
-          onPlaceSelect(placeDetails);
-        }
-      );
+    if (!placesService.current || !autocompleteSessionToken.current) {
+      console.error("Places service not initialized");
+      return;
     }
+    
+    setIsLoading(true);
+    
+    placesService.current.getDetails(
+      {
+        placeId: prediction.place_id,
+        fields: ['name', 'formatted_address', 'geometry', 'photos'],
+        sessionToken: autocompleteSessionToken.current,
+      },
+      (place, status) => {
+        setIsLoading(false);
+        setShowPredictions(false);
+        
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !place) {
+          console.error('Error fetching place details');
+          return;
+        }
+        
+        // Create a new token for the next place search
+        if (window.google && window.google.maps && window.google.maps.places) {
+          autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
+        }
+        
+        // Extract photo URLs if available
+        const photoUrls: string[] = [];
+        if (place.photos && place.photos.length > 0) {
+          try {
+            photoUrls.push(place.photos[0].getUrl({ maxWidth: 800, maxHeight: 600 }));
+          } catch (error) {
+            console.error("Error getting photo URL:", error);
+          }
+        }
+        
+        const placeDetails: PlaceDetails = {
+          name: place.name || '',
+          address: place.formatted_address || '',
+          lat: place.geometry?.location?.lat() || 0,
+          lng: place.geometry?.location?.lng() || 0,
+          place_id: prediction.place_id,
+          photos: photoUrls,
+        };
+        
+        setInput(placeDetails.name);
+        onPlaceSelect(placeDetails);
+      }
+    );
   };
   
   const handleClickOutside = () => {
