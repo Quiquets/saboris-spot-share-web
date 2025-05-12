@@ -36,7 +36,7 @@ const PeopleFilter: React.FC<PeopleFilterProps> = ({
       onValueChange={handlePeopleFilterChange}
     >
       <TabsList 
-        className="grid w-full mb-2 md:mb-4 p-1 bg-gray-100 rounded-md" 
+        className="grid w-full mb-2 md:mb-4 p-1 bg-gray-100 rounded-lg" 
         style={{
           gridTemplateColumns: `repeat(${availableOptions.length}, minmax(0, 1fr))`
         }}
