@@ -8,16 +8,17 @@ import { User } from '@/types/global';
 import { Loader2 } from 'lucide-react';
 
 interface FollowersListProps {
-  followers: any[];
-  setShowFollowers: (show: boolean) => void;
+  users: any[];
+  setShowList: (show: boolean) => void;
+  listType: 'followers' | 'following';
 }
 
-const FollowersList = ({ followers, setShowFollowers }: FollowersListProps) => {
+const FollowersList = ({ users, setShowList, listType }: FollowersListProps) => {
   const [followingStates, setFollowingStates] = useState<Record<string, { isFollowing: boolean, isLoading: boolean }>>(() => {
     const states: Record<string, { isFollowing: boolean, isLoading: boolean }> = {};
-    followers.forEach(follower => {
-      states[follower.id] = { 
-        isFollowing: follower.is_following || false,
+    users.forEach(user => {
+      states[user.id] = { 
+        isFollowing: user.is_following || false,
         isLoading: false 
       };
     });
@@ -55,52 +56,57 @@ const FollowersList = ({ followers, setShowFollowers }: FollowersListProps) => {
     }
   };
   
-  if (followers.length === 0) return null;
+  if (users.length === 0) return null;
+  
+  const title = listType === 'followers' ? 'Followers' : 'Following';
   
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Followers</h2>
+        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => setShowFollowers(false)}
+          onClick={() => setShowList(false)}
         >
           Close
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {followers.map((follower) => (
-          <Card key={follower.id} className="overflow-hidden">
+        {users.map((user) => (
+          <Card key={user.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Avatar className="h-12 w-12 mr-3">
-                    <AvatarImage src={follower.avatar_url || undefined} />
+                    <AvatarImage src={user.avatar_url || undefined} />
                     <AvatarFallback className="bg-saboris-primary/10">
-                      {follower.name?.charAt(0) || '?'}
+                      {user.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium text-gray-800">{follower.name}</p>
-                    <p className="text-sm text-gray-500">@{follower.username}</p>
+                    <p className="font-medium text-gray-800">{user.name}</p>
+                    <p className="text-sm text-gray-500">@{user.username}</p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant={followingStates[follower.id]?.isFollowing ? "outline" : "default"}
-                  onClick={() => toggleFollow(follower.id)}
-                  disabled={followingStates[follower.id]?.isLoading}
-                  className={followingStates[follower.id]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}
-                >
-                  {followingStates[follower.id]?.isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : followingStates[follower.id]?.isFollowing ? (
-                    "Following"
-                  ) : (
-                    "Follow"
-                  )}
-                </Button>
+                {/* Don't show follow button for user's own profile */}
+                {user.is_self !== true && (
+                  <Button
+                    size="sm"
+                    variant={followingStates[user.id]?.isFollowing ? "outline" : "default"}
+                    onClick={() => toggleFollow(user.id)}
+                    disabled={followingStates[user.id]?.isLoading}
+                    className={followingStates[user.id]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}
+                  >
+                    {followingStates[user.id]?.isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : followingStates[user.id]?.isFollowing ? (
+                      "Following"
+                    ) : (
+                      "Follow"
+                    )}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

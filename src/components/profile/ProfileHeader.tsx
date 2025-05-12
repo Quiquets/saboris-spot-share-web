@@ -1,95 +1,96 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Globe, Lock, MapPin } from 'lucide-react';
-import { ProfileStats } from '@/services/supabaseService';
-import { User } from '@/types/global';
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Edit, Lock, MapPin, Users } from "lucide-react";
+import { User } from "@/types/global";
+import { ProfileStats } from "@/services/supabaseService";
 
 interface ProfileHeaderProps {
   user: User;
   profileStats: ProfileStats | null;
   isPrivate: boolean;
   setIsEditProfileOpen: (open: boolean) => void;
-  fetchFollowers: () => void;
+  fetchFollowers: () => Promise<void>;
+  fetchFollowing: () => Promise<void>;
 }
 
 const ProfileHeader = ({ 
   user, 
   profileStats, 
   isPrivate, 
-  setIsEditProfileOpen, 
-  fetchFollowers 
-}: ProfileHeaderProps) => {
+  setIsEditProfileOpen,
+  fetchFollowers,
+  fetchFollowing
+}: ProfileHeaderProps) => {  
   return (
-    <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm mb-8">
-      <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-        <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-saboris-primary">
-          <AvatarImage 
-            src={user.avatar_url || undefined} 
-            alt={user.name} 
-            className="object-cover h-full w-full"
-          />
-          <AvatarFallback className="bg-saboris-primary/20 text-saboris-primary">{user.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-        
-        <div className="flex-1 text-center md:text-left">
-          <h1 className="text-2xl font-bold text-gray-800">{user.name}</h1>
-          <p className="text-gray-500">@{user.username}</p>
-          {user.bio && <p className="mt-2 text-gray-700">{user.bio}</p>}
-          {user.location && (
-            <p className="text-sm text-gray-500 mt-1 flex items-center justify-center md:justify-start">
-              <MapPin className="inline h-4 w-4 mr-1" />
-              {user.location}
-            </p>
-          )}
+    <div className="mb-8">
+      <div className="flex flex-col md:flex-row items-center md:items-start justify-center md:justify-between mb-6">
+        <div className="flex flex-col md:flex-row items-center mb-4 md:mb-0">
+          <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-white shadow-md">
+            <AvatarImage 
+              src={user.avatar_url || undefined} 
+              alt={user.name} 
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-saboris-primary/20 text-saboris-primary text-2xl">
+              {user.name?.charAt(0) || '?'}
+            </AvatarFallback>
+          </Avatar>
           
-          {/* User Stats */}
-          {profileStats && (
-            <div className="flex gap-6 mt-3 justify-center md:justify-start flex-wrap">
-              <div className="text-center">
-                <p className="font-semibold text-gray-800">{profileStats.posts_count || 0}</p>
-                <p className="text-xs text-gray-500">Posts</p>
-              </div>
-              <button 
-                className="text-center"
-                onClick={fetchFollowers}
-              >
-                <p className="font-semibold text-gray-800">{profileStats.followers_count || 0}</p>
-                <p className="text-xs text-gray-500">Followers</p>
-              </button>
-              <div className="text-center">
-                <p className="font-semibold text-gray-800">{profileStats.following_count || 0}</p>
-                <p className="text-xs text-gray-500">Following</p>
-              </div>
-            </div>
-          )}
-          
-          {/* Account status indicator (public/private) */}
-          <div className="mt-2 flex items-center justify-center md:justify-start">
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full flex items-center">
-              {isPrivate ? (
-                <>
-                  <Lock className="h-3 w-3 mr-1" /> 
-                  Private Account
-                </>
-              ) : (
-                <>
-                  <Globe className="h-3 w-3 mr-1" />
-                  Public Account
-                </>
+          <div className="md:ml-6 text-center md:text-left mt-4 md:mt-0">
+            <div className="flex items-center justify-center md:justify-start">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{user.name}</h1>
+              {isPrivate && (
+                <Lock className="ml-2 h-4 w-4 text-gray-500" />
               )}
-            </span>
+            </div>
+            <p className="text-gray-600">@{user.username}</p>
+            
+            {user.location && (
+              <div className="flex items-center justify-center md:justify-start mt-2 text-gray-600">
+                <MapPin className="h-4 w-4 mr-1" />
+                <span>{user.location}</span>
+              </div>
+            )}
+            
+            {user.bio && (
+              <p className="mt-3 text-gray-700">{user.bio}</p>
+            )}
           </div>
         </div>
         
         <div>
           <Button 
-            variant="outline" 
-            className="border-saboris-primary text-saboris-primary"
+            size="sm"
+            variant="outline"
+            className="flex items-center"
             onClick={() => setIsEditProfileOpen(true)}
           >
+            <Edit className="h-4 w-4 mr-1.5" />
             Edit Profile
           </Button>
+        </div>
+      </div>
+      
+      <div className="flex justify-center md:justify-start space-x-8 md:space-x-12 pt-4 border-t border-gray-200">
+        <div className="text-center cursor-pointer" onClick={fetchFollowers}>
+          <p className="text-xl font-bold text-gray-800">{profileStats?.followers_count || 0}</p>
+          <p className="text-sm text-gray-600">Followers</p>
+        </div>
+        
+        <div className="text-center cursor-pointer" onClick={fetchFollowing}>
+          <p className="text-xl font-bold text-gray-800">{profileStats?.following_count || 0}</p>
+          <p className="text-sm text-gray-600">Following</p>
+        </div>
+        
+        <div className="text-center">
+          <p className="text-xl font-bold text-gray-800">{profileStats?.reviews_count || 0}</p>
+          <p className="text-sm text-gray-600">Reviews</p>
+        </div>
+        
+        <div className="text-center">
+          <p className="text-xl font-bold text-gray-800">{profileStats?.saved_places_count || 0}</p>
+          <p className="text-sm text-gray-600">Saved</p>
         </div>
       </div>
     </div>

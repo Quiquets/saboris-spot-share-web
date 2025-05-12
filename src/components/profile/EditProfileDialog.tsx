@@ -58,8 +58,15 @@ const EditProfileDialog = ({
         const bucketExists = buckets?.some(b => b.name === 'avatars');
         
         if (!bucketExists) {
-          await supabase.storage.createBucket('avatars', { public: true });
-          console.log("Created avatars bucket");
+          try {
+            await supabase.storage.createBucket('avatars', { public: true });
+            console.log("Created avatars bucket");
+          } catch (error: any) {
+            if (error.message !== "Bucket already exists") {
+              console.error("Error creating avatars bucket:", error);
+              toast.error("Error setting up profile image storage");
+            }
+          }
         }
       } catch (error) {
         console.error("Error checking/creating avatars bucket:", error);

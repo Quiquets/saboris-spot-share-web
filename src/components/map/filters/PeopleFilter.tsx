@@ -30,28 +30,26 @@ const PeopleFilter: React.FC<PeopleFilterProps> = ({
   });
 
   return (
-    <Tabs 
-      value={activePeople} 
-      className="w-full mb-4"
-      onValueChange={handlePeopleFilterChange}
-    >
-      <TabsList 
-        className="grid w-full mb-2 md:mb-4 p-1 bg-gray-100 rounded-lg" 
-        style={{
-          gridTemplateColumns: `repeat(${availableOptions.length}, minmax(0, 1fr))`
-        }}
+    <div className="w-full mb-4">
+      <Tabs 
+        value={activePeople} 
+        onValueChange={handlePeopleFilterChange}
       >
-        {availableOptions.map(option => (
-          <TabsTrigger 
-            key={option.id} 
-            value={option.id} 
-            className="flex-1 py-2 px-3 text-center whitespace-nowrap data-[state=active]:bg-white data-[state=active]:text-saboris-primary data-[state=active]:shadow-sm rounded-md"
-          >
-            {isMobile ? option.shortLabel || option.label : option.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+        <TabsList 
+          className="w-full flex justify-center bg-gray-100 p-1 rounded-full"
+        >
+          {availableOptions.map(option => (
+            <TabsTrigger 
+              key={option.id} 
+              value={option.id} 
+              className="flex-1 py-2 px-4 text-center data-[state=active]:bg-white data-[state=active]:text-saboris-primary data-[state=active]:shadow-sm rounded-full"
+            >
+              {isMobile ? option.shortLabel || option.label : option.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
   );
 };
 

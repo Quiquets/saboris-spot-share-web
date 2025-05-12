@@ -22,7 +22,9 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [isPrivate, setIsPrivate] = useState(false);
   const [followers, setFollowers] = useState<any[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
   const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [bio, setBio] = useState('');
   const [username, setUsername] = useState('');
@@ -169,18 +171,47 @@ const ProfilePage = () => {
       const followersWithFollowingStatus = await Promise.all(
         followersData.map(async (follower) => {
           const isFollowing = await supabaseService.isFollowing(user.id, follower.id);
+          // Check if the follower is the current user
+          const isSelf = follower.id === user.id;
+          
           return {
             ...follower,
-            is_following: isFollowing
+            is_following: isFollowing,
+            is_self: isSelf
           };
         })
       );
       
       setFollowers(followersWithFollowingStatus);
       setShowFollowers(true);
+      setShowFollowing(false);
     } catch (error) {
       console.error("Error fetching followers:", error);
       toast.error("Failed to load followers");
+    }
+  };
+
+  const fetchFollowing = async () => {
+    if (!user) return;
+    
+    try {
+      // Get users that the current user is following
+      const followingData = await supabaseService.getFollowing(user.id);
+      
+      // Mark all as being followed by current user
+      const processedFollowing = followingData.map(followed => ({
+        ...followed,
+        is_following: true,
+        // Check if the followed user is the current user
+        is_self: followed.id === user.id
+      }));
+      
+      setFollowing(processedFollowing);
+      setShowFollowing(true);
+      setShowFollowers(false);
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      toast.error("Failed to load following");
     }
   };
 
@@ -347,6 +378,7 @@ const ProfilePage = () => {
             isPrivate={isPrivate}
             setIsEditProfileOpen={setIsEditProfileOpen}
             fetchFollowers={fetchFollowers}
+            fetchFollowing={fetchFollowing}
           />
           
           {/* Edit Profile Dialog */}
@@ -369,8 +401,23 @@ const ProfilePage = () => {
             isSubmitting={isSubmitting}
           />
           
-          {/* Followers Modal */}
-          {showFollowers && <FollowersList followers={followers} setShowFollowers={setShowFollowers} />}
+          {/* Followers List */}
+          {showFollowers && 
+            <FollowersList 
+              users={followers} 
+              setShowList={setShowFollowers} 
+              listType="followers" 
+            />
+          }
+          
+          {/* Following List */}
+          {showFollowing && 
+            <FollowersList 
+              users={following} 
+              setShowList={setShowFollowing} 
+              listType="following" 
+            />
+          }
           
           {/* Full Review Dialog */}
           <ReviewDialog 

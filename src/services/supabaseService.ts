@@ -280,6 +280,33 @@ class SupabaseService {
     }
   }
   
+  async getFollowing(userId: string): Promise<User[]> {
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select('following_id, users!follows_following_id_fkey(*)')
+        .eq('follower_id', userId);
+      
+      if (error) {
+        console.error("Get following error:", error);
+        return [];
+      }
+      
+      return data.map(item => {
+        const user = item.users;
+        // Add email field to match User interface
+        const email = user.username.includes('@') ? user.username : '';
+        return {
+          ...user,
+          email
+        };
+      });
+    } catch (error) {
+      console.error("Get following error:", error);
+      return [];
+    }
+  }
+  
   async searchUsers(query: string): Promise<any[]> {
     try {
       const { data, error } = await supabase
