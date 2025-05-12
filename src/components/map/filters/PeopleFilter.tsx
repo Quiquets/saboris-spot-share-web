@@ -35,12 +35,14 @@ const PeopleFilter: React.FC<PeopleFilterProps> = ({
       className="w-full mb-4"
       onValueChange={handlePeopleFilterChange}
     >
-      <TabsList className={`grid grid-cols-${availableOptions.length} mb-2 md:mb-4 w-full`}>
+      <TabsList className="grid w-full mb-2 md:mb-4" style={{
+        gridTemplateColumns: `repeat(${availableOptions.length}, minmax(0, 1fr))`
+      }}>
         {availableOptions.map(option => (
           <TabsTrigger 
             key={option.id} 
             value={option.id} 
-            className={`flex-1 text-xs md:text-sm px-1 py-1 whitespace-nowrap overflow-hidden text-ellipsis`}
+            className="flex-1 py-2 px-3 text-center whitespace-nowrap"
           >
             {isMobile ? option.shortLabel || option.label : option.label}
           </TabsTrigger>

@@ -1,11 +1,10 @@
-
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { mapStyles } from './MapStyles';
-import { safeGetUserLocation, communityRecommendations } from '@/utils/mapUtils';
+import { safeGetUserLocation, communityRecommendations, loadGoogleMapsScript } from '@/utils/mapUtils';
 
 interface GoogleMapViewProps {
   className?: string;
@@ -267,13 +266,13 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
       {/* Map container with explicit height */}
       <div 
         ref={mapContainerRef} 
-        className="h-[400px] w-full"
+        className="w-full h-full"
         style={{ display: isLoadingMap ? 'none' : 'block' }}
       />
       
       {/* Loading state */}
       {isLoadingMap && (
-        <div className="h-[400px] w-full flex items-center justify-center bg-gray-100">
+        <div className="h-full w-full flex items-center justify-center bg-gray-100">
           <div className="flex flex-col items-center">
             <div className="h-8 w-8 rounded-full border-4 border-saboris-primary border-t-transparent animate-spin"></div>
             <p className="mt-2 text-saboris-gray">Loading map...</p>
