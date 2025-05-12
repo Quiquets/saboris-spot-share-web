@@ -35,33 +35,41 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
   const [isLoading, setIsLoading] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
   const [userLocation, setUserLocation] = useState<google.maps.LatLng | null>(null);
+  const [isGoogleReady, setIsGoogleReady] = useState(false);
   
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const autocompleteSessionToken = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const placeholderDivRef = useRef<HTMLDivElement>(null);
   
   // Initialize Google Places API services and get user location when component mounts
   useEffect(() => {
     const initGooglePlaces = async () => {
       try {
-        // Check if Google Maps API is available
-        if (!window.google || !window.google.maps || !window.google.maps.places) {
-          // Load Google Maps API if not already loaded
-          await loadGoogleMapsScript();
+        // Ensure Google Maps API is loaded
+        await loadGoogleMapsScript();
+        
+        // Confirm the API is available
+        if (!window.google?.maps?.places) {
+          throw new Error('Google Maps Places API not available');
         }
-
-        // If still not available, something is wrong
-        if (!window.google || !window.google.maps || !window.google.maps.places) {
-          console.error("Google Maps API failed to load");
-          return;
-        }
-
+        
         console.log("Initializing Google Places services");
+        setIsGoogleReady(true);
+        
+        // Initialize the autocomplete service
         autocompleteService.current = new window.google.maps.places.AutocompleteService();
         
-        // Need a DOM element for PlacesService even if we don't show the map
-        const mapDiv = document.createElement('div');
-        placesService.current = new window.google.maps.places.PlacesService(mapDiv);
+        // Create a placeholder div for PlacesService if not already present
+        if (!placeholderDivRef.current) {
+          const div = document.createElement('div');
+          div.style.display = 'none';
+          document.body.appendChild(div);
+          placeholderDivRef.current = div;
+        }
+        
+        // Initialize the places service with the placeholder div
+        placesService.current = new window.google.maps.places.PlacesService(placeholderDivRef.current);
         
         // Create a new session token for better pricing
         autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
@@ -74,20 +82,25 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
             position.coords.longitude
           );
           setUserLocation(latLng);
-          console.log("User location set:", position.coords.latitude, position.coords.longitude);
         } catch (error) {
           console.warn("Could not get user location:", error);
           // Continue without user location
         }
       } catch (error) {
         console.error("Error initializing Google Places:", error);
+        setIsGoogleReady(false);
       }
     };
     
     initGooglePlaces();
     
     return () => {
-      // Clean up
+      // Cleanup function: remove the placeholder div if it exists
+      if (placeholderDivRef.current && placeholderDivRef.current.parentNode) {
+        placeholderDivRef.current.parentNode.removeChild(placeholderDivRef.current);
+      }
+      
+      // Clear the session token
       autocompleteSessionToken.current = null;
     };
   }, []);
@@ -101,21 +114,21 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
     const newInput = e.target.value;
     setInput(newInput);
     
-    if (newInput.length > 2 && autocompleteService.current) {
+    if (newInput.length > 2 && autocompleteService.current && isGoogleReady) {
       setIsLoading(true);
       setShowPredictions(true);
       
       // Create request with location bias if available
       const request: google.maps.places.AutocompletionRequest = {
         input: newInput,
-        sessionToken: autocompleteSessionToken.current,
+        sessionToken: autocompleteSessionToken.current || undefined,
         types: ['establishment'],
       };
       
       // If we have user location, add location bias
       if (userLocation) {
         request.location = userLocation;
-        request.radius = 50000; // 50km radius, adjust as needed
+        request.radius = 50000; // 50km radius
       }
       
       autocompleteService.current.getPlacePredictions(
@@ -138,8 +151,8 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
   };
   
   const handlePredictionClick = (prediction: Prediction) => {
-    if (!placesService.current || !autocompleteSessionToken.current) {
-      console.error("Places service not initialized");
+    if (!placesService.current || !autocompleteSessionToken.current || !isGoogleReady) {
+      console.error("Places service not initialized properly");
       return;
     }
     
@@ -161,7 +174,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
         }
         
         // Create a new token for the next place search
-        if (window.google && window.google.maps && window.google.maps.places) {
+        if (window.google?.maps?.places) {
           autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
         }
         
@@ -196,6 +209,15 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       setShowPredictions(false);
     }, 200);
   };
+  
+  if (!isGoogleReady) {
+    return (
+      <div className="w-full p-4 border border-gray-200 rounded-xl flex justify-center items-center">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+        <span>Loading Google Places...</span>
+      </div>
+    );
+  }
   
   return (
     <div className="relative w-full">

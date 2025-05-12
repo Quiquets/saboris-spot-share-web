@@ -19,10 +19,11 @@ import { PlaceAutocomplete } from '@/components/places/PlaceAutocomplete';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
 import { loadGoogleMapsScript } from '@/utils/mapUtils';
+import { SelectDropdown } from '@/components/places/SelectDropdown';
 
 // Define place types as a constant array to avoid recursive typing issues
 const PLACE_TYPES = ["restaurant", "bar", "cafe"] as const;
-type PlaceType = (typeof PLACE_TYPES)[number];
+type PlaceType = typeof PLACE_TYPES[number];
 
 const AddPlacePage = () => {
   const navigate = useNavigate();
