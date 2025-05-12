@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ActiveFilters, FilterChangeHandler, PeopleFilterChangeHandler } from './FilterOptions';
 import PeopleFilter from './filters/PeopleFilter';
@@ -44,7 +43,6 @@ const MapFilters: React.FC<MapFiltersProps> = ({
         <FoodTypeFilter 
           activeFoodTypes={activeFilters.foodType}
           handleFilterChange={handleFilterChange}
-          singleSelect={true} // Set to single select mode
         />
 
         <VibeFilter 

@@ -12,13 +12,11 @@ import { filterOptions } from '../FilterOptions';
 interface FoodTypeFilterProps {
   activeFoodTypes: string[];
   handleFilterChange: (type: string, value: string[]) => void;
-  singleSelect?: boolean;
 }
 
 const FoodTypeFilter: React.FC<FoodTypeFilterProps> = ({ 
   activeFoodTypes, 
-  handleFilterChange,
-  singleSelect = false
+  handleFilterChange 
 }) => {
   return (
     <Popover>
@@ -39,18 +37,9 @@ const FoodTypeFilter: React.FC<FoodTypeFilterProps> = ({
                 ? "bg-saboris-primary text-white hover:bg-saboris-primary/90" 
                 : "border-saboris-primary text-saboris-gray"}`}
               onClick={() => {
-                let newFilters: string[];
-                
-                if (singleSelect) {
-                  // If already selected, clear the selection, otherwise set only this one
-                  newFilters = activeFoodTypes.includes(option.id) ? [] : [option.id];
-                } else {
-                  // Multi-select behavior (original)
-                  newFilters = activeFoodTypes.includes(option.id)
-                    ? activeFoodTypes.filter(id => id !== option.id)
-                    : [...activeFoodTypes, option.id];
-                }
-                
+                const newFilters = activeFoodTypes.includes(option.id)
+                  ? activeFoodTypes.filter(id => id !== option.id)
+                  : [...activeFoodTypes, option.id];
                 handleFilterChange('foodType', newFilters);
               }}
             >

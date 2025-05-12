@@ -34,22 +34,35 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   onFollow,
   onUnfollow
 }) => {
+  if (loading) {
+    return (
+      <div className="flex justify-center my-8">
+        <Loader2 className="h-8 w-8 animate-spin text-saboris-primary" />
+      </div>
+    );
+  }
+
   if (users.length > 0) {
     return (
-      <div>
-        <h2 className="text-xl font-semibold mb-4">People</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {users.map(user => (
-            <UserCard
-              key={user.id}
-              user={user}
-              currentUserId={currentUserId}
-              followLoading={followLoading[user.id] || false}
-              onFollow={() => onFollow(user.id)}
-              onUnfollow={() => onUnfollow(user.id)}
-            />
-          ))}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        {users.map(user => (
+          <UserCard
+            key={user.id}
+            user={user}
+            currentUserId={currentUserId}
+            followLoading={followLoading[user.id] || false}
+            onFollow={() => onFollow(user.id)}
+            onUnfollow={() => onUnfollow(user.id)}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (searchQuery && users.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">No users found matching "{searchQuery}"</p>
       </div>
     );
   }
