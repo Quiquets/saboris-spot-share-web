@@ -1,17 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Search, UserPlus, UserCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import AccessGateModal from '@/components/AccessGateModal';
+import SearchInput from '@/components/search/SearchInput';
+import SearchResults from '@/components/search/SearchResults';
 
 interface UserProfile {
   id: string;
@@ -117,99 +114,20 @@ const SearchUsersPage = () => {
             Search for friends or restaurants
           </h1>
           
-          <div className="relative max-w-lg mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <Input 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or username"
-              className="pl-10 pr-4"
-            />
-          </div>
+          <SearchInput 
+            value={searchQuery} 
+            onChange={setSearchQuery} 
+          />
           
-          {loading && (
-            <div className="flex justify-center my-8">
-              <Loader2 className="h-8 w-8 animate-spin text-saboris-primary" />
-            </div>
-          )}
-          
-          {!loading && users.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              {users.map(user => (
-                <Card key={user.id} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <Link to={`/profile/${user.id}`} className="flex items-center flex-1 min-w-0">
-                        <Avatar className="h-12 w-12 mr-4">
-                          <AvatarImage src={user.avatar_url || undefined} />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        
-                        <div className="truncate">
-                          <p className="font-medium truncate">{user.name}</p>
-                          <p className="text-sm text-gray-500 truncate">@{user.username}</p>
-                        </div>
-                      </Link>
-                      
-                      {user.id !== user?.id && (
-                        user.is_following ? (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleUnfollowUser(user.id)}
-                            disabled={followLoading[user.id]}
-                            className="ml-2"
-                          >
-                            {followLoading[user.id] ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <UserCheck className="h-4 w-4 mr-1" />
-                                Following
-                              </>
-                            )}
-                          </Button>
-                        ) : (
-                          <Button 
-                            size="sm"
-                            onClick={() => handleFollowUser(user.id)}
-                            disabled={followLoading[user.id]}
-                            className="ml-2 bg-saboris-primary hover:bg-saboris-primary/90"
-                          >
-                            {followLoading[user.id] ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <>
-                                <UserPlus className="h-4 w-4 mr-1" />
-                                Follow
-                              </>
-                            )}
-                          </Button>
-                        )
-                      )}
-                    </div>
-                    
-                    <div className="mt-3 flex text-xs text-gray-500 space-x-4">
-                      <span>{user.posts_count || 0} posts</span>
-                      <span>{user.followers_count || 0} followers</span>
-                    </div>
-                    
-                    {user.bio && (
-                      <p className="text-sm mt-3 line-clamp-2">
-                        {user.bio}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-          
-          {!loading && searchQuery && users.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No users found matching "{searchQuery}"</p>
-            </div>
-          )}
+          <SearchResults
+            loading={loading}
+            searchQuery={searchQuery}
+            users={users}
+            currentUserId={user?.id}
+            followLoading={followLoading}
+            onFollow={handleFollowUser}
+            onUnfollow={handleUnfollowUser}
+          />
         </div>
       </div>
       
