@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -39,7 +38,7 @@ const AddPlacePage = () => {
       lat: 0,
       lng: 0,
       place_id: "",
-      place_type: "restaurant" as "restaurant" | "bar" | "cafe",
+      place_type: "restaurant",
       rating_food: 3,
       rating_service: 3,
       rating_atmosphere: 3,
@@ -56,8 +55,9 @@ const AddPlacePage = () => {
     }
   });
   
-  const { formState, getValues } = form;
-  const formValues = getValues();
+  // Extract form state and values
+  const { watch } = form;
+  const formValues = watch();
   
   useEffect(() => {
     document.title = 'Saboris - Share Your Experience';
@@ -194,7 +194,10 @@ const AddPlacePage = () => {
             <div className="space-y-6">
               <div>
                 <Label htmlFor="place_type">Place Type</Label>
-                <Select onValueChange={(value: "restaurant" | "bar" | "cafe") => form.setValue("place_type", value)}>
+                <Select 
+                  onValueChange={(value) => form.setValue("place_type", value as "restaurant" | "bar" | "cafe")}
+                  defaultValue={formValues.place_type}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a type" />
                   </SelectTrigger>
@@ -291,6 +294,7 @@ const AddPlacePage = () => {
                   value={formValues.occasions}
                   onChange={(values) => form.setValue("occasions", values)}
                   placeholder="Select occasions..."
+                  label="Occasions"
                 />
               </div>
               
@@ -305,6 +309,7 @@ const AddPlacePage = () => {
                   value={formValues.vibes}
                   onChange={(values) => form.setValue("vibes", values)}
                   placeholder="Select vibes..."
+                  label="Vibes"
                 />
               </div>
               
@@ -359,7 +364,11 @@ const AddPlacePage = () => {
                 <Checkbox 
                   id="is_public"
                   checked={formValues.is_public}
-                  onCheckedChange={(checked) => form.setValue("is_public", !!checked)}
+                  onCheckedChange={(checked) => {
+                    if (typeof checked === 'boolean') {
+                      form.setValue("is_public", checked);
+                    }
+                  }}
                 />
                 <Label htmlFor="is_public">Public</Label>
               </div>
