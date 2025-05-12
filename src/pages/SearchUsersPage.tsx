@@ -94,10 +94,23 @@ const SearchUsersPage = () => {
       if (error) throw error;
       
       // If the user is logged in, check which restaurants are saved
-      let restaurantsWithSaveStatus = data || [];
+      let restaurantsWithSaveStatus: Restaurant[] = [];
       let reviewerData: Record<string, any[]> = {};
       
-      if (user) {
+      if (data) {
+        // Transform data to match Restaurant interface
+        restaurantsWithSaveStatus = data.map(restaurant => ({
+          id: restaurant.id,
+          name: restaurant.name,
+          address: restaurant.address,
+          place_id: restaurant.id, // Ensure place_id is correctly set
+          cuisine: undefined,
+          avg_rating: 0,
+          is_saved: false
+        }));
+      }
+      
+      if (user && data) {
         // Check if restaurants are saved by the current user
         const { data: savedPlaces } = await supabase
           .from('wishlists')
@@ -121,24 +134,25 @@ const SearchUsersPage = () => {
           .in('place_id', data?.map(r => r.id) || []);
         
         // Group reviewers by place_id
-        reviews?.forEach(review => {
-          if (!reviewerData[review.place_id]) {
-            reviewerData[review.place_id] = [];
-          }
-          reviewerData[review.place_id].push({
-            ...review.users,
-            rating: Math.round((review.rating_food + review.rating_service + review.rating_atmosphere + review.rating_value) / 4)
+        if (reviews) {
+          reviews.forEach(review => {
+            if (!reviewerData[review.place_id]) {
+              reviewerData[review.place_id] = [];
+            }
+            reviewerData[review.place_id].push({
+              ...review.users,
+              rating: Math.round((review.rating_food + review.rating_service + review.rating_atmosphere + review.rating_value) / 4)
+            });
           });
-        });
-        
-        // Combine restaurant data with saved status and reviewer info - make sure to include place_id
-        restaurantsWithSaveStatus = data?.map(restaurant => ({
-          ...restaurant,
-          place_id: restaurant.id, // Ensure place_id is set for the Restaurant type
-          is_saved: savedPlaceIds.includes(restaurant.id),
-          reviewers: reviewerData[restaurant.id] || [],
-          avg_rating: calculateAvgRating(reviewerData[restaurant.id] || [])
-        })) || [];
+          
+          // Update the restaurants with saved status and reviewer info
+          restaurantsWithSaveStatus = restaurantsWithSaveStatus.map(restaurant => ({
+            ...restaurant,
+            is_saved: savedPlaceIds.includes(restaurant.id),
+            reviewers: reviewerData[restaurant.id] || [],
+            avg_rating: calculateAvgRating(reviewerData[restaurant.id] || [])
+          }));
+        }
       }
       
       return restaurantsWithSaveStatus;

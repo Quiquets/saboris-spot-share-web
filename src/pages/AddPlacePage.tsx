@@ -13,14 +13,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formSchema, FormValues } from '@/types/place';
+import { formSchema, FormValues, PlaceDetails } from '@/types/place';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { PlusCircle } from 'lucide-react';
 import { SelectDropdown } from '@/components/places/SelectDropdown';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
-import { PlaceDetails } from '@/types/place';
 
 const AddPlacePage = () => {
   const navigate = useNavigate();
@@ -31,7 +30,9 @@ const AddPlacePage = () => {
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Use a simpler form type to avoid excessive recursion
+  // Define the place type literal type separately to avoid recursive type issues
+  type PlaceType = "restaurant" | "bar" | "cafe";
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,7 +41,7 @@ const AddPlacePage = () => {
       lat: 0,
       lng: 0,
       place_id: "",
-      place_type: "restaurant" as const, // Use const assertion to fix type
+      place_type: "restaurant" as PlaceType,
       rating_food: 3,
       rating_service: 3,
       rating_atmosphere: 3,
@@ -197,7 +198,7 @@ const AddPlacePage = () => {
               <div>
                 <Label htmlFor="place_type">Place Type</Label>
                 <Select 
-                  onValueChange={(value) => form.setValue("place_type", value as "restaurant" | "bar" | "cafe")}
+                  onValueChange={(value) => form.setValue("place_type", value as PlaceType)}
                   defaultValue={formValues.place_type}
                 >
                   <SelectTrigger className="w-full">
