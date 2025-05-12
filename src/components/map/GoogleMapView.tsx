@@ -31,6 +31,7 @@ interface GoogleMapViewProps {
 const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {
   const mapRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isGoogleMapsAvailable, setIsGoogleMapsAvailable] = useState(false);
@@ -121,7 +122,7 @@ const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {
     }
     
     try {
-      const mapElement = document.getElementById("map");
+      const mapElement = mapContainerRef.current;
       if (!mapElement) {
         console.error("Map container not found");
         return;
@@ -188,7 +189,7 @@ const GoogleMapView = ({ peopleFilter, activeFilters }: GoogleMapViewProps) => {
   }
   
   return (
-    <div id="map" style={{ height: '100%', width: '100%' }}></div>
+    <div id="map" ref={mapContainerRef} style={{ height: '100%', width: '100%' }}></div>
   );
 };
 

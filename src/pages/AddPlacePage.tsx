@@ -21,8 +21,9 @@ import { ImageUpload } from '@/components/places/ImageUpload';
 import { loadGoogleMapsScript } from '@/utils/mapUtils';
 import { SelectDropdown } from '@/components/places/SelectDropdown';
 
-// Define place types as a constant array to avoid recursive typing issues
-const PLACE_TYPES = ["restaurant", "bar", "cafe"] as const;
+// Define place types as a simple string array
+const PLACE_TYPES = ["restaurant", "bar", "cafe"];
+// Define the type based on the array
 type PlaceType = typeof PLACE_TYPES[number];
 
 const AddPlacePage = () => {
@@ -233,7 +234,7 @@ const AddPlacePage = () => {
                 <Label htmlFor="place_type">Place Type</Label>
                 <Select 
                   onValueChange={(value) => {
-                    if (PLACE_TYPES.includes(value as PlaceType)) {
+                    if (PLACE_TYPES.includes(value)) {
                       form.setValue("place_type", value as PlaceType);
                     }
                   }}
