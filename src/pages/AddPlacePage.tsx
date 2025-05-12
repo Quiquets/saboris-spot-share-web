@@ -21,6 +21,11 @@ import { SelectDropdown } from '@/components/places/SelectDropdown';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
 
+// Define a constant array of place types to avoid recursive typing issues
+const PLACE_TYPES = ["restaurant", "bar", "cafe"] as const;
+// Create a type from the array
+type PlaceType = typeof PLACE_TYPES[number];
+
 const AddPlacePage = () => {
   const navigate = useNavigate();
   const { user, showAuthModal, setShowAuthModal } = useAuth();
@@ -29,9 +34,6 @@ const AddPlacePage = () => {
   const [step, setStep] = useState(1);
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Define the place type literal type separately to avoid recursive type issues
-  type PlaceType = "restaurant" | "bar" | "cafe";
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -198,16 +200,23 @@ const AddPlacePage = () => {
               <div>
                 <Label htmlFor="place_type">Place Type</Label>
                 <Select 
-                  onValueChange={(value) => form.setValue("place_type", value as PlaceType)}
+                  onValueChange={(value) => {
+                    // Ensure type safety by checking if value is a valid PlaceType
+                    if (PLACE_TYPES.includes(value as PlaceType)) {
+                      form.setValue("place_type", value as PlaceType);
+                    }
+                  }}
                   defaultValue={formValues.place_type}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="restaurant">Restaurant</SelectItem>
-                    <SelectItem value="bar">Bar</SelectItem>
-                    <SelectItem value="cafe">Cafe</SelectItem>
+                    {PLACE_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>{
+                        type.charAt(0).toUpperCase() + type.slice(1)
+                      }</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {form.formState.errors.place_type && (
