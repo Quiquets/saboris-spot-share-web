@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,17 +12,23 @@ import { loadGoogleMapsScript } from '@/utils/mapUtils';
 const AddPlacePage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [isMapLoading, setIsMapLoading] = useState(true);
 
   useEffect(() => {
     document.title = 'Saboris - Share a Place';
     
     // Load Google Maps API
-    loadGoogleMapsScript().catch(err => {
-      console.error("Error loading Google Maps:", err);
-    });
+    loadGoogleMapsScript()
+      .then(() => {
+        setIsMapLoading(false);
+      })
+      .catch(err => {
+        console.error("Error loading Google Maps:", err);
+        setIsMapLoading(false);
+      });
   }, []);
 
-  if (authLoading) {
+  if (authLoading || isMapLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -56,7 +62,8 @@ const AddPlacePage = () => {
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <div className="container mx-auto px-4 py-8 flex-grow">
-        <h1 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
+          <PlusCircleIcon className="h-6 w-6 mr-2" />
           Share your recommendations with your friends
         </h1>
         <AddPlaceForm />
@@ -65,5 +72,8 @@ const AddPlacePage = () => {
     </main>
   );
 };
+
+// Import at the end to avoid circular dependencies
+import { PlusCircle as PlusCircleIcon } from 'lucide-react';
 
 export default AddPlacePage;

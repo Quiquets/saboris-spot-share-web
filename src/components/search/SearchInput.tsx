@@ -15,13 +15,13 @@ const SearchInput: React.FC<SearchInputProps> = ({
   placeholder = "Search by name or username" 
 }) => {
   return (
-    <div className="relative max-w-lg mx-auto">
+    <div className="relative w-full">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
       <Input 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pl-10 pr-4"
+        className="pl-10 pr-4 w-full"
       />
     </div>
   );

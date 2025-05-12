@@ -141,8 +141,11 @@ const SavedPlacesPage = () => {
       
       <div className="bg-gray-50 py-6 md:py-8 px-4 flex-grow">
         <div className="container mx-auto">
-          {/* Title with consistent styling */}
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">My Saved Places</h1>
+          {/* Title with consistent styling and an icon */}
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
+            <Heart className="h-6 w-6 mr-2" />
+            My Saved Places
+          </h1>
           
           {/* Filter section */}
           <div className="mb-6">

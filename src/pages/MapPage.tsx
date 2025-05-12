@@ -5,6 +5,7 @@ import MapSection from '@/components/MapSection';
 import Footer from '@/components/Footer';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { MapPin } from 'lucide-react';
 
 const MapPage = () => {
   const { showAuthModal, setShowAuthModal } = useAuth();
@@ -17,7 +18,8 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="container mx-auto px-4 py-6 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
+          <MapPin className="h-6 w-6 mr-2" />
           Explore restaurants, cafes and bars near you
         </h1>
         <div className="flex-grow w-full">

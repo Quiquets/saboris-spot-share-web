@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search as SearchIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
@@ -110,14 +110,17 @@ const SearchUsersPage = () => {
       
       <div className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
+            <SearchIcon className="h-6 w-6 mr-2" />
             Search for friends or restaurants
           </h1>
           
-          <SearchInput 
-            value={searchQuery} 
-            onChange={setSearchQuery} 
-          />
+          <div className="w-full">
+            <SearchInput 
+              value={searchQuery} 
+              onChange={setSearchQuery} 
+            />
+          </div>
           
           <SearchResults
             loading={loading}
