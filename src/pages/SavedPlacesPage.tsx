@@ -5,17 +5,33 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, Filter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SavedRestaurant, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import MapFilters from '@/components/map/MapFilters';
+import { ActiveFilters } from '@/components/map/FilterOptions';
 
 const SavedPlacesPage = () => {
   const { user, loading: authLoading } = useAuth();
   const [savedPlaces, setSavedPlaces] = useState<SavedRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
+  
+  // Add state for filters
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
+    people: 'community', // Default to Saboris Community
+    occasion: [],
+    foodType: [],
+    vibe: [],
+    price: [],
+    rating: 0,
+    foodSortDirection: "desc", // Default: high to low
+    serviceSortDirection: "desc", // Default: high to low
+    atmosphereSortDirection: "desc", // Default: high to low
+    valueSortDirection: "desc", // Default: high to low
+  });
 
   useEffect(() => {
     document.title = 'Saboris - Saved Places';
@@ -50,6 +66,39 @@ const SavedPlacesPage = () => {
     } catch (error) {
       console.error("Error removing from wishlist:", error);
       toast.error("Failed to remove from wishlist");
+    }
+  };
+  
+  const handleFilterChange = (type: string, value: any) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+  
+  const handlePeopleFilterChange = (value: string) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      people: value
+    }));
+  };
+  
+  const toggleSortDirection = (category: string) => {
+    const directionKey = {
+      'value': 'valueSortDirection',
+      'food-quality': 'foodSortDirection',
+      'service': 'serviceSortDirection',
+      'atmosphere': 'atmosphereSortDirection'
+    }[category] as keyof ActiveFilters;
+    
+    if (directionKey) {
+      const currentDirection = activeFilters[directionKey] as "asc" | "desc";
+      const newDirection = currentDirection === "desc" ? "asc" : "desc";
+      
+      setActiveFilters(prev => ({
+        ...prev,
+        [directionKey]: newDirection
+      }));
     }
   };
 
@@ -92,11 +141,17 @@ const SavedPlacesPage = () => {
       
       <div className="bg-gray-50 py-6 md:py-8 px-4 flex-grow">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-0 mb-4 md:mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2 mx-auto">
-              <Heart className="text-saboris-primary" />
-              <span>My Saved Places</span>
-            </h1>
+          {/* Title with consistent styling */}
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">My Saved Places</h1>
+          
+          {/* Filter section */}
+          <div className="mb-6">
+            <MapFilters
+              activeFilters={activeFilters}
+              handleFilterChange={handleFilterChange}
+              handlePeopleFilterChange={handlePeopleFilterChange}
+              toggleSortDirection={toggleSortDirection}
+            />
           </div>
           
           {loading ? (

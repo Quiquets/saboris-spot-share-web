@@ -72,11 +72,10 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
   };
   
   return (
-    <section id="map-section" className="py-6 md:py-16 px-2 md:px-8 bg-white">
+    <section id="map-section" className="py-6 md:py-8 px-2 md:px-0 bg-white">
       <div className="max-w-5xl mx-auto">
         {!simplified && (
           <div className="mb-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Explore Places</h2>
             <MapFilters 
               activeFilters={activeFilters} 
               handleFilterChange={handleFilterChange}

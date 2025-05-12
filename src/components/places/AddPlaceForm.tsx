@@ -149,6 +149,11 @@ export function AddPlaceForm() {
       if (placeError) throw placeError;
       
       // 2. Insert into reviews table with rating_value
+      // Convert tagged_friends array to string for storage
+      const taggedFriendsStr = values.tagged_friends && values.tagged_friends.length > 0 
+        ? values.tagged_friends.join(',') 
+        : null;
+        
       const { data: reviewData, error: reviewError } = await supabase
         .from('reviews')
         .insert({
@@ -157,10 +162,10 @@ export function AddPlaceForm() {
           rating_food: values.rating_food,
           rating_service: values.rating_service,
           rating_atmosphere: values.rating_atmosphere,
-          rating_value: values.rating_value, // Include rating_value field
+          rating_value: values.rating_value,
           text: values.description,
           photo_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
-          tagged_friends: values.tagged_friends
+          tagged_friends: taggedFriendsStr // Store as comma-separated string
         })
         .select()
         .single();
@@ -212,7 +217,6 @@ export function AddPlaceForm() {
     <div className="flex-grow w-full px-4 py-8 md:py-12 max-w-[1440px] mx-auto">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center mb-6 md:mb-8 gap-3">
-          <Sparkles className="text-saboris-primary h-6 w-6 md:h-7 md:w-7" />
           <h1 className="text-2xl md:text-3xl font-bold">Share Your Experience</h1>
         </div>
         
