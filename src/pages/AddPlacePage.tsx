@@ -6,25 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formSchema, FormValues, PlaceDetails } from '@/types/place';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { PlaceAutocomplete } from '@/components/places/PlaceAutocomplete';
+import { formSchema, FormValues } from '@/types/place';
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { PlusCircle } from 'lucide-react';
+import { MultiSelect } from '@/components/places/MultiSelect';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
-import { loadGoogleMapsScript } from '@/utils/mapUtils';
-import { SelectDropdown } from '@/components/places/SelectDropdown';
-
-// Define place types as a simple string array
-const PLACE_TYPES = ["restaurant", "bar", "cafe"];
-// Define the type based on the array
-type PlaceType = typeof PLACE_TYPES[number];
+import { PlaceDetails } from '@/types/place';
 
 const AddPlacePage = () => {
   const navigate = useNavigate();
@@ -34,28 +29,8 @@ const AddPlacePage = () => {
   const [step, setStep] = useState(1);
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
   
-  // Load Google Maps API
-  useEffect(() => {
-    const loadGoogleMaps = async () => {
-      try {
-        await loadGoogleMapsScript();
-        setIsGoogleMapsLoaded(true);
-      } catch (error) {
-        console.error("Failed to load Google Maps:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load Google Maps. Please refresh the page.",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    loadGoogleMaps();
-  }, []);
-  
-  const form = useForm<FormValues>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       place_name: "",
@@ -63,7 +38,7 @@ const AddPlacePage = () => {
       lat: 0,
       lng: 0,
       place_id: "",
-      place_type: "restaurant" as PlaceType,
+      place_type: "restaurant",
       rating_food: 3,
       rating_service: 3,
       rating_atmosphere: 3,
@@ -80,10 +55,6 @@ const AddPlacePage = () => {
     }
   });
   
-  // Extract form state and values
-  const { watch } = form;
-  const formValues = watch();
-  
   useEffect(() => {
     document.title = 'Saboris - Share Your Experience';
     
@@ -98,11 +69,11 @@ const AddPlacePage = () => {
   
   const handlePlaceSelect = (details: PlaceDetails) => {
     setPlaceDetails(details);
-    form.setValue("place_name", details.name);
-    form.setValue("address", details.address);
-    form.setValue("lat", details.lat);
-    form.setValue("lng", details.lng);
-    form.setValue("place_id", details.place_id);
+    setValue("place_name", details.name);
+    setValue("address", details.address);
+    setValue("lat", details.lat);
+    setValue("lng", details.lng);
+    setValue("place_id", details.place_id);
     setStep(2);
   };
   
@@ -210,49 +181,27 @@ const AddPlacePage = () => {
           </div>
         </div>
         
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {step === 1 && (
-            <div className="space-y-4">
-              <Label htmlFor="search">Find a Place</Label>
-              {isGoogleMapsLoaded ? (
-                <PlaceAutocomplete
-                  value={formValues.place_name}
-                  onPlaceSelect={handlePlaceSelect}
-                  disabled={isSubmitting}
-                />
-              ) : (
-                <div className="flex items-center justify-center p-6 border rounded-md">
-                  <p>Loading Google Maps...</p>
-                </div>
-              )}
-            </div>
+            <PlaceSearch onPlaceSelect={handlePlaceSelect} />
           )}
           
           {step === 2 && (
             <div className="space-y-6">
               <div>
                 <Label htmlFor="place_type">Place Type</Label>
-                <Select 
-                  onValueChange={(value) => {
-                    if (PLACE_TYPES.includes(value)) {
-                      form.setValue("place_type", value as PlaceType);
-                    }
-                  }}
-                  defaultValue={formValues.place_type}
-                >
+                <Select onValueChange={(value) => setValue("place_type", value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PLACE_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="restaurant">Restaurant</SelectItem>
+                    <SelectItem value="bar">Bar</SelectItem>
+                    <SelectItem value="cafe">Cafe</SelectItem>
                   </SelectContent>
                 </Select>
-                {form.formState.errors.place_type && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.place_type.message}</p>
+                {errors.place_type && (
+                  <p className="text-red-500 text-sm">{errors.place_type.message}</p>
                 )}
               </div>
               
@@ -262,10 +211,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_food"
                   defaultValue={3}
-                  {...form.register("rating_food", { valueAsNumber: true })}
+                  {...register("rating_food", { valueAsNumber: true })}
                 />
-                {form.formState.errors.rating_food && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.rating_food.message}</p>
+                {errors.rating_food && (
+                  <p className="text-red-500 text-sm">{errors.rating_food.message}</p>
                 )}
               </div>
               
@@ -275,10 +224,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_service"
                   defaultValue={3}
-                  {...form.register("rating_service", { valueAsNumber: true })}
+                  {...register("rating_service", { valueAsNumber: true })}
                 />
-                {form.formState.errors.rating_service && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.rating_service.message}</p>
+                {errors.rating_service && (
+                  <p className="text-red-500 text-sm">{errors.rating_service.message}</p>
                 )}
               </div>
               
@@ -288,10 +237,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_atmosphere"
                   defaultValue={3}
-                  {...form.register("rating_atmosphere", { valueAsNumber: true })}
+                  {...register("rating_atmosphere", { valueAsNumber: true })}
                 />
-                {form.formState.errors.rating_atmosphere && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.rating_atmosphere.message}</p>
+                {errors.rating_atmosphere && (
+                  <p className="text-red-500 text-sm">{errors.rating_atmosphere.message}</p>
                 )}
               </div>
               
@@ -301,10 +250,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_value"
                   defaultValue={3}
-                  {...form.register("rating_value", { valueAsNumber: true })}
+                  {...register("rating_value", { valueAsNumber: true })}
                 />
-                {form.formState.errors.rating_value && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.rating_value.message}</p>
+                {errors.rating_value && (
+                  <p className="text-red-500 text-sm">{errors.rating_value.message}</p>
                 )}
               </div>
               
@@ -314,46 +263,40 @@ const AddPlacePage = () => {
                   type="text"
                   id="cuisine"
                   placeholder="e.g., Italian, Mexican"
-                  {...form.register("cuisine")}
+                  {...register("cuisine")}
                 />
-                {form.formState.errors.cuisine && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.cuisine.message}</p>
+                {errors.cuisine && (
+                  <p className="text-red-500 text-sm">{errors.cuisine.message}</p>
                 )}
               </div>
               
               <PriceRangeSelector 
                 value={formValues.price_range}
-                onChange={(price) => form.setValue("price_range", price)}
+                onChange={(price) => setValue("price_range", price)}
               />
               
               <div>
                 <Label>Occasions</Label>
-                <SelectDropdown 
+                <MultiSelect 
                   options={[
                     { value: "breakfast", label: "Breakfast" },
                     { value: "brunch", label: "Brunch" },
                     { value: "lunch", label: "Lunch" },
                     { value: "dinner", label: "Dinner" },
                   ]}
-                  value={formValues.occasions}
-                  onChange={(values) => form.setValue("occasions", values)}
-                  placeholder="Select occasions..."
-                  label="Occasions"
+                  onChange={(values) => setValue("occasions", values)}
                 />
               </div>
               
               <div>
                 <Label>Vibes</Label>
-                <SelectDropdown 
+                <MultiSelect 
                   options={[
                     { value: "romantic", label: "Romantic" },
                     { value: "casual", label: "Casual" },
                     { value: "lively", label: "Lively" },
                   ]}
-                  value={formValues.vibes}
-                  onChange={(values) => form.setValue("vibes", values)}
-                  placeholder="Select vibes..."
-                  label="Vibes"
+                  onChange={(values) => setValue("vibes", values)}
                 />
               </div>
               
@@ -362,10 +305,10 @@ const AddPlacePage = () => {
                 <Textarea
                   id="description"
                   placeholder="Share your experience..."
-                  {...form.register("description")}
+                  {...register("description")}
                 />
-                {form.formState.errors.description && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.description.message}</p>
+                {errors.description && (
+                  <p className="text-red-500 text-sm">{errors.description.message}</p>
                 )}
               </div>
               
@@ -375,10 +318,10 @@ const AddPlacePage = () => {
                   type="text"
                   id="ordered_items"
                   placeholder="e.g., Pizza, Pasta"
-                  {...form.register("ordered_items")}
+                  {...register("ordered_items")}
                 />
-                {form.formState.errors.ordered_items && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.ordered_items.message}</p>
+                {errors.ordered_items && (
+                  <p className="text-red-500 text-sm">{errors.ordered_items.message}</p>
                 )}
               </div>
               
@@ -386,7 +329,7 @@ const AddPlacePage = () => {
                 <Label>Photo Uploads</Label>
                 <ImageUpload 
                   images={formValues.photo_urls}
-                  onChange={(urls) => form.setValue("photo_urls", urls)}
+                  onChange={(urls) => setValue("photo_urls", urls)}
                   maxImages={5}
                 />
               </div>
@@ -397,22 +340,18 @@ const AddPlacePage = () => {
                   type="text"
                   id="tagged_friends"
                   placeholder="e.g., @friend1, @friend2"
-                  {...form.register("tagged_friends")}
+                  {...register("tagged_friends")}
                 />
-                {form.formState.errors.tagged_friends && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.tagged_friends.message}</p>
+                {errors.tagged_friends && (
+                  <p className="text-red-500 text-sm">{errors.tagged_friends.message}</p>
                 )}
               </div>
               
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="is_public"
-                  checked={formValues.is_public}
-                  onCheckedChange={(checked) => {
-                    if (typeof checked === 'boolean') {
-                      form.setValue("is_public", checked);
-                    }
-                  }}
+                  defaultChecked
+                  {...register("is_public")}
                 />
                 <Label htmlFor="is_public">Public</Label>
               </div>
@@ -453,6 +392,123 @@ const AddPlacePage = () => {
       </Dialog>
     </main>
   );
+};
+
+interface PlaceSearchProps {
+  onPlaceSelect: (details: PlaceDetails) => void;
+}
+
+const PlaceSearch: React.FC<PlaceSearchProps> = ({ onPlaceSelect }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [autocompleteService, setAutocompleteService] = useState<google.maps.places.AutocompleteService | null>(null);
+  
+  useEffect(() => {
+    // Load Google Maps API and Autocomplete Service
+    if (!window.google) {
+      console.error("Google Maps API not loaded");
+      return;
+    }
+    
+    setAutocompleteService(new window.google.maps.places.AutocompleteService());
+  }, []);
+  
+  useEffect(() => {
+    if (!searchQuery || !autocompleteService) {
+      setSearchResults([]);
+      return;
+    }
+    
+    autocompleteService.getPlacePredictions({
+      input: searchQuery,
+      types: ['establishment'],
+    }, (predictions) => {
+      setSearchResults(predictions || []);
+    });
+  }, [searchQuery, autocompleteService]);
+  
+  const handlePlaceSelect = (placeId: string) => {
+    if (!window.google) {
+      console.error("Google Maps API not loaded");
+      return;
+    }
+    
+    const placesService = new window.google.maps.places.PlacesService(document.createElement('div'));
+    
+    placesService.getDetails({
+      placeId: placeId,
+      fields: ['name', 'address_components', 'geometry', 'place_id'],
+    }, (place, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+        const address = place.address_components?.map(component => component.long_name).join(', ') || 'Address not found';
+        
+        const details: PlaceDetails = {
+          name: place.name || 'Name not found',
+          address: address,
+          lat: place.geometry?.location?.lat() || 0,
+          lng: place.geometry?.location?.lng() || 0,
+          place_id: place.place_id || 'Place ID not found',
+        };
+        
+        onPlaceSelect(details);
+        setSearchQuery('');
+        setSearchResults([]);
+      } else {
+        console.error('Could not retrieve place details:', status);
+      }
+    });
+  };
+  
+  return (
+    <div className="space-y-4">
+      <Label htmlFor="search">Find a Place</Label>
+      <Input
+        type="text"
+        id="search"
+        placeholder="Enter a place name"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
+      
+      {searchResults.length > 0 && (
+        <ul className="border rounded-md bg-white shadow-md max-h-48 overflow-y-auto">
+          {searchResults.map((result) => (
+            <li
+              key={result.place_id}
+              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              onClick={() => handlePlaceSelect(result.place_id)}
+            >
+              {result.description}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+const useFormValues = <T extends Record<string, any>>(defaultValues: T) => {
+  const [values, setValues] = useState<T>(defaultValues);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = event.target;
+    
+    setValues(prevValues => ({
+      ...prevValues,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  return {
+    values,
+    handleChange,
+    setValue: (name: string, value: any) => {
+      setValues(prevValues => ({
+        ...prevValues,
+        [name]: value
+      }));
+    }
+  };
 };
 
 export default AddPlacePage;

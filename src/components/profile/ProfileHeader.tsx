@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Globe, Lock, MapPin } from 'lucide-react';
-import { ProfileStats } from '@/services';
+import { ProfileStats } from '@/services/supabaseService';
 import { User } from '@/types/global';
 
 interface ProfileHeaderProps {

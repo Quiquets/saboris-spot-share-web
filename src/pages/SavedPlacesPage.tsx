@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -7,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Heart, MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SavedRestaurant, supabaseService } from '@/services';
+import { SavedRestaurant, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MapFilters from '@/components/map/MapFilters';

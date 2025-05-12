@@ -76,12 +76,12 @@ export function PlaceDetailsSection({
               <FormItem>
                 <FormControl>
                   <SelectDropdown
-                    placeholder="Select vibes..."
+                    label="Vibes"
                     options={vibeOptions}
-                    value={field.value || []}
+                    selectedValues={field.value || []}
                     onChange={field.onChange}
                     maxSelection={3}
-                    label="Vibes"
+                    placeholder="Select vibes..."
                   />
                 </FormControl>
                 <FormMessage />
@@ -98,12 +98,12 @@ export function PlaceDetailsSection({
               <FormItem>
                 <FormControl>
                   <SelectDropdown
-                    placeholder="Select occasions..."
+                    label="Occasions"
                     options={occasionOptions}
-                    value={field.value || []}
+                    selectedValues={field.value || []}
                     onChange={field.onChange}
                     maxSelection={2}
-                    label="Occasions"
+                    placeholder="Select occasions..."
                   />
                 </FormControl>
                 <FormMessage />

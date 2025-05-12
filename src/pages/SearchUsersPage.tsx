@@ -3,9 +3,8 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabaseService } from '@/services';
+import { supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import AccessGateModal from '@/components/AccessGateModal';
 import SearchInput from '@/components/search/SearchInput';
 import SearchResults from '@/components/search/SearchResults';
@@ -94,23 +93,10 @@ const SearchUsersPage = () => {
       if (error) throw error;
       
       // If the user is logged in, check which restaurants are saved
-      let restaurantsWithSaveStatus: Restaurant[] = [];
+      let restaurantsWithSaveStatus = data || [];
       let reviewerData: Record<string, any[]> = {};
       
-      if (data) {
-        // Transform data to match Restaurant interface
-        restaurantsWithSaveStatus = data.map(restaurant => ({
-          id: restaurant.id,
-          name: restaurant.name,
-          address: restaurant.address,
-          place_id: restaurant.id, // Ensure place_id is correctly set
-          cuisine: undefined,
-          avg_rating: 0,
-          is_saved: false
-        }));
-      }
-      
-      if (user && data) {
+      if (user) {
         // Check if restaurants are saved by the current user
         const { data: savedPlaces } = await supabase
           .from('wishlists')
@@ -134,25 +120,23 @@ const SearchUsersPage = () => {
           .in('place_id', data?.map(r => r.id) || []);
         
         // Group reviewers by place_id
-        if (reviews) {
-          reviews.forEach(review => {
-            if (!reviewerData[review.place_id]) {
-              reviewerData[review.place_id] = [];
-            }
-            reviewerData[review.place_id].push({
-              ...review.users,
-              rating: Math.round((review.rating_food + review.rating_service + review.rating_atmosphere + review.rating_value) / 4)
-            });
+        reviews?.forEach(review => {
+          if (!reviewerData[review.place_id]) {
+            reviewerData[review.place_id] = [];
+          }
+          reviewerData[review.place_id].push({
+            ...review.users,
+            rating: Math.round((review.rating_food + review.rating_service + review.rating_atmosphere + review.rating_value) / 4)
           });
-          
-          // Update the restaurants with saved status and reviewer info
-          restaurantsWithSaveStatus = restaurantsWithSaveStatus.map(restaurant => ({
-            ...restaurant,
-            is_saved: savedPlaceIds.includes(restaurant.id),
-            reviewers: reviewerData[restaurant.id] || [],
-            avg_rating: calculateAvgRating(reviewerData[restaurant.id] || [])
-          }));
-        }
+        });
+        
+        // Combine restaurant data with saved status and reviewer info
+        restaurantsWithSaveStatus = data?.map(restaurant => ({
+          ...restaurant,
+          is_saved: savedPlaceIds.includes(restaurant.id),
+          reviewers: reviewerData[restaurant.id] || [],
+          avg_rating: calculateAvgRating(reviewerData[restaurant.id] || [])
+        })) || [];
       }
       
       return restaurantsWithSaveStatus;

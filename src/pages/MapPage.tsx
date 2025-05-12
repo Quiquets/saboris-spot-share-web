@@ -1,37 +1,16 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Header from '@/components/Header';
 import MapSection from '@/components/MapSection';
 import Footer from '@/components/Footer';
 import AuthModal from '@/components/AuthModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { loadGoogleMapsScript } from '@/utils/mapUtils';
-import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 const MapPage = () => {
   const { showAuthModal, setShowAuthModal } = useAuth();
-  const [isMapLoaded, setIsMapLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     document.title = 'Saboris - Explore';
-    
-    // Load Google Maps API
-    const loadMap = async () => {
-      try {
-        setIsLoading(true);
-        await loadGoogleMapsScript();
-        setIsMapLoaded(true);
-      } catch (error) {
-        console.error("Failed to load Google Maps:", error);
-        toast.error("Failed to load map. Please refresh the page.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadMap();
   }, []);
 
   return (
@@ -42,16 +21,7 @@ const MapPage = () => {
           Explore restaurants, cafes and bars near you
         </h1>
         <div className="flex-grow w-full">
-          {isLoading ? (
-            <div className="h-[400px] md:h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
-              <div className="flex flex-col items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin mb-2 text-saboris-primary" />
-                <p className="text-lg">Loading map...</p>
-              </div>
-            </div>
-          ) : (
-            <MapSection simplified={false} />
-          )}
+          <MapSection simplified={false} />
         </div>
       </div>
       <Footer />

@@ -1,11 +1,6 @@
 
 import { z } from 'zod';
 
-// Define valid place types as a const array
-const PLACE_TYPES = ["restaurant", "bar", "cafe"] as const;
-// Create a Zod enum from the array
-const placeTypeEnum = z.enum(PLACE_TYPES);
-
 // Form schema with Zod validation
 export const formSchema = z.object({
   place_name: z.string().min(1, "Place name is required"),
@@ -13,7 +8,7 @@ export const formSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   place_id: z.string(),
-  place_type: placeTypeEnum,
+  place_type: z.enum(["restaurant", "bar", "cafe"]),
   rating_food: z.number().min(1, "Food rating is required"),
   rating_service: z.number().min(1, "Service rating is required"),
   rating_atmosphere: z.number().min(1, "Atmosphere rating is required"),

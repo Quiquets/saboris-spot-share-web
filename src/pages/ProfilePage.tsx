@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Loader2, PlusCircle, UserIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { ProfileStats, supabaseService } from '@/services';
+import { ProfileStats, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ProfileHeader from '@/components/profile/ProfileHeader';
