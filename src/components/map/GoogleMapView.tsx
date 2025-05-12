@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -295,51 +296,3 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
 };
 
 export default GoogleMapView;
-
-// Helper function from mapUtils.ts - included here to ensure the component works correctly
-// These would normally be imported from mapUtils.ts
-function loadGoogleMapsScript(): Promise<void> {
-  // If already loaded, return immediately
-  if (window.google?.maps) {
-    console.log("Google Maps API already loaded");
-    return Promise.resolve();
-  }
-  
-  return new Promise<void>((resolve, reject) => {
-    try {
-      // Create unique callback name
-      const callbackName = `initGoogleMaps${Date.now()}`;
-      
-      // Define callback function
-      window[callbackName] = function() {
-        console.log("Google Maps initialized");
-        resolve();
-        
-        // Clean up the callback after use
-        try {
-          delete window[callbackName];
-        } catch (e) {
-          window[callbackName] = undefined;
-        }
-      };
-      
-      // Create script element
-      const script = document.createElement('script');
-      script.id = 'google-maps-script';
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDtlKxZhiMEgLtnbdBTpc5ly6-_lJqWnVQ&libraries=places&v=beta&callback=${callbackName}`;
-      script.async = true;
-      script.defer = true;
-      
-      script.onerror = (e) => {
-        console.error('Google Maps failed to load:', e);
-        reject(new Error('Google Maps failed to load. Check API key or network connection.'));
-      };
-      
-      // Append to document head
-      document.head.appendChild(script);
-    } catch (error) {
-      console.error("Error in loadGoogleMapsScript:", error);
-      reject(error);
-    }
-  });
-}
