@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -216,10 +215,6 @@ export function AddPlaceForm() {
   return (
     <div className="flex-grow w-full px-4 py-8 md:py-12 max-w-[1440px] mx-auto">
       <div className="mx-auto max-w-3xl">
-        <div className="flex items-center mb-6 md:mb-8 gap-3">
-          <h1 className="text-2xl md:text-3xl font-bold">Share Your Experience</h1>
-        </div>
-        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-8">
             {/* Place information (name, address, etc) */}

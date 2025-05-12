@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { AddPlaceForm } from '@/components/places/AddPlaceForm';
@@ -63,7 +63,7 @@ const AddPlacePage = () => {
       <Header />
       <div className="container mx-auto px-4 py-8 flex-grow">
         <h1 className="text-xl md:text-3xl font-bold text-center mb-4 md:mb-6 text-saboris-primary flex items-center justify-center">
-          <PlusCircleIcon className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+          <PlusCircle className="h-5 w-5 md:h-6 md:w-6 mr-2" />
           Share your recommendations
         </h1>
         <AddPlaceForm />
@@ -72,8 +72,5 @@ const AddPlacePage = () => {
     </main>
   );
 };
-
-// Import at the end to avoid circular dependencies
-import { PlusCircle as PlusCircleIcon } from 'lucide-react';
 
 export default AddPlacePage;

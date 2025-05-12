@@ -93,8 +93,8 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
           </div>
         )}
         
-        {/* Google Map Component - Make it taller */}
-        <div className="h-[450px] md:h-[550px] w-full border rounded-lg overflow-hidden">
+        {/* Make the map container taller */}
+        <div className="h-[500px] md:h-[650px] w-full border rounded-lg overflow-hidden">
           <GoogleMapView className="h-full" />
         </div>
       </div>
