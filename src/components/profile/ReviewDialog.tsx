@@ -6,7 +6,7 @@ import { MapPin, Star, Edit, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SharedPlace } from '@/types/profile';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ImageUpload } from '@/components/places/ImageUpload';
@@ -25,13 +25,13 @@ const ReviewDialog = ({ isOpen, onOpenChange, selectedPlace, onPlaceDeleted }: R
   const [isDeleting, setIsDeleting] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
 
-  // Initialize editing state when dialog opens
-  useState(() => {
+  // Initialize editing state when dialog opens or selected place changes
+  useEffect(() => {
     if (selectedPlace) {
       setReviewText(selectedPlace.review_text || '');
       setPhotos(selectedPlace.photo_urls || []);
     }
-  });
+  }, [selectedPlace]);
 
   if (!selectedPlace) return null;
   
@@ -79,12 +79,31 @@ const ReviewDialog = ({ isOpen, onOpenChange, selectedPlace, onPlaceDeleted }: R
 
       // If it was also a place created by the user, delete it
       if (selectedPlace.created_by === user.id) {
-        const { error: placeError } = await supabase
-          .from('places')
-          .delete()
-          .eq('id', selectedPlace.place_id);
+        // First, check if there are other reviews for this place
+        const { data: otherReviews, error: countError } = await supabase
+          .from('reviews')
+          .select('id', { count: 'exact' })
+          .eq('place_id', selectedPlace.place_id)
+          .neq('id', selectedPlace.id);
           
-        if (placeError) throw placeError;
+        if (countError) throw countError;
+        
+        // If there are no other reviews, delete the place
+        if (!otherReviews || otherReviews.length === 0) {
+          const { error: placeError } = await supabase
+            .from('places')
+            .delete()
+            .eq('id', selectedPlace.place_id);
+            
+          if (placeError) throw placeError;
+        }
+        
+        // Also delete any wishlist entries for this place
+        await supabase
+          .from('wishlists')
+          .delete()
+          .eq('place_id', selectedPlace.place_id)
+          .eq('user_id', user.id);
       }
       
       toast.success('Place deleted successfully');

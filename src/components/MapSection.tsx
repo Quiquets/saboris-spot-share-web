@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import GoogleMapView from './map/GoogleMapView';
+import MapFilters from './map/MapFilters';
 import { ActiveFilters } from './map/FilterOptions';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -37,12 +38,55 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     }));
   }, [user]);
   
-  // In a real app, we would refresh the map data based on filters here
+  const handleFilterChange = (type: string, value: any) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [type]: value
+    }));
+  };
+  
+  const handlePeopleFilterChange = (value: string) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      people: value
+    }));
+  };
+  
+  const toggleSortDirection = (category: string) => {
+    const directionKey = {
+      'value': 'valueSortDirection',
+      'food-quality': 'foodSortDirection',
+      'service': 'serviceSortDirection',
+      'atmosphere': 'atmosphereSortDirection'
+    }[category] as keyof ActiveFilters;
+    
+    if (directionKey) {
+      const currentDirection = activeFilters[directionKey] as "asc" | "desc";
+      const newDirection = currentDirection === "desc" ? "asc" : "desc";
+      
+      setActiveFilters(prev => ({
+        ...prev,
+        [directionKey]: newDirection
+      }));
+    }
+  };
   
   return (
     <section id="map-section" className="py-6 md:py-16 px-2 md:px-8 bg-white">
       <div className="max-w-5xl mx-auto">
-        {/* Google Map Component - simplified layout */}
+        {!simplified && (
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">Explore Places</h2>
+            <MapFilters 
+              activeFilters={activeFilters} 
+              handleFilterChange={handleFilterChange}
+              handlePeopleFilterChange={handlePeopleFilterChange}
+              toggleSortDirection={toggleSortDirection}
+            />
+          </div>
+        )}
+        
+        {/* Google Map Component */}
         <div className="h-[400px] md:h-[500px] w-full border rounded-lg overflow-hidden">
           <GoogleMapView />
         </div>

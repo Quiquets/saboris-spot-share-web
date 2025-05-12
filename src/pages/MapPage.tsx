@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import MapSection from '@/components/MapSection';
 import Footer from '@/components/Footer';
@@ -17,7 +17,7 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="flex-grow w-full">
-        <MapSection simplified={true} />
+        <MapSection simplified={false} />
       </div>
       <Footer />
       <AuthModal 

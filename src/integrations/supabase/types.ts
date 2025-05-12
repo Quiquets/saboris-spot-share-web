@@ -265,6 +265,7 @@ export type Database = {
           rating_food: number | null
           rating_service: number | null
           rating_value: number | null
+          tagged_friends: string | null
           text: string | null
           user_id: string
         }
@@ -277,6 +278,7 @@ export type Database = {
           rating_food?: number | null
           rating_service?: number | null
           rating_value?: number | null
+          tagged_friends?: string | null
           text?: string | null
           user_id: string
         }
@@ -289,6 +291,7 @@ export type Database = {
           rating_food?: number | null
           rating_service?: number | null
           rating_value?: number | null
+          tagged_friends?: string | null
           text?: string | null
           user_id?: string
         }
