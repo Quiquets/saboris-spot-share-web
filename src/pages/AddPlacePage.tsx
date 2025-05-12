@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,17 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formSchema, FormValues } from '@/types/place';
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { PlusCircle } from 'lucide-react';
-import { MultiSelect } from '@/components/places/MultiSelect';
+import { SelectDropdown } from '@/components/places/SelectDropdown';
 import { PriceRangeSelector } from '@/components/places/PriceRangeSelector';
 import { ImageUpload } from '@/components/places/ImageUpload';
 import { PlaceDetails } from '@/types/place';
@@ -30,7 +31,7 @@ const AddPlacePage = () => {
   const [placeDetails, setPlaceDetails] = useState<PlaceDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       place_name: "",
@@ -38,7 +39,7 @@ const AddPlacePage = () => {
       lat: 0,
       lng: 0,
       place_id: "",
-      place_type: "restaurant",
+      place_type: "restaurant" as "restaurant" | "bar" | "cafe",
       rating_food: 3,
       rating_service: 3,
       rating_atmosphere: 3,
@@ -55,6 +56,9 @@ const AddPlacePage = () => {
     }
   });
   
+  const { formState, getValues } = form;
+  const formValues = getValues();
+  
   useEffect(() => {
     document.title = 'Saboris - Share Your Experience';
     
@@ -69,11 +73,11 @@ const AddPlacePage = () => {
   
   const handlePlaceSelect = (details: PlaceDetails) => {
     setPlaceDetails(details);
-    setValue("place_name", details.name);
-    setValue("address", details.address);
-    setValue("lat", details.lat);
-    setValue("lng", details.lng);
-    setValue("place_id", details.place_id);
+    form.setValue("place_name", details.name);
+    form.setValue("address", details.address);
+    form.setValue("lat", details.lat);
+    form.setValue("lng", details.lng);
+    form.setValue("place_id", details.place_id);
     setStep(2);
   };
   
@@ -181,7 +185,7 @@ const AddPlacePage = () => {
           </div>
         </div>
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {step === 1 && (
             <PlaceSearch onPlaceSelect={handlePlaceSelect} />
           )}
@@ -190,7 +194,7 @@ const AddPlacePage = () => {
             <div className="space-y-6">
               <div>
                 <Label htmlFor="place_type">Place Type</Label>
-                <Select onValueChange={(value) => setValue("place_type", value)}>
+                <Select onValueChange={(value: "restaurant" | "bar" | "cafe") => form.setValue("place_type", value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a type" />
                   </SelectTrigger>
@@ -200,8 +204,8 @@ const AddPlacePage = () => {
                     <SelectItem value="cafe">Cafe</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.place_type && (
-                  <p className="text-red-500 text-sm">{errors.place_type.message}</p>
+                {form.formState.errors.place_type && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.place_type.message}</p>
                 )}
               </div>
               
@@ -211,10 +215,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_food"
                   defaultValue={3}
-                  {...register("rating_food", { valueAsNumber: true })}
+                  {...form.register("rating_food", { valueAsNumber: true })}
                 />
-                {errors.rating_food && (
-                  <p className="text-red-500 text-sm">{errors.rating_food.message}</p>
+                {form.formState.errors.rating_food && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.rating_food.message}</p>
                 )}
               </div>
               
@@ -224,10 +228,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_service"
                   defaultValue={3}
-                  {...register("rating_service", { valueAsNumber: true })}
+                  {...form.register("rating_service", { valueAsNumber: true })}
                 />
-                {errors.rating_service && (
-                  <p className="text-red-500 text-sm">{errors.rating_service.message}</p>
+                {form.formState.errors.rating_service && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.rating_service.message}</p>
                 )}
               </div>
               
@@ -237,10 +241,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_atmosphere"
                   defaultValue={3}
-                  {...register("rating_atmosphere", { valueAsNumber: true })}
+                  {...form.register("rating_atmosphere", { valueAsNumber: true })}
                 />
-                {errors.rating_atmosphere && (
-                  <p className="text-red-500 text-sm">{errors.rating_atmosphere.message}</p>
+                {form.formState.errors.rating_atmosphere && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.rating_atmosphere.message}</p>
                 )}
               </div>
               
@@ -250,10 +254,10 @@ const AddPlacePage = () => {
                   type="number"
                   id="rating_value"
                   defaultValue={3}
-                  {...register("rating_value", { valueAsNumber: true })}
+                  {...form.register("rating_value", { valueAsNumber: true })}
                 />
-                {errors.rating_value && (
-                  <p className="text-red-500 text-sm">{errors.rating_value.message}</p>
+                {form.formState.errors.rating_value && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.rating_value.message}</p>
                 )}
               </div>
               
@@ -263,40 +267,44 @@ const AddPlacePage = () => {
                   type="text"
                   id="cuisine"
                   placeholder="e.g., Italian, Mexican"
-                  {...register("cuisine")}
+                  {...form.register("cuisine")}
                 />
-                {errors.cuisine && (
-                  <p className="text-red-500 text-sm">{errors.cuisine.message}</p>
+                {form.formState.errors.cuisine && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.cuisine.message}</p>
                 )}
               </div>
               
               <PriceRangeSelector 
                 value={formValues.price_range}
-                onChange={(price) => setValue("price_range", price)}
+                onChange={(price) => form.setValue("price_range", price)}
               />
               
               <div>
                 <Label>Occasions</Label>
-                <MultiSelect 
+                <SelectDropdown 
                   options={[
                     { value: "breakfast", label: "Breakfast" },
                     { value: "brunch", label: "Brunch" },
                     { value: "lunch", label: "Lunch" },
                     { value: "dinner", label: "Dinner" },
                   ]}
-                  onChange={(values) => setValue("occasions", values)}
+                  value={formValues.occasions}
+                  onChange={(values) => form.setValue("occasions", values)}
+                  placeholder="Select occasions..."
                 />
               </div>
               
               <div>
                 <Label>Vibes</Label>
-                <MultiSelect 
+                <SelectDropdown 
                   options={[
                     { value: "romantic", label: "Romantic" },
                     { value: "casual", label: "Casual" },
                     { value: "lively", label: "Lively" },
                   ]}
-                  onChange={(values) => setValue("vibes", values)}
+                  value={formValues.vibes}
+                  onChange={(values) => form.setValue("vibes", values)}
+                  placeholder="Select vibes..."
                 />
               </div>
               
@@ -305,10 +313,10 @@ const AddPlacePage = () => {
                 <Textarea
                   id="description"
                   placeholder="Share your experience..."
-                  {...register("description")}
+                  {...form.register("description")}
                 />
-                {errors.description && (
-                  <p className="text-red-500 text-sm">{errors.description.message}</p>
+                {form.formState.errors.description && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.description.message}</p>
                 )}
               </div>
               
@@ -318,10 +326,10 @@ const AddPlacePage = () => {
                   type="text"
                   id="ordered_items"
                   placeholder="e.g., Pizza, Pasta"
-                  {...register("ordered_items")}
+                  {...form.register("ordered_items")}
                 />
-                {errors.ordered_items && (
-                  <p className="text-red-500 text-sm">{errors.ordered_items.message}</p>
+                {form.formState.errors.ordered_items && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.ordered_items.message}</p>
                 )}
               </div>
               
@@ -329,7 +337,7 @@ const AddPlacePage = () => {
                 <Label>Photo Uploads</Label>
                 <ImageUpload 
                   images={formValues.photo_urls}
-                  onChange={(urls) => setValue("photo_urls", urls)}
+                  onChange={(urls) => form.setValue("photo_urls", urls)}
                   maxImages={5}
                 />
               </div>
@@ -340,18 +348,18 @@ const AddPlacePage = () => {
                   type="text"
                   id="tagged_friends"
                   placeholder="e.g., @friend1, @friend2"
-                  {...register("tagged_friends")}
+                  {...form.register("tagged_friends")}
                 />
-                {errors.tagged_friends && (
-                  <p className="text-red-500 text-sm">{errors.tagged_friends.message}</p>
+                {form.formState.errors.tagged_friends && (
+                  <p className="text-red-500 text-sm">{form.formState.errors.tagged_friends.message}</p>
                 )}
               </div>
               
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="is_public"
-                  defaultChecked
-                  {...register("is_public")}
+                  checked={formValues.is_public}
+                  onCheckedChange={(checked) => form.setValue("is_public", !!checked)}
                 />
                 <Label htmlFor="is_public">Public</Label>
               </div>
@@ -485,30 +493,6 @@ const PlaceSearch: React.FC<PlaceSearchProps> = ({ onPlaceSelect }) => {
       )}
     </div>
   );
-};
-
-const useFormValues = <T extends Record<string, any>>(defaultValues: T) => {
-  const [values, setValues] = useState<T>(defaultValues);
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = event.target;
-    
-    setValues(prevValues => ({
-      ...prevValues,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  return {
-    values,
-    handleChange,
-    setValue: (name: string, value: any) => {
-      setValues(prevValues => ({
-        ...prevValues,
-        [name]: value
-      }));
-    }
-  };
 };
 
 export default AddPlacePage;

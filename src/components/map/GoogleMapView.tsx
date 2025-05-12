@@ -1,4 +1,3 @@
-
 /// <reference types="@types/google.maps" />
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
@@ -9,13 +8,12 @@ import { toast } from 'sonner';
 import { mapStyles } from './MapStyles';
 import { safeGetUserLocation } from '@/utils/mapUtils';
 
-interface GoogleMapViewProps {
-  className?: string;
-  peopleFilter?: string;
+export interface GoogleMapViewProps {
+  peopleFilter: string;
+  activeFilters?: ActiveFilters; // Make this optional to maintain backward compatibility
 }
 
 const GoogleMapView: React.FC<GoogleMapViewProps> = ({ 
-  className,
   peopleFilter = 'community' 
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -326,7 +324,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   }, [peopleFilter]); // Re-create this function when peopleFilter changes
 
   return (
-    <Card className={`overflow-hidden shadow-lg relative ${className}`}>
+    <Card className={`overflow-hidden shadow-lg relative`}>
       {/* Map container with explicit height */}
       <div 
         ref={mapContainerRef} 
