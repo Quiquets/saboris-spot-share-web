@@ -14,7 +14,7 @@ interface MapSectionProps {
 }
 
 const MapSection = ({ simplified = false }: MapSectionProps) => {
-  const { user } = useAuth();
+  const { user, setShowAuthModal } = useAuth();
   const isMobile = useIsMobile();
   
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
@@ -46,6 +46,13 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
   };
   
   const handlePeopleFilterChange = (value: string) => {
+    // Check if user is authenticated for friends-related filters
+    if ((value === 'friends' || value === 'friends-of-friends') && !user) {
+      toast.info("Please sign in to use friend filters");
+      setShowAuthModal(true);
+      return;
+    }
+    
     setActiveFilters(prev => ({
       ...prev,
       people: value
@@ -72,22 +79,23 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
   };
   
   return (
-    <section id="map-section" className="py-6 md:py-8 px-2 md:px-0 bg-white">
+    <section id="map-section" className="py-3 md:py-6 px-1 md:px-2 bg-white">
       <div className="max-w-5xl mx-auto">
         {!simplified && (
-          <div className="mb-6">
+          <div className="mb-3 md:mb-6">
             <MapFilters 
               activeFilters={activeFilters} 
               handleFilterChange={handleFilterChange}
               handlePeopleFilterChange={handlePeopleFilterChange}
               toggleSortDirection={toggleSortDirection}
+              isUserAuthenticated={!!user}
             />
           </div>
         )}
         
-        {/* Google Map Component */}
-        <div className="h-[400px] md:h-[500px] w-full border rounded-lg overflow-hidden">
-          <GoogleMapView />
+        {/* Google Map Component - Make it taller */}
+        <div className="h-[450px] md:h-[550px] w-full border rounded-lg overflow-hidden">
+          <GoogleMapView className="h-full" />
         </div>
       </div>
     </section>

@@ -17,9 +17,9 @@ const MapPage = () => {
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
-          <MapPin className="h-6 w-6 mr-2" />
+      <div className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+        <h1 className="text-xl md:text-3xl font-bold text-center mb-4 md:mb-6 text-saboris-primary flex items-center justify-center">
+          <MapPin className="h-5 w-5 md:h-6 md:w-6 mr-2" />
           Explore restaurants, cafes and bars near you
         </h1>
         <div className="flex-grow w-full">

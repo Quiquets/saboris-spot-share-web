@@ -15,13 +15,15 @@ interface MapFiltersProps {
   handleFilterChange: FilterChangeHandler;
   handlePeopleFilterChange: PeopleFilterChangeHandler;
   toggleSortDirection: (category: string) => void;
+  isUserAuthenticated?: boolean;
 }
 
 const MapFilters: React.FC<MapFiltersProps> = ({ 
   activeFilters, 
   handleFilterChange, 
   handlePeopleFilterChange, 
-  toggleSortDirection 
+  toggleSortDirection,
+  isUserAuthenticated = false
 }) => {
   const isMobile = useIsMobile();
   
@@ -31,10 +33,11 @@ const MapFilters: React.FC<MapFiltersProps> = ({
       <PeopleFilter 
         activePeople={activeFilters.people}
         handlePeopleFilterChange={handlePeopleFilterChange}
+        isUserAuthenticated={isUserAuthenticated}
       />
 
       {/* Filter grid - responsive for mobile */}
-      <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-5 gap-2'} w-full mb-4`}>
+      <div className={`${isMobile ? 'grid grid-cols-2 gap-1' : 'grid grid-cols-5 gap-2'} w-full mb-3 md:mb-4`}>
         {/* Occasion Filter */}
         <OccasionFilter 
           activeOccasions={activeFilters.occasion}

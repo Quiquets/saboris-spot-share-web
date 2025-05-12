@@ -1,10 +1,9 @@
-
 // Constants for map filter options
 export const filterOptions = {
   people: [
-    { id: 'community', label: 'Saboris Community' },
-    { id: 'friends', label: 'Friends' },
-    { id: 'friends-of-friends', label: 'Friends of Friends' },
+    { id: 'community', label: 'Saboris Community', shortLabel: 'Community' },
+    { id: 'friends', label: 'My Friends', shortLabel: 'Friends' },
+    { id: 'friends-of-friends', label: 'Friends of Friends', shortLabel: 'FoF' }
   ],
   occasion: [
     { id: 'breakfast', label: 'Breakfast' },

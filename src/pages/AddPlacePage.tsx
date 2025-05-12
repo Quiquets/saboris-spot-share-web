@@ -62,9 +62,9 @@ const AddPlacePage = () => {
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <div className="container mx-auto px-4 py-8 flex-grow">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
-          <PlusCircleIcon className="h-6 w-6 mr-2" />
-          Share your recommendations with your friends
+        <h1 className="text-xl md:text-3xl font-bold text-center mb-4 md:mb-6 text-saboris-primary flex items-center justify-center">
+          <PlusCircleIcon className="h-5 w-5 md:h-6 md:w-6 mr-2" />
+          Share your recommendations
         </h1>
         <AddPlaceForm />
       </div>
