@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Filter } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { filterOptions } from '../FilterOptions';
 
 interface OccasionFilterProps {
@@ -18,6 +18,12 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
   activeOccasions, 
   handleFilterChange 
 }) => {
+  // Function to remove an occasion filter
+  const removeOccasion = (occasionId: string) => {
+    const newFilters = activeOccasions.filter(id => id !== occasionId);
+    handleFilterChange('occasion', newFilters);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -28,7 +34,31 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-60">
-        <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto">
+        <div className="mb-2">
+          {activeOccasions.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {activeOccasions.map(occasionId => {
+                const occasion = filterOptions.occasion.find(o => o.id === occasionId);
+                return (
+                  <div 
+                    key={occasionId} 
+                    className="flex items-center bg-saboris-primary text-white rounded-full px-2 py-1 text-xs"
+                  >
+                    <span>{occasion?.label}</span>
+                    <button 
+                      onClick={() => removeOccasion(occasionId)}
+                      className="ml-1 p-0.5 rounded-full hover:bg-saboris-primary/80"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      
+        <div className="flex flex-wrap gap-2">
           {filterOptions.occasion.map(option => (
             <Button 
               key={option.id}

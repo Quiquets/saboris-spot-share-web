@@ -2,13 +2,13 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
 import AccessGateModal from '@/components/AccessGateModal';
 import SearchInput from '@/components/search/SearchInput';
 import SearchResults from '@/components/search/SearchResults';
+import RestaurantSearchResults from '@/components/search/RestaurantSearchResults';
 
 interface UserProfile {
   id: string;
@@ -22,36 +22,134 @@ interface UserProfile {
   posts_count?: number;
 }
 
+interface Restaurant {
+  id: string;
+  name: string;
+  address: string;
+  place_id: string;
+  cuisine?: string;
+  avg_rating?: number;
+  reviewers?: {
+    id: string;
+    name: string;
+    avatar_url: string | null;
+  }[];
+  is_saved?: boolean;
+}
+
 const SearchUsersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(false);
   const [followLoading, setFollowLoading] = useState<Record<string, boolean>>({});
+  const [saveLoading, setSaveLoading] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
   const [showGateModal, setShowGateModal] = useState(false);
   
   useEffect(() => {
     if (searchQuery.length > 0) {
-      searchUsers();
+      performSearch();
+    } else {
+      setUsers([]);
+      setRestaurants([]);
     }
   }, [searchQuery]);
   
-  const searchUsers = async () => {
+  const performSearch = async () => {
     if (!searchQuery.trim()) {
       setUsers([]);
+      setRestaurants([]);
       return;
     }
     
     setLoading(true);
     try {
-      const results = await supabaseService.searchUsers(searchQuery);
-      setUsers(results);
+      // Search for both users and restaurants in parallel
+      const [userResults, restaurantResults] = await Promise.all([
+        supabaseService.searchUsers(searchQuery),
+        searchRestaurants(searchQuery)
+      ]);
+      
+      setUsers(userResults);
+      setRestaurants(restaurantResults);
     } catch (error) {
-      console.error("Error searching users:", error);
-      toast.error("Failed to search users");
+      console.error("Error searching:", error);
+      toast.error("Failed to perform search");
     } finally {
       setLoading(false);
     }
+  };
+  
+  const searchRestaurants = async (query: string) => {
+    try {
+      // Search restaurants in Supabase that match the query
+      const { data, error } = await supabase
+        .from('places')
+        .select('id, name, address, lat, lng, category')
+        .ilike('name', `%${query}%`)
+        .limit(10);
+      
+      if (error) throw error;
+      
+      // If the user is logged in, check which restaurants are saved
+      let restaurantsWithSaveStatus = data || [];
+      let reviewerData: Record<string, any[]> = {};
+      
+      if (user) {
+        // Check if restaurants are saved by the current user
+        const { data: savedPlaces } = await supabase
+          .from('wishlists')
+          .select('place_id')
+          .eq('user_id', user.id);
+        
+        const savedPlaceIds = savedPlaces?.map(p => p.place_id) || [];
+        
+        // Get reviewer data for each restaurant
+        const { data: reviews } = await supabase
+          .from('reviews')
+          .select(`
+            place_id,
+            user_id,
+            rating_food,
+            rating_service,
+            rating_atmosphere,
+            rating_value,
+            users:user_id (id, name, avatar_url)
+          `)
+          .in('place_id', data?.map(r => r.id) || []);
+        
+        // Group reviewers by place_id
+        reviews?.forEach(review => {
+          if (!reviewerData[review.place_id]) {
+            reviewerData[review.place_id] = [];
+          }
+          reviewerData[review.place_id].push({
+            ...review.users,
+            rating: Math.round((review.rating_food + review.rating_service + review.rating_atmosphere + review.rating_value) / 4)
+          });
+        });
+        
+        // Combine restaurant data with saved status and reviewer info
+        restaurantsWithSaveStatus = data?.map(restaurant => ({
+          ...restaurant,
+          is_saved: savedPlaceIds.includes(restaurant.id),
+          reviewers: reviewerData[restaurant.id] || [],
+          avg_rating: calculateAvgRating(reviewerData[restaurant.id] || [])
+        })) || [];
+      }
+      
+      return restaurantsWithSaveStatus;
+    } catch (error) {
+      console.error("Error searching restaurants:", error);
+      return [];
+    }
+  };
+  
+  const calculateAvgRating = (reviewers: any[]) => {
+    if (reviewers.length === 0) return 0;
+    const sum = reviewers.reduce((acc, reviewer) => acc + reviewer.rating, 0);
+    return Math.round((sum / reviewers.length) * 10) / 10; // Round to 1 decimal place
   };
   
   const handleFollowUser = async (userId: string) => {
@@ -104,21 +202,87 @@ const SearchUsersPage = () => {
     }
   };
   
+  const handleSaveRestaurant = async (restaurantId: string) => {
+    if (!user) {
+      setShowGateModal(true);
+      return;
+    }
+    
+    setSaveLoading(prev => ({ ...prev, [restaurantId]: true }));
+    try {
+      await supabaseService.saveRestaurant(user.id, restaurantId);
+      
+      setRestaurants(restaurants.map(r => 
+        r.id === restaurantId 
+          ? { ...r, is_saved: true } 
+          : r
+      ));
+      
+      toast.success("Restaurant saved to your wishlist!");
+    } catch (error) {
+      console.error("Error saving restaurant:", error);
+      toast.error("Failed to save restaurant");
+    } finally {
+      setSaveLoading(prev => ({ ...prev, [restaurantId]: false }));
+    }
+  };
+  
+  const handleUnsaveRestaurant = async (restaurantId: string) => {
+    if (!user) {
+      setShowGateModal(true);
+      return;
+    }
+    
+    setSaveLoading(prev => ({ ...prev, [restaurantId]: true }));
+    try {
+      await supabaseService.unsaveRestaurant(user.id, restaurantId);
+      
+      setRestaurants(restaurants.map(r => 
+        r.id === restaurantId 
+          ? { ...r, is_saved: false } 
+          : r
+      ));
+      
+      toast.success("Restaurant removed from your wishlist");
+    } catch (error) {
+      console.error("Error removing restaurant from wishlist:", error);
+      toast.error("Failed to remove restaurant from wishlist");
+    } finally {
+      setSaveLoading(prev => ({ ...prev, [restaurantId]: false }));
+    }
+  };
+  
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
       
       <div className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary">
             Search for friends or restaurants
           </h1>
           
-          <SearchInput 
-            value={searchQuery} 
-            onChange={setSearchQuery} 
+          <div className="flex justify-center mb-6">
+            <div className="w-full max-w-xl">
+              <SearchInput 
+                value={searchQuery} 
+                onChange={setSearchQuery}
+                placeholder="Search for friends or restaurants..." 
+              />
+            </div>
+          </div>
+          
+          {/* Restaurant Results */}
+          <RestaurantSearchResults
+            loading={loading}
+            searchQuery={searchQuery}
+            restaurants={restaurants}
+            saveLoading={saveLoading}
+            onSave={handleSaveRestaurant}
+            onUnsave={handleUnsaveRestaurant}
           />
           
+          {/* User Results */}
           <SearchResults
             loading={loading}
             searchQuery={searchQuery}
@@ -136,7 +300,7 @@ const SearchUsersPage = () => {
       <AccessGateModal 
         isOpen={showGateModal} 
         onClose={() => setShowGateModal(false)}
-        featureName="follow users"
+        featureName="follow users and save restaurants"
       />
     </main>
   );

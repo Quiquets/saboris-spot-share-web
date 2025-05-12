@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as AuthUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   };
   
-  // Function to update user profile
+  // Function to update user profile with improved avatar handling
   const updateUserProfile = async (updates: Partial<User>) => {
     if (!authUser) {
       toast.error("You must be signed in to update your profile");
@@ -103,6 +102,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       const updatedProfile = await supabaseService.updateUserProfile(authUser.id, updates);
+      
+      // If we're updating the avatar, also update the auth metadata
+      if (updates.avatar_url && updatedProfile) {
+        // Update the auth.users metadata with the new avatar URL
+        await supabase.auth.updateUser({
+          data: { avatar_url: updates.avatar_url }
+        });
+        
+        // Force refresh the auth state to update UI components
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setAuthUser(data.session?.user || null);
+      }
+      
       if (updatedProfile) {
         setUser(updatedProfile);
         return updatedProfile;
@@ -291,7 +304,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     followers,
     following,
     refreshUserData,
-    updateUserProfile,
+    updateUserProfile,  // Use our improved function
     deleteAccount,
   };
 

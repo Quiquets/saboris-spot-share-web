@@ -18,7 +18,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
   const isMobile = useIsMobile();
   
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
-    people: 'community', // Default to Saboris Community
+    people: user ? 'community' : 'community', // Default to Saboris Community
     occasion: [],
     foodType: [],
     vibe: [],
@@ -87,7 +87,10 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
         
         {/* Google Map Component - pass people filter */}
         <div className="h-[400px] md:h-[500px] w-full border rounded-lg overflow-hidden">
-          <GoogleMapView peopleFilter={activeFilters.people} />
+          <GoogleMapView 
+            peopleFilter={activeFilters.people} 
+            activeFilters={activeFilters}
+          />
         </div>
       </div>
     </section>

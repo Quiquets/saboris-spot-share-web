@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Filter } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { filterOptions } from '../FilterOptions';
 
 interface VibeFilterProps {
@@ -18,6 +18,12 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
   activeVibes, 
   handleFilterChange 
 }) => {
+  // Function to remove a vibe filter
+  const removeVibe = (vibeId: string) => {
+    const newFilters = activeVibes.filter(id => id !== vibeId);
+    handleFilterChange('vibe', newFilters);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -28,6 +34,30 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
+        <div className="mb-2">
+          {activeVibes.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {activeVibes.map(vibeId => {
+                const vibe = filterOptions.vibe.find(v => v.id === vibeId);
+                return (
+                  <div 
+                    key={vibeId} 
+                    className="flex items-center bg-saboris-primary text-white rounded-full px-2 py-1 text-xs"
+                  >
+                    <span>{vibe?.label}</span>
+                    <button 
+                      onClick={() => removeVibe(vibeId)}
+                      className="ml-1 p-0.5 rounded-full hover:bg-saboris-primary/80"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        
         <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
           {filterOptions.vibe.map(option => (
             <Button 
