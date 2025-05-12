@@ -16,7 +16,12 @@ const Index = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <HeroSection />
-      <MapSection />
+      <div className="container mx-auto px-4">
+        <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+          Explore restaurants, cafes and bars near you
+        </h2>
+        <MapSection simplified={true} />
+      </div>
       <NotionEmbed />
       <CallToAction />
       <Footer />

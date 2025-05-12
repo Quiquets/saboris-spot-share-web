@@ -17,7 +17,9 @@ const MapPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <div className="container mx-auto px-4 py-6 md:py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">Explore Places</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+          Explore restaurants, cafes and bars near you
+        </h1>
         <div className="flex-grow w-full">
           <MapSection simplified={false} />
         </div>

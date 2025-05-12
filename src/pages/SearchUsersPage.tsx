@@ -113,7 +113,9 @@ const SearchUsersPage = () => {
       
       <div className="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold mb-6 text-center">Find Friends</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+            Search for friends or restaurants
+          </h1>
           
           <div className="relative max-w-lg mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
