@@ -22,9 +22,9 @@ const FoodTypeFilter: React.FC<FoodTypeFilterProps> = ({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" 
-          className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+          className="w-full gap-1 px-1 py-1 text-xs sm:text-sm sm:px-2 border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
-          Food Type
+          <span className="truncate">Food Type</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">

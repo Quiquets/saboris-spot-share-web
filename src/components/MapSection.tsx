@@ -85,9 +85,9 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
           </div>
         )}
         
-        {/* Google Map Component */}
+        {/* Google Map Component - pass people filter */}
         <div className="h-[400px] md:h-[500px] w-full border rounded-lg overflow-hidden">
-          <GoogleMapView />
+          <GoogleMapView peopleFilter={activeFilters.people} />
         </div>
       </div>
     </section>
