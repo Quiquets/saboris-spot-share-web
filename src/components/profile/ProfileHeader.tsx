@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,19 +92,19 @@ const ProfileHeader = ({
           {/* Stats Row */}
           <div className="mt-4 flex flex-wrap gap-6">
             <div className="text-center cursor-pointer" onClick={onPlacesClick}>
-              <div className="font-semibold">{profileStats?.places || 0}</div>
+              <div className="font-semibold">{profileStats?.saved_places_count || 0}</div>
               <div className="text-sm text-gray-500">Places</div>
             </div>
             <div className="text-center cursor-pointer" onClick={onFollowersClick}>
-              <div className="font-semibold">{profileStats?.followers || 0}</div>
+              <div className="font-semibold">{profileStats?.followers_count || 0}</div>
               <div className="text-sm text-gray-500">Followers</div>
             </div>
             <div className="text-center cursor-pointer" onClick={onFollowingClick}>
-              <div className="font-semibold">{profileStats?.following || 0}</div>
+              <div className="font-semibold">{profileStats?.following_count || 0}</div>
               <div className="text-sm text-gray-500">Following</div>
             </div>
             <div className="text-center">
-              <div className="font-semibold">{profileStats?.reviews || 0}</div>
+              <div className="font-semibold">{profileStats?.reviews_count || 0}</div>
               <div className="text-sm text-gray-500">Reviews</div>
             </div>
           </div>

@@ -40,33 +40,40 @@ export const useProfileEdit = (
 
   const ensureAvatarsBucketExists = async (): Promise<boolean> => {
     try {
-      // Check if avatars bucket exists
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      // Check if avatars bucket exists by attempting to get its info
+      const { data: bucketInfo, error: bucketError } = await supabase.storage.getBucket('avatars');
       
-      if (bucketsError) {
-        console.error("Error checking buckets:", bucketsError);
-        return false;
-      }
-      
-      const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
-      
-      // If avatars bucket doesn't exist, create it
-      if (!avatarBucketExists) {
+      if (bucketError) {
+        console.log("Bucket doesn't exist or error fetching bucket info:", bucketError);
+        // Try to create the avatars bucket with public access
         const { error: createError } = await supabase.storage.createBucket('avatars', { 
-          public: true 
+          public: true,
+          fileSizeLimit: 2 * 1024 * 1024 // 2MB
         });
         
         if (createError) {
-          console.error("Error creating avatars bucket:", createError);
-          return false;
+          // If creation failed, but it's not because the bucket already exists
+          if (createError.message !== "Bucket already exists") {
+            console.error("Error creating avatars bucket:", createError);
+            toast.error("Failed to create storage bucket for profile images. Please try again later.");
+            return false;
+          }
+          
+          // Bucket already exists, so we can proceed
+          console.log("Bucket already exists, continuing...");
+          return true;
         }
         
         console.log("Created avatars bucket successfully");
+        return true;
       }
       
+      // Bucket exists, we can proceed
+      console.log("Avatars bucket exists:", bucketInfo);
       return true;
     } catch (error) {
       console.error("Error ensuring avatars bucket exists:", error);
+      toast.error("Failed to access storage bucket. Please try again later.");
       return false;
     }
   };

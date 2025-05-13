@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MapPin, Filter } from 'lucide-react';
+import { Heart, MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { SavedRestaurant, supabaseService } from '@/services/supabaseService';
 import { toast } from 'sonner';
@@ -154,6 +154,7 @@ const SavedPlacesPage = () => {
               handleFilterChange={handleFilterChange}
               handlePeopleFilterChange={handlePeopleFilterChange}
               toggleSortDirection={toggleSortDirection}
+              isUserAuthenticated={!!user}
             />
           </div>
           
