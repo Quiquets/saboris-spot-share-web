@@ -11,6 +11,12 @@ import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MapFilters from '@/components/map/MapFilters';
 import { ActiveFilters } from '@/components/map/FilterOptions';
+import PeopleFilter from '@/components/map/filters/PeopleFilter';
+import OccasionFilter from '@/components/map/filters/OccasionFilter';
+import FoodTypeFilter from '@/components/map/filters/FoodTypeFilter';
+import VibeFilter from '@/components/map/filters/VibeFilter';
+import PriceFilter from '@/components/map/filters/PriceFilter';
+import RatingFilters from '@/components/map/filters/RatingFilters';
 
 const SavedPlacesPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -148,23 +154,55 @@ const SavedPlacesPage = () => {
             My Saved Places
           </h1>
           
-          {/* Filter section - optimized for mobile */}
-          <div className="mb-4 md:mb-6">
-            <MapFilters
-              activeFilters={{
-                people: activeFilters.people,
-                occasion: activeFilters.occasion,
-                foodType: activeFilters.foodType,
-                vibe: activeFilters.vibe,
-                price: activeFilters.price,
-                rating: activeFilters.rating.toString(),
-                sortDirection: activeFilters.sortDirection || "desc"
-              }}
-              handleFilterChange={handleFilterChange}
-              handlePeopleFilterChange={handlePeopleFilterChange}
-              toggleSortDirection={toggleSortDirection}
-              isUserAuthenticated={!!user}
-            />
+          {/* Filter section with People filter at the top */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 md:p-4 w-full mb-4 md:mb-6">
+            {/* People filter positioned above other filters */}
+            <div className="mb-3">
+              <PeopleFilter
+                activePeople={activeFilters.people} 
+                handlePeopleFilterChange={handlePeopleFilterChange}
+                isUserAuthenticated={!!user}
+              />
+            </div>
+            
+            {/* Other filters */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 w-full">
+              <div>
+                <OccasionFilter 
+                  activeOccasions={activeFilters.occasion}
+                  handleFilterChange={handleFilterChange}
+                />
+              </div>
+              
+              <div>
+                <FoodTypeFilter 
+                  activeFoodTypes={activeFilters.foodType}
+                  handleFilterChange={handleFilterChange}
+                />
+              </div>
+
+              <div>
+                <VibeFilter 
+                  activeVibes={activeFilters.vibe}
+                  handleFilterChange={handleFilterChange}
+                />
+              </div>
+
+              <div>
+                <PriceFilter 
+                  activePrices={activeFilters.price}
+                  handleFilterChange={handleFilterChange}
+                />
+              </div>
+
+              <div>
+                <RatingFilters 
+                  rating={activeFilters.rating.toString()}
+                  sortDirection={activeFilters.sortDirection || "desc"}
+                  toggleSortDirection={toggleSortDirection}
+                />
+              </div>
+            </div>
           </div>
           
           {loading ? (

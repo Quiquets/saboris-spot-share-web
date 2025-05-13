@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { filterOptions, ActiveFilters } from './FilterOptions';
@@ -37,6 +36,15 @@ const MapFilters: React.FC<FilterProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 md:p-4 w-full">
+      {/* People filter positioned at the top */}
+      <div className="mb-3">
+        <PeopleFilter 
+          activePeople={activeFilters.people || 'community'} 
+          handlePeopleFilterChange={handlePeopleFilterChange}
+          isUserAuthenticated={isUserAuthenticated}
+        />
+      </div>
+      
       <ActiveFilterBadges
         activeOccasions={activeFilters.occasion}
         activeFoodTypes={activeFilters.foodType}
@@ -45,16 +53,8 @@ const MapFilters: React.FC<FilterProps> = ({
         handleFilterChange={handleFilterChange}
       />
 
-      {/* Filter grid - responsive for mobile */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 w-full mb-3 md:mb-4">
-        <div>
-          <PeopleFilter 
-            activePeople={activeFilters.people || 'community'} 
-            handlePeopleFilterChange={handlePeopleFilterChange}
-            isUserAuthenticated={isUserAuthenticated}
-          />
-        </div>
-        
+      {/* Other filters grid - responsive for mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 w-full mb-3 md:mb-4">
         <div>
           <OccasionFilter 
             activeOccasions={activeFilters.occasion}
