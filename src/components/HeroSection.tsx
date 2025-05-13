@@ -140,7 +140,7 @@ const HeroSection = () => {
           <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
             {imagesLoaded ? (
               <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-                {/* Updated iPhone mockups with proper frames and correct screen ratio */}
+                {/* Updated iPhone mockups with proper frames and screen ratio */}
                 {[
                   "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
                   "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
@@ -168,15 +168,15 @@ const HeroSection = () => {
                           </div>
                           
                           {/* Screen content with proper aspect ratio and fit - IMPROVED */}
-                          <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                            <AspectRatio ratio={9/19.5} className="w-full h-full">
+                          <div className="w-full h-full flex items-center justify-center overflow-hidden py-[24px]">
+                            <div className="w-full h-full overflow-hidden">
                               <img 
                                 src={src}
                                 alt={`Saboris App Screenshot ${index + 1}`}
-                                className="h-full w-full object-cover object-center"
+                                className="h-full w-full object-contain"
                                 loading="lazy"
                               />
-                            </AspectRatio>
+                            </div>
                           </div>
                           
                           {/* Home indicator */}
