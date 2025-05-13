@@ -36,37 +36,37 @@ const MapFilters: React.FC<MapFiltersProps> = ({
         isUserAuthenticated={isUserAuthenticated}
       />
 
-      {/* Filter grid - responsive for mobile with better sizing */}
-      <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-5 gap-2'} w-full mb-3 md:mb-4`}>
-        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+      {/* Filter grid - responsive for mobile */}
+      <div className="grid grid-cols-5 gap-2 w-full mb-3 md:mb-4">
+        <div>
           <OccasionFilter 
             activeOccasions={activeFilters.occasion}
             handleFilterChange={handleFilterChange}
           />
         </div>
         
-        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+        <div>
           <FoodTypeFilter 
             activeFoodTypes={activeFilters.foodType}
             handleFilterChange={handleFilterChange}
           />
         </div>
 
-        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+        <div>
           <VibeFilter 
             activeVibes={activeFilters.vibe}
             handleFilterChange={handleFilterChange}
           />
         </div>
 
-        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+        <div>
           <PriceFilter 
             activePrices={activeFilters.price}
             handleFilterChange={handleFilterChange}
           />
         </div>
 
-        <div className={`${isMobile ? 'col-span-2 mt-2' : ''}`}>
+        <div>
           <RatingFilters 
             activeFilters={activeFilters}
             toggleSortDirection={toggleSortDirection}
