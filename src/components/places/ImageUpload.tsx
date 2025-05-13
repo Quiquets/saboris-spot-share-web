@@ -14,6 +14,39 @@ interface ImageUploadProps {
 export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
 
+  const ensurePlacePhotosBucketExists = async (): Promise<boolean> => {
+    try {
+      // Check if place-photos bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error("Error checking buckets:", bucketsError);
+        return false;
+      }
+      
+      const bucketExists = buckets?.some(b => b.name === 'place-photos');
+      
+      // If place-photos bucket doesn't exist, create it
+      if (!bucketExists) {
+        const { error: createError } = await supabase.storage.createBucket('place-photos', { 
+          public: true 
+        });
+        
+        if (createError) {
+          console.error("Error creating place-photos bucket:", createError);
+          return false;
+        }
+        
+        console.log("Created place-photos bucket successfully");
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error ensuring place-photos bucket exists:", error);
+      return false;
+    }
+  };
+
   const uploadImage = async (file: File) => {
     if (images.length >= maxImages) {
       toast.error(`Maximum ${maxImages} images allowed`);
@@ -28,23 +61,26 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
     setIsUploading(true);
 
     try {
+      // Ensure bucket exists
+      const bucketExists = await ensurePlacePhotosBucketExists();
+      
+      if (!bucketExists) {
+        toast.error("Failed to create storage bucket for images");
+        return;
+      }
+      
       // Create a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Check if bucket exists, create it if it doesn't
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(b => b.name === 'place-photos');
-      
-      if (!bucketExists) {
-        await supabase.storage.createBucket('place-photos', { public: true });
-      }
-
       // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('place-photos')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (error) throw error;
 

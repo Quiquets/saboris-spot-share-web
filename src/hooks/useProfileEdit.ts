@@ -38,8 +38,41 @@ export const useProfileEdit = (
     }
   };
 
+  const ensureAvatarsBucketExists = async (): Promise<boolean> => {
+    try {
+      // Check if avatars bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error("Error checking buckets:", bucketsError);
+        return false;
+      }
+      
+      const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
+      
+      // If avatars bucket doesn't exist, create it
+      if (!avatarBucketExists) {
+        const { error: createError } = await supabase.storage.createBucket('avatars', { 
+          public: true 
+        });
+        
+        if (createError) {
+          console.error("Error creating avatars bucket:", createError);
+          return false;
+        }
+        
+        console.log("Created avatars bucket successfully");
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error ensuring avatars bucket exists:", error);
+      return false;
+    }
+  };
+
   const handleSaveProfile = async () => {
-    if (!user) return;
+    if (!user) return false;
     
     try {
       setIsSubmitting(true);
@@ -55,25 +88,25 @@ export const useProfileEdit = (
           
         if (usernameCheck) {
           toast.error("Username is already taken");
-          return;
+          return false;
         }
       }
       
       // Upload profile image if new one is selected
       let avatarUrl = user.avatar_url;
       if (profileImage) {
+        // Make sure the avatars bucket exists
+        const bucketExists = await ensureAvatarsBucketExists();
+        
+        if (!bucketExists) {
+          toast.error("Failed to create storage bucket for profile images");
+          return false;
+        }
+        
         const fileExt = profileImage.name.split('.').pop();
         const filePath = `${user.id}-${Date.now()}.${fileExt}`;
         
-        // Check if avatars bucket exists, create it if not
-        const { data: buckets } = await supabase.storage.listBuckets();
-        const avatarBucketExists = buckets?.some(b => b.name === 'avatars');
-        
-        if (!avatarBucketExists) {
-          await supabase.storage.createBucket('avatars', { public: true });
-        }
-        
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, profileImage, {
             cacheControl: '3600',
@@ -83,6 +116,7 @@ export const useProfileEdit = (
         if (uploadError) {
           console.error("Error uploading image:", uploadError);
           toast.error("Failed to upload profile image");
+          return false;
         } else {
           const { data: urlData } = supabase.storage
             .from('avatars')

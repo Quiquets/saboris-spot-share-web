@@ -136,6 +136,10 @@ const ProfilePage = () => {
           <SocialListsContainer 
             followers={showFollowers ? followers : []} 
             following={showFollowing ? following : []}
+            showFollowers={showFollowers}
+            showFollowing={showFollowing}
+            setShowFollowers={setShowFollowers}
+            setShowFollowing={setShowFollowing}
           />
           
           {/* Full Review Dialog */}

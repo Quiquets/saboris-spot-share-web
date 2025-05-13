@@ -2,28 +2,34 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabaseService } from '@/services/supabaseService';
 import { User } from '@/types/global';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FollowersListProps {
   users: any[];
-  setShowList: (show: boolean) => void;
   listType: 'followers' | 'following';
+  className?: string;
 }
 
-const FollowersList = ({ users, setShowList, listType }: FollowersListProps) => {
-  const [followingStates, setFollowingStates] = useState<Record<string, { isFollowing: boolean, isLoading: boolean }>>(() => {
-    const states: Record<string, { isFollowing: boolean, isLoading: boolean }> = {};
+const FollowersList = ({ users, listType, className = '' }: FollowersListProps) => {
+  const [displayedUsers, setDisplayedUsers] = useState<any[]>(users);
+  const [followingStates, setFollowingStates] = useState<Record<string, { isFollowing: boolean, isLoading: boolean }>>({});
+
+  useEffect(() => {
+    // Initialize following states from users data
+    const initialStates: Record<string, { isFollowing: boolean, isLoading: boolean }> = {};
     users.forEach(user => {
-      states[user.id] = { 
+      initialStates[user.id] = { 
         isFollowing: user.is_following || false,
         isLoading: false 
       };
     });
-    return states;
-  });
+    setFollowingStates(initialStates);
+    setDisplayedUsers(users);
+  }, [users]);
 
   const toggleFollow = async (userId: string) => {
     setFollowingStates(prev => ({
@@ -36,10 +42,18 @@ const FollowersList = ({ users, setShowList, listType }: FollowersListProps) => 
       
       if (isCurrentlyFollowing) {
         await supabaseService.unfollowUser(userId);
+        
+        // If this is in the following list, remove the user from displayed users
+        if (listType === 'following') {
+          setDisplayedUsers(current => current.filter(user => user.id !== userId));
+          toast.success("User unfollowed");
+          return;
+        }
       } else {
         await supabaseService.followUser(userId);
       }
       
+      // Update the following state for user who stays in the list
       setFollowingStates(prev => ({
         ...prev,
         [userId]: { 
@@ -47,8 +61,11 @@ const FollowersList = ({ users, setShowList, listType }: FollowersListProps) => 
           isLoading: false 
         }
       }));
+      
+      toast.success(isCurrentlyFollowing ? "Unfollowed user" : "Now following user");
     } catch (error) {
       console.error("Error toggling follow:", error);
+      toast.error("Failed to update follow status");
       setFollowingStates(prev => ({
         ...prev,
         [userId]: { ...prev[userId], isLoading: false }
@@ -56,24 +73,20 @@ const FollowersList = ({ users, setShowList, listType }: FollowersListProps) => 
     }
   };
   
-  if (users.length === 0) return null;
-  
-  const title = listType === 'followers' ? 'Followers' : 'Following';
+  if (displayedUsers.length === 0) {
+    return (
+      <div className={`text-center py-6 ${className}`}>
+        <p className="text-gray-500">
+          {listType === 'followers' ? 'No followers yet' : 'Not following anyone yet'}
+        </p>
+      </div>
+    );
+  }
   
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={() => setShowList(false)}
-        >
-          Close
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {users.map((user) => (
+    <div className={className}>
+      <div className="space-y-3">
+        {displayedUsers.map((user) => (
           <Card key={user.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -101,7 +114,7 @@ const FollowersList = ({ users, setShowList, listType }: FollowersListProps) => 
                     {followingStates[user.id]?.isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : followingStates[user.id]?.isFollowing ? (
-                      "Following"
+                      "Unfollow"
                     ) : (
                       "Follow"
                     )}
