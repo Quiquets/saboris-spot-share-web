@@ -1,3 +1,4 @@
+
 // Constants for map filter options
 export const filterOptions = {
   people: [
@@ -89,6 +90,7 @@ export interface ActiveFilters {
   serviceSortDirection: "asc" | "desc";
   atmosphereSortDirection: "asc" | "desc";
   valueSortDirection: "asc" | "desc";
+  sortDirection?: "asc" | "desc"; // Added this for backward compatibility
 }
 
 export type FilterChangeHandler = (type: string, value: string | string[] | { direction: "asc" | "desc", category: string }) => void;

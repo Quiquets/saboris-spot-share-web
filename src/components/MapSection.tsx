@@ -28,6 +28,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     serviceSortDirection: "desc", // Default: high to low
     atmosphereSortDirection: "desc", // Default: high to low
     valueSortDirection: "desc", // Default: high to low
+    sortDirection: "desc", // Added for compatibility
   });
 
   useEffect(() => {
@@ -73,7 +74,8 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
       
       setActiveFilters(prev => ({
         ...prev,
-        [directionKey]: newDirection
+        [directionKey]: newDirection,
+        sortDirection: newDirection // Update this for compatibility
       }));
     }
   };
@@ -87,7 +89,14 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
         {!simplified && (
           <div className="mb-2 md:mb-6">
             <MapFilters 
-              activeFilters={activeFilters} 
+              activeFilters={{
+                occasion: activeFilters.occasion,
+                foodType: activeFilters.foodType,
+                vibe: activeFilters.vibe,
+                price: activeFilters.price,
+                rating: activeFilters.rating.toString(),
+                sortDirection: activeFilters.sortDirection || "desc"
+              }}
               handleFilterChange={handleFilterChange}
               handlePeopleFilterChange={handlePeopleFilterChange}
               toggleSortDirection={toggleSortDirection}

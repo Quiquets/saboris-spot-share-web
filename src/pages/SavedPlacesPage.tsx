@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -31,6 +30,7 @@ const SavedPlacesPage = () => {
     serviceSortDirection: "desc", // Default: high to low
     atmosphereSortDirection: "desc", // Default: high to low
     valueSortDirection: "desc", // Default: high to low
+    sortDirection: "desc", // Added for compatibility
   });
 
   useEffect(() => {
@@ -97,7 +97,8 @@ const SavedPlacesPage = () => {
       
       setActiveFilters(prev => ({
         ...prev,
-        [directionKey]: newDirection
+        [directionKey]: newDirection,
+        sortDirection: newDirection // Update this for compatibility
       }));
     }
   };
@@ -150,7 +151,14 @@ const SavedPlacesPage = () => {
           {/* Filter section - optimized for mobile */}
           <div className="mb-4 md:mb-6">
             <MapFilters
-              activeFilters={activeFilters}
+              activeFilters={{
+                occasion: activeFilters.occasion,
+                foodType: activeFilters.foodType,
+                vibe: activeFilters.vibe,
+                price: activeFilters.price,
+                rating: activeFilters.rating.toString(),
+                sortDirection: activeFilters.sortDirection || "desc"
+              }}
               handleFilterChange={handleFilterChange}
               handlePeopleFilterChange={handlePeopleFilterChange}
               toggleSortDirection={toggleSortDirection}
