@@ -6,12 +6,32 @@ import { Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { mapStyles } from './MapStyles';
 import { safeGetUserLocation, communityRecommendations, loadGoogleMapsScript } from '@/utils/mapUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GoogleMapViewProps {
   className?: string;
+  activeFilters?: {
+    people?: string;
+    occasion?: string[];
+    foodType?: string[];
+    vibe?: string[];
+    price?: string[];
+    rating?: string;
+  };
 }
 
-const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
+interface Place {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  photo_url?: string;
+}
+
+const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className, activeFilters }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const mapLoadedRef = useRef<boolean>(false);
@@ -20,7 +40,32 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
   const userLocationRef = useRef<{lat: number, lng: number} | null>(null);
   const googleMapsLoadedRef = useRef<boolean>(false);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [mapIsReady, setMapIsReady] = useState(false);
+
+  // Load community places from Supabase
+  useEffect(() => {
+    const fetchCommunityPlaces = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('places')
+          .select('id, name, lat, lng, description, category, tags');
+        
+        if (error) {
+          console.error("Error fetching places:", error);
+          return;
+        }
+        
+        if (data) {
+          setPlaces(data as Place[]);
+        }
+      } catch (err) {
+        console.error("Error in fetchCommunityPlaces:", err);
+      }
+    };
+    
+    fetchCommunityPlaces();
+  }, []);
 
   // Load Google Maps script and initialize map
   useEffect(() => {
@@ -88,7 +133,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
   }, []);
 
   // Create map with given center location
-  const createMap = (centerLocation: {lat: number, lng: number}) => {
+  const createMap = useCallback((centerLocation: {lat: number, lng: number}) => {
     if (!mapContainerRef.current || !window.google?.maps) {
       console.error("Map container ref or Google Maps not available");
       setIsLoadingMap(false);
@@ -123,16 +168,16 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
         addUserMarker(centerLocation);
       }
       
-      // Add recommendation markers
+      // Add markers to map
       addMarkersToMap();
     } catch (error) {
       console.error("Error creating map:", error);
       setIsLoadingMap(false);
     }
-  };
+  }, [places]);
   
   // Add user location marker
-  const addUserMarker = (position: {lat: number, lng: number}) => {
+  const addUserMarker = useCallback((position: {lat: number, lng: number}) => {
     if (!mapInstanceRef.current || !window.google?.maps) return;
     
     try {
@@ -162,18 +207,68 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
     } catch (error) {
       console.error("Error creating user marker:", error);
     }
-  };
+  }, []);
   
   // Add markers to map when it's loaded
   const addMarkersToMap = useCallback(() => {
-    if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) return;
+    if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) {
+      console.log("Map not ready for markers");
+      return;
+    }
     
     try {
       // Clear any existing markers first
       markersRef.current.forEach(marker => marker.setMap(null));
       markersRef.current = [];
+
+      // Filter places based on activeFilters
+      const filteredPlaces = filterPlaces();
+      console.log("Displaying places:", filteredPlaces);
       
-      // Add community recommendations
+      // Add filtered places to the map
+      filteredPlaces.forEach(place => {
+        try {
+          if (!place.lat || !place.lng) return;
+          
+          const marker = new window.google.maps.Marker({
+            position: { lat: place.lat, lng: place.lng },
+            map: mapInstanceRef.current,
+            title: place.name,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: "#EE8C80",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+              scale: 8,
+            }
+          });
+          
+          markersRef.current.push(marker);
+          
+          // Create info window with place details
+          const infoContent = `
+            <div style="padding: 8px; max-width: 200px;">
+              <h3 style="margin: 0; font-weight: bold;">${place.name}</h3>
+              ${place.description ? `<p style="margin-top: 4px;">${place.description}</p>` : ''}
+              ${place.category ? `<p style="margin-top: 4px; font-style: italic;">${place.category}</p>` : ''}
+              ${place.tags && place.tags.length > 0 ? `<p style="margin-top: 4px; font-size: 12px;">${place.tags.join(', ')}</p>` : ''}
+            </div>
+          `;
+          
+          const infoWindow = new window.google.maps.InfoWindow({
+            content: infoContent
+          });
+          
+          marker.addListener('click', () => {
+            infoWindow.open(mapInstanceRef.current, marker);
+          });
+        } catch (error) {
+          console.error("Error creating place marker:", error);
+        }
+      });
+
+      // Also add community recommendations for additional places
       communityRecommendations.forEach(location => {
         try {
           const marker = new window.google.maps.Marker({
@@ -217,7 +312,58 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
     } catch (error) {
       console.error("Error adding markers to map:", error);
     }
-  }, []);
+  }, [places, activeFilters]);
+  
+  // Filter places based on active filters
+  const filterPlaces = useCallback(() => {
+    if (!activeFilters || activeFilters.people !== 'community') {
+      // If people filter is not set to community or not present, just return original places
+      return places;
+    }
+
+    // Filter by occasion
+    let filtered = [...places];
+    
+    if (activeFilters.occasion && activeFilters.occasion.length > 0) {
+      filtered = filtered.filter(place => 
+        place.tags?.some(tag => activeFilters.occasion?.includes(tag))
+      );
+    }
+    
+    // Filter by food type
+    if (activeFilters.foodType && activeFilters.foodType.length > 0) {
+      filtered = filtered.filter(place => 
+        place.category && activeFilters.foodType?.includes(place.category.toLowerCase()) ||
+        place.tags?.some(tag => activeFilters.foodType?.includes(tag))
+      );
+    }
+    
+    // Filter by vibe
+    if (activeFilters.vibe && activeFilters.vibe.length > 0) {
+      filtered = filtered.filter(place => 
+        place.tags?.some(tag => activeFilters.vibe?.includes(tag))
+      );
+    }
+    
+    // Filter by price (if we have price tags in the data)
+    if (activeFilters.price && activeFilters.price.length > 0) {
+      filtered = filtered.filter(place => 
+        place.tags?.some(tag => {
+          const priceTags = ['low', 'medium', 'high', 'premium'];
+          return priceTags.some(price => tag.includes(price) && activeFilters.price?.includes(price));
+        })
+      );
+    }
+    
+    return filtered;
+  }, [places, activeFilters]);
+
+  // Update markers when filters change
+  useEffect(() => {
+    if (mapLoadedRef.current) {
+      addMarkersToMap();
+    }
+  }, [activeFilters, addMarkersToMap]);
   
   // Safe geolocation handler with improved error handling
   const handleGetUserLocation = useCallback(() => {
@@ -260,7 +406,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className }) => {
         toast.error("Location access denied. We're showing our New York recommendations instead.");
       }
     );
-  }, []);
+  }, [addUserMarker]);
 
   return (
     <Card className={`overflow-hidden shadow-lg relative ${className}`}>

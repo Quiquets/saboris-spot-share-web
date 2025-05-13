@@ -108,7 +108,17 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
         
         {/* Google Map Component with adjustable height */}
         <div className={`h-[${mapHeight}] w-full border rounded-lg overflow-hidden`} style={{height: mapHeight}}>
-          <GoogleMapView className="h-full w-full" />
+          <GoogleMapView 
+            className="h-full w-full" 
+            activeFilters={{
+              people: activeFilters.people,
+              occasion: activeFilters.occasion,
+              foodType: activeFilters.foodType,
+              vibe: activeFilters.vibe,
+              price: activeFilters.price,
+              rating: activeFilters.rating.toString(),
+            }}
+          />
         </div>
       </div>
     </section>

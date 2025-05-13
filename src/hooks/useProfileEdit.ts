@@ -38,46 +38,6 @@ export const useProfileEdit = (
     }
   };
 
-  const ensureAvatarsBucketExists = async (): Promise<boolean> => {
-    try {
-      // Check if avatars bucket exists by attempting to get its info
-      const { data: bucketInfo, error: bucketError } = await supabase.storage.getBucket('avatars');
-      
-      if (bucketError) {
-        console.log("Bucket doesn't exist or error fetching bucket info:", bucketError);
-        // Try to create the avatars bucket with public access
-        const { error: createError } = await supabase.storage.createBucket('avatars', { 
-          public: true,
-          fileSizeLimit: 2 * 1024 * 1024 // 2MB
-        });
-        
-        if (createError) {
-          // If creation failed, but it's not because the bucket already exists
-          if (createError.message !== "Bucket already exists") {
-            console.error("Error creating avatars bucket:", createError);
-            toast.error("Failed to create storage bucket for profile images. Please try again later.");
-            return false;
-          }
-          
-          // Bucket already exists, so we can proceed
-          console.log("Bucket already exists, continuing...");
-          return true;
-        }
-        
-        console.log("Created avatars bucket successfully");
-        return true;
-      }
-      
-      // Bucket exists, we can proceed
-      console.log("Avatars bucket exists:", bucketInfo);
-      return true;
-    } catch (error) {
-      console.error("Error ensuring avatars bucket exists:", error);
-      toast.error("Failed to access storage bucket. Please try again later.");
-      return false;
-    }
-  };
-
   const handleSaveProfile = async () => {
     if (!user) return false;
     
@@ -102,49 +62,46 @@ export const useProfileEdit = (
       // Upload profile image if new one is selected
       let avatarUrl = user.avatar_url;
       if (profileImage) {
-        // Make sure the avatars bucket exists
-        const bucketExists = await ensureAvatarsBucketExists();
-        
-        if (!bucketExists) {
-          toast.error("Failed to create storage bucket for profile images");
-          return false;
-        }
-        
-        const fileExt = profileImage.name.split('.').pop();
-        const filePath = `${user.id}-${Date.now()}.${fileExt}`;
-        
-        // First try to delete previous avatar if exists
-        if (user.avatar_url) {
-          try {
-            const prevFilePath = user.avatar_url.split('/').pop();
-            if (prevFilePath && prevFilePath.startsWith(user.id)) {
-              await supabase.storage.from('avatars').remove([prevFilePath]);
-              console.log("Previous avatar removed successfully");
+        try {
+          // First try to delete previous avatar if exists
+          if (user.avatar_url) {
+            try {
+              const prevFilePath = user.avatar_url.split('/').pop();
+              if (prevFilePath && prevFilePath.startsWith(user.id)) {
+                await supabase.storage.from('avatars').remove([prevFilePath]);
+                console.log("Previous avatar removed successfully");
+              }
+            } catch (error) {
+              console.error("Error removing previous avatar:", error);
+              // Continue even if this fails
             }
-          } catch (error) {
-            console.error("Error removing previous avatar:", error);
-            // Continue even if this fails
           }
-        }
-        
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, profileImage, {
-            cacheControl: '3600',
-            upsert: true
-          });
           
-        if (uploadError) {
-          console.error("Error uploading image:", uploadError);
-          toast.error("Failed to upload profile image");
-          return false;
-        } else {
-          const { data: urlData } = supabase.storage
+          const fileExt = profileImage.name.split('.').pop();
+          const filePath = `${user.id}-${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
             .from('avatars')
-            .getPublicUrl(filePath);
+            .upload(filePath, profileImage, {
+              cacheControl: '3600',
+              upsert: true
+            });
             
-          avatarUrl = urlData.publicUrl;
-          setProfileImageUrl(avatarUrl);
+          if (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            throw new Error("Failed to upload profile image");
+          } else {
+            const { data: urlData } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(filePath);
+              
+            avatarUrl = urlData.publicUrl;
+            setProfileImageUrl(avatarUrl);
+          }
+        } catch (error) {
+          console.error("Error uploading profile image:", error);
+          toast.error("Failed to upload profile image. Please try again later.");
+          return false;
         }
       }
       

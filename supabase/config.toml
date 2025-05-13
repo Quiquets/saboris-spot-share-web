@@ -7,3 +7,5 @@ public = true
 
 [storage.avatars]
 public = true
+file_size_limit = "2MB"
+

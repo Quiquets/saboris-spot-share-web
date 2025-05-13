@@ -2,6 +2,7 @@
 import { Instagram } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const HeroSection = () => {
   // Ref for the scrolling text container
@@ -160,20 +161,22 @@ const HeroSection = () => {
                         <div className="absolute -left-[2px] top-[130px] h-[32px] w-[3px] bg-[#2a2a2a] rounded-r-md"></div>
                         
                         {/* Screen with correct bezel */}
-                        <div className="absolute inset-[3px] bg-black rounded-[33px] overflow-hidden border border-[#2a2a2a]">
+                        <div className="absolute inset-[4px] bg-black rounded-[32px] overflow-hidden">
                           {/* Notch */}
                           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[24px] bg-black rounded-b-[14px] z-20 flex items-center justify-center">
                             <div className="w-[40px] h-[8px] bg-[#2a2a2a] rounded-full"></div>
                           </div>
                           
-                          {/* Screen content with proper aspect ratio and fit */}
-                          <div className="w-full h-full flex items-center justify-center">
-                            <img 
-                              src={src}
-                              alt={`Saboris App Screenshot ${index + 1}`}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
+                          {/* Screen content with proper aspect ratio and fit - IMPROVED */}
+                          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                            <AspectRatio ratio={9/19.5} className="w-full h-full">
+                              <img 
+                                src={src}
+                                alt={`Saboris App Screenshot ${index + 1}`}
+                                className="h-full w-full object-cover object-center"
+                                loading="lazy"
+                              />
+                            </AspectRatio>
                           </div>
                           
                           {/* Home indicator */}
