@@ -28,7 +28,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     serviceSortDirection: "desc", // Default: high to low
     atmosphereSortDirection: "desc", // Default: high to low
     valueSortDirection: "desc", // Default: high to low
-    sortDirection: "desc", // Added for compatibility
+    sortDirection: "desc", // For compatibility
   });
 
   useEffect(() => {
@@ -95,7 +95,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
                 vibe: activeFilters.vibe,
                 price: activeFilters.price,
                 rating: activeFilters.rating.toString(),
-                sortDirection: activeFilters.sortDirection || "desc"
+                sortDirection: activeFilters.sortDirection
               }}
               handleFilterChange={handleFilterChange}
               handlePeopleFilterChange={handlePeopleFilterChange}

@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import FollowersList from './FollowersList';
+import { useNavigate } from 'react-router-dom';
 
 interface SocialListsContainerProps {
   followers: any[];
@@ -21,6 +22,7 @@ const SocialListsContainer = ({
   setShowFollowers,
   setShowFollowing
 }: SocialListsContainerProps) => {
+  const navigate = useNavigate();
   
   // Don't render anything if no list is shown
   if (!showFollowers && !showFollowing) return null;

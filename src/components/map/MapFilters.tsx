@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { filterOptions } from './FilterOptions';
+import { filterOptions, ActiveFilters } from './FilterOptions';
 import ActiveFilterBadges from './filters/ActiveFilterBadges';
 import OccasionFilter from './filters/OccasionFilter';
 import FoodTypeFilter from './filters/FoodTypeFilter';
@@ -9,7 +9,6 @@ import VibeFilter from './filters/VibeFilter';
 import PriceFilter from './filters/PriceFilter';
 import RatingFilters from './filters/RatingFilters';
 
-// Update the interface to match the ActiveFilters type in FilterOptions.ts
 interface FilterProps {
   activeFilters: {
     occasion: string[];
@@ -76,7 +75,6 @@ const MapFilters: React.FC<FilterProps> = ({
 
         <div>
           <RatingFilters 
-            // Pass the directly required properties instead of the whole activeFilters object
             rating={activeFilters.rating}
             sortDirection={activeFilters.sortDirection}
             toggleSortDirection={toggleSortDirection}

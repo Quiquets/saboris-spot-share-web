@@ -24,8 +24,13 @@ const ProfilePage = () => {
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   
   useEffect(() => {
-    document.title = 'Saboris - Profile';
-  }, []);
+    // Set document title based on whether viewing own profile or another user's
+    if (userId && userId !== user?.id) {
+      document.title = 'Saboris - User Profile';
+    } else {
+      document.title = 'Saboris - My Profile';
+    }
+  }, [userId, user]);
   
   useEffect(() => {
     // Determine if this is the user's own profile or someone else's
@@ -113,7 +118,12 @@ const ProfilePage = () => {
         <div className="max-w-5xl mx-auto">
           {/* Profile Header */}
           <ProfileHeader 
-            user={user}
+            user={{
+              ...user,
+              username: isOwnProfile ? username || user.username : username,
+              bio: isOwnProfile ? bio || user.bio : bio,
+              avatar_url: isOwnProfile ? profileImageUrl || user.avatar_url : profileImageUrl
+            }}
             isOwnProfile={isOwnProfile}
             profileStats={profileStats}
             isPrivate={isPrivate}
@@ -170,7 +180,7 @@ const ProfilePage = () => {
             onPlaceDeleted={fetchProfileData}
           />
           
-          {/* Shared Places */}
+          {/* Shared Places - Call refreshPlaces to update post counts after changes */}
           <SharedPlaces 
             loading={loading}
             sharedPlaces={sharedPlaces}
