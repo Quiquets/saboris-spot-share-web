@@ -90,6 +90,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
           <div className="mb-2 md:mb-6">
             <MapFilters 
               activeFilters={{
+                people: activeFilters.people,
                 occasion: activeFilters.occasion,
                 foodType: activeFilters.foodType,
                 vibe: activeFilters.vibe,

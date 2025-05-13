@@ -3,6 +3,7 @@ import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { filterOptions, ActiveFilters } from './FilterOptions';
 import ActiveFilterBadges from './filters/ActiveFilterBadges';
+import PeopleFilter from './filters/PeopleFilter';
 import OccasionFilter from './filters/OccasionFilter';
 import FoodTypeFilter from './filters/FoodTypeFilter';
 import VibeFilter from './filters/VibeFilter';
@@ -11,6 +12,7 @@ import RatingFilters from './filters/RatingFilters';
 
 interface FilterProps {
   activeFilters: {
+    people?: string;
     occasion: string[];
     foodType: string[];
     vibe: string[];
@@ -44,7 +46,15 @@ const MapFilters: React.FC<FilterProps> = ({
       />
 
       {/* Filter grid - responsive for mobile */}
-      <div className="grid grid-cols-5 gap-2 w-full mb-3 md:mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 w-full mb-3 md:mb-4">
+        <div>
+          <PeopleFilter 
+            activePeople={activeFilters.people || 'community'} 
+            handlePeopleFilterChange={handlePeopleFilterChange}
+            isUserAuthenticated={isUserAuthenticated}
+          />
+        </div>
+        
         <div>
           <OccasionFilter 
             activeOccasions={activeFilters.occasion}

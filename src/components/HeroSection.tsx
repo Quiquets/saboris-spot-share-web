@@ -139,7 +139,7 @@ const HeroSection = () => {
           <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
             {imagesLoaded ? (
               <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-                {/* Responsive phone mockups - better alignment and styling */}
+                {/* Restored phone mockups with proper frames */}
                 {[
                   "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
                   "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
@@ -148,21 +148,31 @@ const HeroSection = () => {
                   "/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png"
                 ].map((src, index) => (
                   <div key={index} className="relative flex-shrink-0">
-                    {/* Phone mockup with proper dimensions */}
+                    {/* Phone frame with shadow */}
                     <div className={`${isMobile ? 'w-[180px] h-[360px]' : 'w-[200px] h-[400px] md:w-[220px] md:h-[440px] lg:w-[240px] lg:h-[480px]'} relative`}>
-                      {/* Phone frame */}
-                      <div className="absolute inset-0 bg-black rounded-[36px] shadow-xl">
-                        {/* Notch */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[3%] bg-black rounded-b-xl"></div>
-                        
-                        {/* Screen with rounded corners */}
-                        <div className="absolute inset-[2px] rounded-[34px] overflow-hidden">
-                          <img 
-                            src={src}
-                            alt={`Saboris App Screenshot ${index + 1}`}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
+                      {/* Phone outer frame */}
+                      <div className="absolute inset-0 bg-gray-800 rounded-[40px] shadow-xl overflow-hidden">
+                        {/* Phone inner bezel */}
+                        <div className="absolute inset-[3px] bg-black rounded-[37px] overflow-hidden">
+                          {/* Notch */}
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80px] h-[25px] bg-black rounded-b-xl z-20"></div>
+                          
+                          {/* Screen with rounded corners */}
+                          <div className="absolute inset-0 overflow-hidden">
+                            <img 
+                              src={src}
+                              alt={`Saboris App Screenshot ${index + 1}`}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          
+                          {/* Power button */}
+                          <div className="absolute top-[100px] -right-[3px] w-[3px] h-[40px] bg-gray-700 rounded-l-sm"></div>
+                          
+                          {/* Volume buttons */}
+                          <div className="absolute top-[80px] -left-[3px] w-[3px] h-[30px] bg-gray-700 rounded-r-sm"></div>
+                          <div className="absolute top-[120px] -left-[3px] w-[3px] h-[30px] bg-gray-700 rounded-r-sm"></div>
                         </div>
                       </div>
                     </div>

@@ -152,6 +152,7 @@ const SavedPlacesPage = () => {
           <div className="mb-4 md:mb-6">
             <MapFilters
               activeFilters={{
+                people: activeFilters.people,
                 occasion: activeFilters.occasion,
                 foodType: activeFilters.foodType,
                 vibe: activeFilters.vibe,
