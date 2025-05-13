@@ -107,7 +107,7 @@ const SavedPlacesPage = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-grow flex items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-t-saboris-primary border-gray-200"></div>
+          <div className="h-8 w-8 md:h-12 md:w-12 animate-spin rounded-full border-4 border-t-saboris-primary border-gray-200"></div>
         </div>
         <Footer />
       </div>
@@ -118,14 +118,14 @@ const SavedPlacesPage = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <div className="flex-grow container mx-auto px-4 py-8 md:py-16">
+        <div className="flex-grow container mx-auto px-4 py-6 md:py-16">
           <div className="max-w-md mx-auto text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 md:h-16 md:w-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 md:h-16 md:w-16 mx-auto text-gray-300 mb-3 md:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-12V3m0 0v2m0-2h2M9 3h2m10 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h1 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Sign In Required</h1>
-            <p className="text-gray-600 mb-6 md:mb-8">Please sign in to view your saved places.</p>
-            <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
+            <h1 className="text-lg md:text-2xl font-bold mb-2 md:mb-4">Sign In Required</h1>
+            <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-8">Please sign in to view your saved places.</p>
+            <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90 text-sm md:text-base">
               <Link to="/">Go to Home</Link>
             </Button>
           </div>
@@ -139,16 +139,16 @@ const SavedPlacesPage = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       
-      <div className="bg-gray-50 py-6 md:py-8 px-4 flex-grow">
+      <div className="bg-gray-50 py-4 md:py-8 px-3 md:px-4 flex-grow">
         <div className="container mx-auto">
           {/* Title with consistent styling and an icon */}
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-saboris-primary flex items-center justify-center">
-            <Heart className="h-6 w-6 mr-2" />
+          <h1 className="text-xl md:text-3xl font-bold text-center mb-4 md:mb-6 text-saboris-primary flex items-center justify-center">
+            <Heart className="h-5 w-5 md:h-6 md:w-6 mr-2" />
             My Saved Places
           </h1>
           
-          {/* Filter section */}
-          <div className="mb-6">
+          {/* Filter section - optimized for mobile */}
+          <div className="mb-4 md:mb-6">
             <MapFilters
               activeFilters={activeFilters}
               handleFilterChange={handleFilterChange}
@@ -159,12 +159,12 @@ const SavedPlacesPage = () => {
           </div>
           
           {loading ? (
-            <div className="text-center py-8 md:py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-saboris-primary border-gray-200 mx-auto mb-3"></div>
-              <p className="text-gray-600">Loading your saved places...</p>
+            <div className="text-center py-6 md:py-12">
+              <div className="h-6 w-6 md:h-8 md:w-8 animate-spin rounded-full border-4 border-t-saboris-primary border-gray-200 mx-auto mb-3"></div>
+              <p className="text-sm md:text-base text-gray-600">Loading your saved places...</p>
             </div>
           ) : savedPlaces.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {savedPlaces.map((place) => (
                 <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <div className="aspect-video w-full overflow-hidden bg-gray-100">
@@ -178,19 +178,19 @@ const SavedPlacesPage = () => {
                   
                   <CardHeader className="py-2 md:py-3">
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-base md:text-lg">{place.restaurant.name}</CardTitle>
+                      <CardTitle className="text-sm md:text-lg line-clamp-1">{place.restaurant.name}</CardTitle>
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-7 w-7 md:h-8 md:w-8 text-saboris-primary"
+                        className="h-6 w-6 md:h-8 md:w-8 text-saboris-primary"
                         onClick={() => handleRemoveFromWishlist(place.place_id)}
                       >
-                        <Heart className="h-4 w-4 md:h-5 md:w-5 fill-saboris-primary" />
+                        <Heart className="h-4 w-4 fill-saboris-primary" />
                       </Button>
                     </div>
                     
                     {place.restaurant.category && (
-                      <span className="inline-block px-2 py-1 bg-saboris-light text-saboris-primary text-xs rounded-full">
+                      <span className="inline-block px-2 py-0.5 bg-saboris-light text-saboris-primary text-xs rounded-full">
                         {place.restaurant.category}
                       </span>
                     )}
@@ -202,21 +202,21 @@ const SavedPlacesPage = () => {
                     )}
                     
                     {place.note && (
-                      <div className="mt-1 md:mt-2 text-xs md:text-sm italic text-gray-500 p-2 bg-gray-50 rounded-md line-clamp-2">"{place.note}"</div>
+                      <div className="mt-1 md:mt-2 text-xs italic text-gray-500 p-2 bg-gray-50 rounded-md line-clamp-2">"{place.note}"</div>
                     )}
                     
                     {place.restaurant.tags && place.restaurant.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2 md:mt-3">
+                      <div className="flex flex-wrap gap-1 mt-2">
                         {place.restaurant.tags.slice(0, isMobile ? 3 : 5).map((tag, index) => (
                           <span 
                             key={index} 
-                            className="text-xs px-1.5 py-0.5 md:px-2 md:py-1 bg-gray-100 rounded-full"
+                            className="text-xs px-1.5 py-0.5 bg-gray-100 rounded-full"
                           >
                             {tag}
                           </span>
                         ))}
                         {place.restaurant.tags.length > (isMobile ? 3 : 5) && (
-                          <span className="text-xs px-1.5 py-0.5 md:px-2 md:py-1 bg-gray-100 rounded-full">
+                          <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded-full">
                             +{place.restaurant.tags.length - (isMobile ? 3 : 5)} more
                           </span>
                         )}
@@ -225,8 +225,8 @@ const SavedPlacesPage = () => {
                   </CardContent>
                   
                   <CardFooter className="pt-0 pb-2 md:pb-3">
-                    <Button variant="outline" size={isMobile ? "sm" : "default"} className="w-full text-saboris-primary border-saboris-primary text-xs md:text-sm py-1 md:py-2">
-                      <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                    <Button variant="outline" size="sm" className="w-full text-saboris-primary border-saboris-primary text-xs py-1">
+                      <MapPin className="h-3 w-3 mr-1" />
                       <span>View on Map</span>
                     </Button>
                   </CardFooter>
@@ -234,11 +234,11 @@ const SavedPlacesPage = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 md:py-12 bg-white rounded-lg border border-gray-100">
-              <Heart className="h-12 w-12 md:h-16 md:w-16 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-lg md:text-xl font-medium mb-2">No saved places found</h3>
-              <p className="text-gray-600 mb-3 md:mb-4">Start exploring and save your favorite restaurants</p>
-              <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90 text-sm md:text-base">
+            <div className="text-center py-6 md:py-12 bg-white rounded-lg border border-gray-100">
+              <Heart className="h-10 w-10 md:h-16 md:w-16 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-base md:text-xl font-medium mb-2">No saved places found</h3>
+              <p className="text-xs md:text-base text-gray-600 mb-3 md:mb-4">Start exploring and save your favorite restaurants</p>
+              <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90 text-xs md:text-base">
                 <Link to="/map">
                   <MapPin className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                   Explore Map

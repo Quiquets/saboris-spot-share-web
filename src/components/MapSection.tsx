@@ -78,11 +78,14 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     }
   };
   
+  // Mobile height adjustment
+  const mapHeight = isMobile ? (simplified ? '300px' : '400px') : (simplified ? '400px' : '700px');
+  
   return (
-    <section id="map-section" className="py-3 md:py-6 px-1 md:px-2 bg-white">
+    <section id="map-section" className="py-2 md:py-6 px-1 md:px-2 bg-white">
       <div className="max-w-5xl mx-auto">
         {!simplified && (
-          <div className="mb-3 md:mb-6">
+          <div className="mb-2 md:mb-6">
             <MapFilters 
               activeFilters={activeFilters} 
               handleFilterChange={handleFilterChange}
@@ -93,8 +96,8 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
           </div>
         )}
         
-        {/* Google Map Component */}
-        <div className="h-[500px] md:h-[700px] w-full border rounded-lg overflow-hidden">
+        {/* Google Map Component with adjustable height */}
+        <div className={`h-[${mapHeight}] w-full border rounded-lg overflow-hidden`} style={{height: mapHeight}}>
           <GoogleMapView className="h-full w-full" />
         </div>
       </div>

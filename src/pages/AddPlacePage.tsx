@@ -33,7 +33,7 @@ const AddPlacePage = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="flex-grow flex items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-saboris-primary" />
+          <Loader2 className="h-8 w-8 md:h-12 md:w-12 animate-spin text-saboris-primary" />
         </div>
         <Footer />
       </div>
@@ -44,11 +44,11 @@ const AddPlacePage = () => {
     return (
       <main className="min-h-screen flex flex-col">
         <Header />
-        <div className="flex-grow container mx-auto px-4 py-16">
+        <div className="flex-grow container mx-auto px-4 py-8 md:py-16">
           <div className="max-w-md mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4">Sign In Required</h1>
-            <p className="text-gray-600 mb-8">Please sign in to add new places.</p>
-            <Button onClick={() => navigate('/')} className="bg-saboris-primary hover:bg-saboris-primary/90">
+            <h1 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Sign In Required</h1>
+            <p className="text-sm md:text-base text-gray-600 mb-6 md:mb-8">Please sign in to add new places.</p>
+            <Button onClick={() => navigate('/')} className="bg-saboris-primary hover:bg-saboris-primary/90 text-sm md:text-base">
               Go to Home
             </Button>
           </div>
@@ -61,10 +61,10 @@ const AddPlacePage = () => {
   return (
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-      <div className="container mx-auto px-4 py-8 flex-grow">
-        <h1 className="text-xl md:text-3xl font-bold text-center mb-4 md:mb-6 text-saboris-primary flex items-center justify-center">
-          <PlusCircle className="h-5 w-5 md:h-6 md:w-6 mr-2" />
-          Share your recommendations
+      <div className="container mx-auto px-3 sm:px-4 py-6 md:py-8 flex-grow">
+        <h1 className="text-lg sm:text-xl md:text-3xl font-bold text-center mb-4 md:mb-6 text-saboris-primary flex items-center justify-center">
+          <PlusCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2" />
+          Share recommendations
         </h1>
         <AddPlaceForm />
       </div>

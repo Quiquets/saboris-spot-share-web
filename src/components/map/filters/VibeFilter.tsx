@@ -22,13 +22,13 @@ const VibeFilter: React.FC<VibeFilterProps> = ({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" 
-          className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+          className="w-full h-8 gap-1 px-2 text-xs border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
-          Vibe
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">Vibe</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">
-        <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
+        <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto">
           {filterOptions.vibe.map(option => (
             <Button 
               key={option.id}

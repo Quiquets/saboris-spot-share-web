@@ -29,44 +29,49 @@ const MapFilters: React.FC<MapFiltersProps> = ({
   
   return (
     <div className="flex flex-col items-start w-full">
-      {/* People filter tabs */}
+      {/* People filter tabs - improved for mobile */}
       <PeopleFilter 
         activePeople={activeFilters.people}
         handlePeopleFilterChange={handlePeopleFilterChange}
         isUserAuthenticated={isUserAuthenticated}
       />
 
-      {/* Filter grid - responsive for mobile */}
-      <div className={`${isMobile ? 'grid grid-cols-2 gap-1' : 'grid grid-cols-5 gap-2'} w-full mb-3 md:mb-4`}>
-        {/* Occasion Filter */}
-        <OccasionFilter 
-          activeOccasions={activeFilters.occasion}
-          handleFilterChange={handleFilterChange}
-        />
+      {/* Filter grid - responsive for mobile with better sizing */}
+      <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-5 gap-2'} w-full mb-3 md:mb-4`}>
+        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+          <OccasionFilter 
+            activeOccasions={activeFilters.occasion}
+            handleFilterChange={handleFilterChange}
+          />
+        </div>
         
-        {/* Food Type Filter */}
-        <FoodTypeFilter 
-          activeFoodTypes={activeFilters.foodType}
-          handleFilterChange={handleFilterChange}
-        />
+        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+          <FoodTypeFilter 
+            activeFoodTypes={activeFilters.foodType}
+            handleFilterChange={handleFilterChange}
+          />
+        </div>
 
-        {/* Vibe Filter */}
-        <VibeFilter 
-          activeVibes={activeFilters.vibe}
-          handleFilterChange={handleFilterChange}
-        />
+        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+          <VibeFilter 
+            activeVibes={activeFilters.vibe}
+            handleFilterChange={handleFilterChange}
+          />
+        </div>
 
-        {/* Price Filter */}
-        <PriceFilter 
-          activePrices={activeFilters.price}
-          handleFilterChange={handleFilterChange}
-        />
+        <div className={`${isMobile ? 'col-span-1' : ''}`}>
+          <PriceFilter 
+            activePrices={activeFilters.price}
+            handleFilterChange={handleFilterChange}
+          />
+        </div>
 
-        {/* More Filters */}
-        <RatingFilters 
-          activeFilters={activeFilters}
-          toggleSortDirection={toggleSortDirection}
-        />
+        <div className={`${isMobile ? 'col-span-2 mt-2' : ''}`}>
+          <RatingFilters 
+            activeFilters={activeFilters}
+            toggleSortDirection={toggleSortDirection}
+          />
+        </div>
       </div>
       
       {/* Active filter badges */}

@@ -22,13 +22,13 @@ const OccasionFilter: React.FC<OccasionFilterProps> = ({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" 
-          className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+          className="w-full h-8 gap-1 px-2 text-xs border-saboris-primary text-saboris-gray">
           <Filter className="h-3 w-3 text-saboris-primary" /> 
-          Occasion
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">Occasion</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-60">
-        <div className="flex flex-wrap gap-2 max-h-80 overflow-y-auto">
+        <div className="flex flex-wrap gap-2 max-h-72 overflow-y-auto">
           {filterOptions.occasion.map(option => (
             <Button 
               key={option.id}

@@ -9,6 +9,7 @@ import {
 import { Sliders, ArrowDown, ArrowUp } from 'lucide-react';
 import { filterOptions } from '../FilterOptions';
 import { ActiveFilters } from '../FilterOptions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Define the mapping between option.id and state property keys
 const directionKeyMap: Record<string, keyof ActiveFilters> = {
@@ -27,13 +28,15 @@ const RatingFilters: React.FC<RatingFiltersProps> = ({
   activeFilters, 
   toggleSortDirection 
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" 
-          className="w-full gap-1 px-2 py-1 text-sm border-saboris-primary text-saboris-gray">
+          className="w-full h-8 gap-1 px-2 text-xs border-saboris-primary text-saboris-gray">
           <Sliders className="h-3 w-3 text-saboris-primary" /> 
-          More
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">Rating</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72">

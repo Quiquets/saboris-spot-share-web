@@ -42,7 +42,7 @@ const PeopleFilter: React.FC<PeopleFilterProps> = ({
             <TabsTrigger 
               key={option.id} 
               value={option.id} 
-              className="flex-1 py-2 px-4 text-center data-[state=active]:bg-white data-[state=active]:text-saboris-primary data-[state=active]:shadow-sm rounded-full"
+              className="flex-1 py-1.5 px-2 md:py-2 md:px-4 text-center text-xs md:text-sm data-[state=active]:bg-white data-[state=active]:text-saboris-primary data-[state=active]:shadow-sm rounded-full"
             >
               {isMobile ? option.shortLabel || option.label : option.label}
             </TabsTrigger>

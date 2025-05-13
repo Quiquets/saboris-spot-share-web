@@ -65,18 +65,18 @@ const HeroSection = () => {
         <div className="absolute top-[20%] -left-10 w-96 h-96 bg-saboris-primary/10 rounded-full blur-xl"></div>
         
         {/* Coral pink horizontal line across the middle */}
-        <div className="absolute left-0 right-0 h-24 top-1/2 -translate-y-1/2 bg-[#FFDEE2] z-0">
+        <div className="absolute left-0 right-0 h-16 md:h-24 top-1/2 -translate-y-1/2 bg-[#FFDEE2] z-0">
           {/* Scrolling text banner - centered within the pink background */}
           <div className="relative w-full h-full overflow-hidden">
             <div 
               ref={scrollTextRef}
-              className={`whitespace-nowrap text-white font-bold text-xl absolute top-1/2 left-0 -translate-y-1/2 flex ${!isReady ? 'opacity-0' : 'opacity-100'} transition-opacity`}
+              className={`whitespace-nowrap text-white font-bold text-sm md:text-xl absolute top-1/2 left-0 -translate-y-1/2 flex ${!isReady ? 'opacity-0' : 'opacity-100'} transition-opacity`}
             >
               {/* Repeat the text enough times to fill the container initially */}
               {Array.from({ length: 40 }).map((_, i) => (
-                <span key={i} className="px-4">
+                <span key={i} className="px-2 md:px-4">
                   APP COMING SOON
-                  <span className="inline-block mx-4">•</span>
+                  <span className="inline-block mx-2 md:mx-4">•</span>
                 </span>
               ))}
             </div>
@@ -85,18 +85,18 @@ const HeroSection = () => {
       </div>
       
       <div className="relative z-10 text-center w-full mx-auto">
-        <h1 className="text-saboris-primary text-6xl font-extrabold text-center mb-2">Saboris</h1>
-        <h2 className="text-saboris-gray text-2xl font-medium text-center mb-4">
+        <h1 className="text-saboris-primary text-4xl md:text-6xl font-extrabold text-center mb-2">Saboris</h1>
+        <h2 className="text-saboris-gray text-lg md:text-2xl font-medium text-center mb-4">
           Taste, Share, Explore
         </h2>
         
-        {/* Phone mockups displayed horizontally across full width */}
+        {/* Phone mockups displayed horizontally across full width - MOBILE OPTIMIZED */}
         <div className="mt-6 mb-8 w-full relative z-10">
           <div className="flex justify-center items-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 max-w-[100vw] overflow-hidden">
-            {/* First phone mockup */}
-            <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
-              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            {/* Phone mockups with better mobile proportions */}
+            <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
                   src="/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png" 
                   alt="Saboris App Screenshot" 
@@ -106,9 +106,9 @@ const HeroSection = () => {
             </div>
             
             {/* Second phone mockup */}
-            <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
-              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
                   src="/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png" 
                   alt="Saboris Map Screenshot" 
@@ -118,9 +118,9 @@ const HeroSection = () => {
             </div>
             
             {/* NEW phone mockup - Added between second and third */}
-            <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
-              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
                   src="/lovable-uploads/f685ee6d-d291-411d-a8f5-6765d1be4ae9.png" 
                   alt="Saboris Map Explore Screenshot" 
@@ -129,10 +129,10 @@ const HeroSection = () => {
               </div>
             </div>
             
-            {/* Third phone mockup - Updated with the user-provided image */}
-            <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
-              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            {/* Additional phone mockups are hidden on very small screens */}
+            <div className="relative hidden sm:block w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
                   src="/lovable-uploads/a32b5be2-a042-4f1c-805c-6d596e8e22c6.png" 
                   alt="Saboris Reviews Screenshot" 
@@ -141,10 +141,10 @@ const HeroSection = () => {
               </div>
             </div>
             
-            {/* Fourth phone mockup */}
-            <div className="relative w-20 md:w-40 lg:w-48 h-40 md:h-80 lg:h-96 bg-black rounded-3xl border-4 md:border-8 border-black shadow-xl">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-2 md:h-5 bg-black rounded-b-xl"></div>
-              <div className="w-full h-full bg-gray-200 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+            {/* Fourth phone mockup - hidden on small screens */}
+            <div className="relative hidden sm:block w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
+              <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                 <img 
                   src="/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png" 
                   alt="Saboris Profile Screenshot" 
@@ -160,9 +160,9 @@ const HeroSection = () => {
             href="https://www.instagram.com/saboris.places/" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="inline-flex items-center gap-2 px-6 py-3 bg-saboris-primary backdrop-blur-sm rounded-full text-white hover:bg-saboris-primary/90 transition-all duration-300 shadow-lg"
+            className="inline-flex items-center gap-1 md:gap-2 px-3 py-2 md:px-6 md:py-3 bg-saboris-primary backdrop-blur-sm rounded-full text-white text-sm md:text-base hover:bg-saboris-primary/90 transition-all duration-300 shadow-lg"
           >
-            <Instagram size={20} />
+            <Instagram size={16} className="md:size-[20px]" />
             <span>Follow us on Instagram</span>
           </a>
         </div>
