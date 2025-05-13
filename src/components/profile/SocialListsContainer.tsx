@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,15 +31,15 @@ const SocialListsContainer = ({
   };
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <Card className="w-full max-w-md max-h-[80vh] overflow-hidden">
-        <CardHeader className="border-b sticky top-0 bg-white z-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <Card className="w-full max-w-md max-h-[80vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+        <CardHeader className="border-b sticky top-0 bg-white z-10 py-3 sm:py-4">
           <div className="flex justify-between items-center">
-            <CardTitle>
+            <CardTitle className="text-lg sm:text-xl">
               {showFollowers ? 'Followers' : 'Following'}
             </CardTitle>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={handleClose} className="h-8 w-8 sm:h-9 sm:w-9">
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </CardHeader>
@@ -49,7 +48,7 @@ const SocialListsContainer = ({
             <FollowersList 
               users={followers} 
               listType="followers"
-              className="p-4"
+              className="p-3 sm:p-4"
             />
           )}
           
@@ -57,7 +56,7 @@ const SocialListsContainer = ({
             <FollowersList 
               users={following} 
               listType="following"
-              className="p-4"
+              className="p-3 sm:p-4"
             />
           )}
         </CardContent>

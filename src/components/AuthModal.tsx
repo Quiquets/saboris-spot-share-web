@@ -104,7 +104,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     <Dialog open={modalOpen} onOpenChange={(open) => {
       if (!open) handleClose();
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md p-4 sm:p-6 max-w-[90vw] w-full">
         {featureName && (
           <div className="mb-4 text-center">
             <h3 className="text-lg font-medium mb-2 text-saboris-gray">{modalTitle}</h3>
@@ -113,14 +113,14 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         )}
         
         <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin" className="mt-0">
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSignIn} className="space-y-3 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="signin-email">Email</Label>
                 <Input 
                   id="signin-email"
@@ -130,10 +130,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   placeholder="your@email.com"
                   required
                   disabled={loading}
+                  className="h-9 sm:h-10"
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="signin-password">Password</Label>
                 <Input 
                   id="signin-password"
@@ -143,18 +144,19 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   placeholder="••••••••"
                   required
                   disabled={loading}
+                  className="h-9 sm:h-10"
                 />
               </div>
               
               <Button 
                 type="submit" 
-                className="w-full bg-saboris-primary text-white hover:bg-saboris-primary/90"
+                className="w-full bg-saboris-primary text-white hover:bg-saboris-primary/90 h-9 sm:h-10 mt-2"
                 disabled={loading}
               >
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
               
-              <div className="relative my-4">
+              <div className="relative my-3 sm:my-4">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
@@ -169,7 +171,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 variant="outline" 
                 type="button" 
                 onClick={handleGoogleAuth}
-                className="w-full" 
+                className="w-full h-9 sm:h-10" 
                 disabled={loading}
               >
                 <img 
@@ -183,8 +185,8 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           </TabsContent>
           
           <TabsContent value="signup" className="mt-0">
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="signup-name">Full Name</Label>
                 <Input 
                   id="signup-name"
@@ -194,10 +196,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   placeholder="Your name"
                   required
                   disabled={loading}
+                  className="h-9 sm:h-10"
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
                 <Input 
                   id="signup-email"
@@ -207,10 +210,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   placeholder="your@email.com"
                   required
                   disabled={loading}
+                  className="h-9 sm:h-10"
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
                 <Input 
                   id="signup-password"
@@ -220,18 +224,19 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   placeholder="••••••••"
                   required
                   disabled={loading}
+                  className="h-9 sm:h-10"
                 />
               </div>
               
               <Button 
                 type="submit" 
-                className="w-full bg-saboris-primary text-white hover:bg-saboris-primary/90"
+                className="w-full bg-saboris-primary text-white hover:bg-saboris-primary/90 h-9 sm:h-10 mt-2"
                 disabled={loading}
               >
                 {loading ? 'Signing Up...' : 'Sign Up'}
               </Button>
               
-              <div className="relative my-4">
+              <div className="relative my-3 sm:my-4">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
@@ -246,7 +251,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 variant="outline" 
                 type="button" 
                 onClick={handleGoogleAuth}
-                className="w-full" 
+                className="w-full h-9 sm:h-10" 
                 disabled={loading}
               >
                 <img 
@@ -257,7 +262,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 Google
               </Button>
               
-              <p className="text-xs text-center text-gray-500 mt-4">
+              <p className="text-xs text-center text-gray-500 mt-3 sm:mt-4 px-2">
                 By signing up, you agree to our <a href="/terms" className="text-saboris-primary hover:underline">Terms & Conditions</a>
               </p>
             </form>

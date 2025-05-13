@@ -47,7 +47,7 @@ const MobileNavigation = ({ onClose }: { onClose?: () => void }) => {
   };
 
   return (
-    <div className="flex flex-col space-y-2 pt-6">
+    <div className="flex flex-col space-y-1 pt-4">
       {user && (
         <div className="flex items-center p-2 mb-2">
           <div className="ml-1">
@@ -60,7 +60,7 @@ const MobileNavigation = ({ onClose }: { onClose?: () => void }) => {
       <button 
         onClick={() => { navigate('/'); if (onClose) onClose(); }}
         className={cn(
-          "px-3 py-2 font-medium rounded-md flex items-center text-sm",
+          "px-4 py-3 font-medium rounded-md flex items-center text-sm",
           isActive('/') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
         )}
       >
@@ -70,41 +70,41 @@ const MobileNavigation = ({ onClose }: { onClose?: () => void }) => {
       <button 
         onClick={() => { navigate('/map'); if (onClose) onClose(); }}
         className={cn(
-          "px-3 py-2 font-medium rounded-md flex items-center text-sm",
+          "px-4 py-3 font-medium rounded-md flex items-center text-sm",
           isActive('/map') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
         )}
       >
-        <MapPin className="h-4 w-4 mr-2" /> Explore
+        <MapPin className="h-4 w-4 mr-3" /> Explore
       </button>
       
       <button 
         onClick={() => navigateProtected('/add', 'Add Place')}
         className={cn(
-          "px-3 py-2 font-medium rounded-md flex items-center text-sm",
+          "px-4 py-3 font-medium rounded-md flex items-center text-sm",
           isActive('/add') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
         )}
       >
-        <PlusCircle className="h-4 w-4 mr-2" /> Share
+        <PlusCircle className="h-4 w-4 mr-3" /> Share
       </button>
       
       <button 
         onClick={() => navigateProtected('/search', 'Search Users')}
         className={cn(
-          "px-3 py-2 font-medium rounded-md flex items-center text-sm",
+          "px-4 py-3 font-medium rounded-md flex items-center text-sm",
           isActive('/search') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
         )}
       >
-        <Search className="h-4 w-4 mr-2" /> Search
+        <Search className="h-4 w-4 mr-3" /> Search
       </button>
       
       <button 
         onClick={() => navigateProtected('/saved', 'Saved Places')}
         className={cn(
-          "px-3 py-2 font-medium rounded-md flex items-center text-sm",
+          "px-4 py-3 font-medium rounded-md flex items-center text-sm",
           isActive('/saved') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
         )}
       >
-        <Heart className="h-4 w-4 mr-2" /> Saved
+        <Heart className="h-4 w-4 mr-3" /> Saved
       </button>
       
       {user ? (
@@ -112,20 +112,20 @@ const MobileNavigation = ({ onClose }: { onClose?: () => void }) => {
           <button 
             onClick={() => { navigate('/profile'); if (onClose) onClose(); }}
             className={cn(
-              "px-3 py-2 font-medium rounded-md flex items-center text-sm",
+              "px-4 py-3 font-medium rounded-md flex items-center text-sm",
               isActive('/profile') ? "bg-saboris-light text-saboris-primary" : "hover:bg-gray-100"
             )}
           >
-            <User className="h-4 w-4 mr-2" /> Profile
+            <User className="h-4 w-4 mr-3" /> Profile
           </button>
           
           <hr className="my-2" />
           
           <button 
             onClick={handleSignOut}
-            className="px-3 py-2 font-medium hover:bg-gray-100 rounded-md flex items-center text-left text-sm"
+            className="px-4 py-3 font-medium hover:bg-gray-100 rounded-md flex items-center text-left text-sm"
           >
-            <LogOut className="h-4 w-4 mr-2" /> Log out
+            <LogOut className="h-4 w-4 mr-3" /> Log out
           </button>
         </>
       ) : null}

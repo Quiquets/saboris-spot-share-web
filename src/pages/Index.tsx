@@ -16,8 +16,8 @@ const Index = () => {
     <main className="min-h-screen flex flex-col">
       <Header />
       <HeroSection />
-      <div className="container mx-auto px-4">
-        <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-saboris-primary">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-left mb-4 sm:mb-6 text-saboris-primary">
           Explore restaurants, cafes and bars near you
         </h2>
         <MapSection simplified={true} />
