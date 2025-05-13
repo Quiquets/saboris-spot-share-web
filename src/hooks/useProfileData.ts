@@ -6,7 +6,7 @@ import { User } from '@/types/global';
 import { toast } from 'sonner';
 import { SharedPlace } from '@/types/profile';
 
-export const useProfileData = (user: User | null) => {
+export const useProfileData = (user: User | null, targetUserId?: string) => {
   const [sharedPlaces, setSharedPlaces] = useState<SharedPlace[]>([]);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,18 +18,21 @@ export const useProfileData = (user: User | null) => {
   const [userLocation, setUserLocation] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   
+  // Use the target user id if provided, otherwise use the logged-in user's id
+  const activeUserId = targetUserId || (user ? user.id : null);
+  
   const fetchProfileData = async () => {
-    if (!user) return;
+    if (!user || !activeUserId) return;
     
     try {
       setLoading(true);
       
       // Get places shared by this user
-      const sharedPlacesData = await fetchSharedPlaces(user.id);
-      const stats = await supabaseService.getProfileStats(user.id);
+      const sharedPlacesData = await fetchSharedPlaces(activeUserId);
+      const stats = await supabaseService.getProfileStats(activeUserId);
       
       // Get user profile to check if account is private
-      const userProfile = await supabaseService.getUserProfile(user.id);
+      const userProfile = await supabaseService.getUserProfile(activeUserId);
       
       setSharedPlaces(sharedPlacesData);
       setProfileStats(stats);
@@ -139,18 +142,18 @@ export const useProfileData = (user: User | null) => {
   };
 
   const fetchFollowers = async () => {
-    if (!user) return [];
+    if (!activeUserId) return [];
     
     try {
       // Get followers with additional data about whether current user follows each follower
-      const followersData = await supabaseService.getFollowers(user.id);
+      const followersData = await supabaseService.getFollowers(activeUserId);
       
       // For each follower, check if the current user is following them
       const followersWithFollowingStatus = await Promise.all(
         followersData.map(async (follower) => {
-          const isFollowing = await supabaseService.isFollowing(user.id, follower.id);
+          const isFollowing = await supabaseService.isFollowing(user?.id || '', follower.id);
           // Check if the follower is the current user
-          const isSelf = follower.id === user.id;
+          const isSelf = follower.id === user?.id;
           
           return {
             ...follower,
@@ -170,19 +173,30 @@ export const useProfileData = (user: User | null) => {
   };
 
   const fetchFollowing = async () => {
-    if (!user) return [];
+    if (!activeUserId) return [];
     
     try {
-      // Get users that the current user is following
-      const followingData = await supabaseService.getFollowing(user.id);
+      // Get users that the target user is following
+      const followingData = await supabaseService.getFollowing(activeUserId);
       
-      // Mark all as being followed by current user
-      const processedFollowing = followingData.map(followed => ({
-        ...followed,
-        is_following: true,
-        // Check if the followed user is the current user
-        is_self: followed.id === user.id
-      }));
+      // For each followed user, check if the current user is following them
+      const processedFollowing = await Promise.all(
+        followingData.map(async (followed) => {
+          // Only check is_following if not viewing own profile
+          const isFollowing = user?.id === activeUserId ? 
+            true : // If viewing own profile, we're following everyone in our following list
+            await supabaseService.isFollowing(user?.id || '', followed.id);
+            
+          // Check if the followed user is the current user
+          const isSelf = followed.id === user?.id;
+          
+          return {
+            ...followed,
+            is_following: isFollowing,
+            is_self: isSelf
+          };
+        })
+      );
       
       setFollowing(processedFollowing);
       return processedFollowing;
@@ -194,10 +208,10 @@ export const useProfileData = (user: User | null) => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && activeUserId) {
       fetchProfileData();
     }
-  }, [user]);
+  }, [user, activeUserId]);
 
   return {
     sharedPlaces,

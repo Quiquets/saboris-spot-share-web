@@ -7,6 +7,7 @@ import { supabaseService } from '@/services/supabaseService';
 import { User } from '@/types/global';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface FollowersListProps {
   users: any[];
@@ -90,18 +91,21 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
           <Card key={user.id} className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Avatar className="h-12 w-12 mr-3">
+                <Link 
+                  to={`/profile/${user.id}`} 
+                  className="flex items-center flex-1 min-w-0 hover:underline hover:text-saboris-primary"
+                >
+                  <Avatar className="h-10 w-10 mr-3 flex-shrink-0">
                     <AvatarImage src={user.avatar_url || undefined} />
                     <AvatarFallback className="bg-saboris-primary/10">
                       {user.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-medium text-gray-800">{user.name}</p>
-                    <p className="text-sm text-gray-500">@{user.username}</p>
+                  <div className="truncate">
+                    <p className="font-medium text-gray-800 truncate">{user.name}</p>
+                    <p className="text-sm text-gray-500 truncate">@{user.username}</p>
                   </div>
-                </div>
+                </Link>
                 {/* Don't show follow button for user's own profile */}
                 {user.is_self !== true && (
                   <Button
@@ -109,7 +113,7 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
                     variant={followingStates[user.id]?.isFollowing ? "outline" : "default"}
                     onClick={() => toggleFollow(user.id)}
                     disabled={followingStates[user.id]?.isLoading}
-                    className={followingStates[user.id]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}
+                    className={`ml-2 ${followingStates[user.id]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}`}
                   >
                     {followingStates[user.id]?.isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

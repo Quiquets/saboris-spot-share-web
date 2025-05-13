@@ -1,6 +1,6 @@
 
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,17 +14,27 @@ import ProfileUnauthenticated from '@/components/profile/ProfileUnauthenticated'
 import { useProfileData } from '@/hooks/useProfileData';
 import { useProfileEdit } from '@/hooks/useProfileEdit';
 import { useProfileReviews } from '@/hooks/useProfileReviews';
-import { useState } from 'react';
 
 const ProfilePage = () => {
+  const { userId } = useParams();
   const { user, loading: authLoading, refreshUserData } = useAuth();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
   
   useEffect(() => {
     document.title = 'Saboris - Profile';
   }, []);
+  
+  useEffect(() => {
+    // Determine if this is the user's own profile or someone else's
+    if (user && userId) {
+      setIsOwnProfile(user.id === userId);
+    } else {
+      setIsOwnProfile(true); // Default to own profile if no userId in URL
+    }
+  }, [user, userId]);
 
   // If authentication is still loading, show loading state
   if (authLoading) {
@@ -35,6 +45,9 @@ const ProfilePage = () => {
   if (!user) {
     return <ProfileUnauthenticated />;
   }
+  
+  // Get profile data for either the logged-in user or the profile being viewed
+  const targetUserId = userId || user.id;
   
   // Get profile data
   const {
@@ -56,9 +69,9 @@ const ProfilePage = () => {
     fetchProfileData,
     fetchFollowers,
     fetchFollowing
-  } = useProfileData(user);
+  } = useProfileData(user, targetUserId);
   
-  // Profile edit functionality
+  // Profile edit functionality - only for own profile
   const {
     isSubmitting,
     handleFileChange,
@@ -101,6 +114,7 @@ const ProfilePage = () => {
           {/* Profile Header */}
           <ProfileHeader 
             user={user}
+            isOwnProfile={isOwnProfile}
             profileStats={profileStats}
             isPrivate={isPrivate}
             setIsEditProfileOpen={setIsEditProfileOpen}
@@ -116,25 +130,27 @@ const ProfilePage = () => {
             }}
           />
           
-          {/* Edit Profile Dialog */}
-          <EditProfileDialog 
-            isOpen={isEditProfileOpen}
-            onOpenChange={setIsEditProfileOpen}
-            user={user}
-            isPrivate={isPrivate}
-            setIsPrivate={setIsPrivate}
-            bio={bio}
-            setBio={setBio}
-            username={username}
-            setUsername={setUsername}
-            userLocation={userLocation}
-            setUserLocation={setUserLocation}
-            profileImageUrl={profileImageUrl}
-            handleFileChange={handleFileChange}
-            handleSaveProfile={handleSaveProfile}
-            handleDeleteAccount={handleDeleteAccount}
-            isSubmitting={isSubmitting}
-          />
+          {/* Edit Profile Dialog - only shown for own profile */}
+          {isOwnProfile && (
+            <EditProfileDialog 
+              isOpen={isEditProfileOpen}
+              onOpenChange={setIsEditProfileOpen}
+              user={user}
+              isPrivate={isPrivate}
+              setIsPrivate={setIsPrivate}
+              bio={bio}
+              setBio={setBio}
+              username={username}
+              setUsername={setUsername}
+              userLocation={userLocation}
+              setUserLocation={setUserLocation}
+              profileImageUrl={profileImageUrl}
+              handleFileChange={handleFileChange}
+              handleSaveProfile={handleSaveProfile}
+              handleDeleteAccount={handleDeleteAccount}
+              isSubmitting={isSubmitting}
+            />
+          )}
           
           {/* Social Lists */}
           <SocialListsContainer 

@@ -50,6 +50,11 @@ const App = () => (
                 <ProfilePage />
               </ProtectedRoute>
             } />
+            <Route path="/profile/:userId" element={
+              <ProtectedRoute featureName="User Profile">
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route path="*" element={<NotFound />} />

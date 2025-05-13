@@ -1,96 +1,112 @@
-
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Edit, Lock, MapPin, Users } from "lucide-react";
-import { User } from "@/types/global";
-import { ProfileStats } from "@/services/supabaseService";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ProfileStats } from '@/services/supabaseService';
+import { User } from '@/types/global';
+import { LockIcon } from 'lucide-react';
 
 interface ProfileHeaderProps {
   user: User;
+  isOwnProfile?: boolean;
   profileStats: ProfileStats | null;
   isPrivate: boolean;
-  setIsEditProfileOpen: (open: boolean) => void;
+  setIsEditProfileOpen: (value: boolean) => void;
   fetchFollowers: () => Promise<void>;
   fetchFollowing: () => Promise<void>;
 }
 
 const ProfileHeader = ({ 
-  user, 
-  profileStats, 
-  isPrivate, 
+  user,
+  isOwnProfile = true,
+  profileStats,
+  isPrivate,
   setIsEditProfileOpen,
   fetchFollowers,
   fetchFollowing
-}: ProfileHeaderProps) => {  
+}: ProfileHeaderProps) => {
+  const avatarUrl = user?.avatar_url || `https://avatar.vercel.sh/${user?.email}.png`;
+  const username = user?.username || 'Unknown';
+  
+  const onPlacesClick = () => {
+    // Scroll to places section or navigate to places page
+  };
+  
+  const onFollowersClick = async () => {
+    await fetchFollowers();
+  };
+  
+  const onFollowingClick = async () => {
+    await fetchFollowing();
+  };
+  
   return (
-    <div className="mb-8">
-      <div className="flex flex-col md:flex-row items-center md:items-start justify-center md:justify-between mb-6">
-        <div className="flex flex-col md:flex-row items-center mb-4 md:mb-0">
-          <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-white shadow-md">
-            <AvatarImage 
-              src={user.avatar_url || undefined} 
-              alt={user.name} 
-              className="object-cover"
-            />
-            <AvatarFallback className="bg-saboris-primary/20 text-saboris-primary text-2xl">
-              {user.name?.charAt(0) || '?'}
+    <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        {/* Profile Image */}
+        <div className="relative">
+          <Avatar className="h-24 w-24 border-4 border-white shadow">
+            <AvatarImage src={avatarUrl} />
+            <AvatarFallback className="bg-saboris-primary/20 text-2xl">
+              {user?.name?.charAt(0) || '?'}
             </AvatarFallback>
           </Avatar>
-          
-          <div className="md:ml-6 text-center md:text-left mt-4 md:mt-0">
-            <div className="flex items-center justify-center md:justify-start">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{user.name}</h1>
-              {isPrivate && (
-                <Lock className="ml-2 h-4 w-4 text-gray-500" />
-              )}
+        </div>
+        
+        {/* Profile Information */}
+        <div className="flex-1">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+            <div>
+              <h1 className="text-2xl font-bold">{user.name}</h1>
+              <p className="text-gray-600">@{username}</p>
             </div>
-            <p className="text-gray-600">@{user.username}</p>
             
-            {user.location && (
-              <div className="flex items-center justify-center md:justify-start mt-2 text-gray-600">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span>{user.location}</span>
-              </div>
-            )}
-            
-            {user.bio && (
-              <p className="mt-3 text-gray-700">{user.bio}</p>
+            {/* Only show Edit Profile button for own profile */}
+            {isOwnProfile && (
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditProfileOpen(true)}
+                className="mt-2 md:mt-0"
+              >
+                Edit Profile
+              </Button>
             )}
           </div>
-        </div>
-        
-        <div>
-          <Button 
-            size="sm"
-            variant="outline"
-            className="flex items-center"
-            onClick={() => setIsEditProfileOpen(true)}
-          >
-            <Edit className="h-4 w-4 mr-1.5" />
-            Edit Profile
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex justify-center md:justify-start space-x-8 md:space-x-12 pt-4 border-t border-gray-200">
-        <div className="text-center cursor-pointer" onClick={fetchFollowers}>
-          <p className="text-xl font-bold text-gray-800">{profileStats?.followers_count || 0}</p>
-          <p className="text-sm text-gray-600">Followers</p>
-        </div>
-        
-        <div className="text-center cursor-pointer" onClick={fetchFollowing}>
-          <p className="text-xl font-bold text-gray-800">{profileStats?.following_count || 0}</p>
-          <p className="text-sm text-gray-600">Following</p>
-        </div>
-        
-        <div className="text-center">
-          <p className="text-xl font-bold text-gray-800">{profileStats?.reviews_count || 0}</p>
-          <p className="text-sm text-gray-600">Reviews</p>
-        </div>
-        
-        <div className="text-center">
-          <p className="text-xl font-bold text-gray-800">{profileStats?.saved_places_count || 0}</p>
-          <p className="text-sm text-gray-600">Saved</p>
+          
+          {/* Bio */}
+          {user?.bio && (
+            <p className="text-gray-700 mb-3">
+              {user.bio}
+            </p>
+          )}
+          
+          {/* Private Account Badge */}
+          {isPrivate && isOwnProfile && (
+            <div className="mt-2">
+              <Badge variant="outline" className="flex items-center gap-1">
+                <LockIcon className="h-3 w-3" /> Private Account
+              </Badge>
+            </div>
+          )}
+          
+          {/* Stats Row */}
+          <div className="mt-4 flex flex-wrap gap-6">
+            <div className="text-center cursor-pointer" onClick={onPlacesClick}>
+              <div className="font-semibold">{profileStats?.places || 0}</div>
+              <div className="text-sm text-gray-500">Places</div>
+            </div>
+            <div className="text-center cursor-pointer" onClick={onFollowersClick}>
+              <div className="font-semibold">{profileStats?.followers || 0}</div>
+              <div className="text-sm text-gray-500">Followers</div>
+            </div>
+            <div className="text-center cursor-pointer" onClick={onFollowingClick}>
+              <div className="font-semibold">{profileStats?.following || 0}</div>
+              <div className="text-sm text-gray-500">Following</div>
+            </div>
+            <div className="text-center">
+              <div className="font-semibold">{profileStats?.reviews || 0}</div>
+              <div className="text-sm text-gray-500">Reviews</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
