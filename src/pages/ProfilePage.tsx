@@ -66,7 +66,11 @@ const ProfilePage = () => {
     handleDeleteAccount
   } = useProfileEdit(
     user, 
-    refreshUserData,
+    // Fix: Wrap refreshUserData with a function that ignores the return value
+    async () => {
+      await refreshUserData();
+      return;
+    },
     bio,
     setBio,
     username,
