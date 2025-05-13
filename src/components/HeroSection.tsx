@@ -1,4 +1,3 @@
-
 import { Instagram } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -140,7 +139,7 @@ const HeroSection = () => {
           <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
             {imagesLoaded ? (
               <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-                {/* Updated iPhone mockups with proper frames and screen ratio */}
+                {/* iPhone mockups with refined frames and proper screen content */}
                 {[
                   "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
                   "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
@@ -151,36 +150,36 @@ const HeroSection = () => {
                   <div key={index} className="relative flex-shrink-0">
                     {/* iPhone frame with realistic dimensions and styling */}
                     <div className={`${isMobile ? 'w-[180px] h-[360px]' : 'w-[200px] h-[400px] md:w-[220px] md:h-[440px] lg:w-[240px] lg:h-[480px]'} relative`}>
-                      {/* Black phone outer frame with correct iPhone-like rounded corners */}
+                      {/* Improved iPhone frame with thinner bezel */}
                       <div className="absolute inset-0 bg-[#1a1a1a] rounded-[36px] shadow-lg overflow-hidden">
-                        {/* Side button */}
-                        <div className="absolute -right-[2px] top-[80px] h-[60px] w-[3px] bg-[#2a2a2a] rounded-l-md"></div>
+                        {/* Power button */}
+                        <div className="absolute -right-[1px] top-[80px] h-[60px] w-[2px] bg-[#2a2a2a] rounded-l-md"></div>
                         
                         {/* Volume buttons */}
-                        <div className="absolute -left-[2px] top-[80px] h-[32px] w-[3px] bg-[#2a2a2a] rounded-r-md"></div>
-                        <div className="absolute -left-[2px] top-[130px] h-[32px] w-[3px] bg-[#2a2a2a] rounded-r-md"></div>
+                        <div className="absolute -left-[1px] top-[80px] h-[32px] w-[2px] bg-[#2a2a2a] rounded-r-md"></div>
+                        <div className="absolute -left-[1px] top-[130px] h-[32px] w-[2px] bg-[#2a2a2a] rounded-r-md"></div>
                         
-                        {/* Screen with correct bezel */}
-                        <div className="absolute inset-[4px] bg-black rounded-[32px] overflow-hidden">
-                          {/* Notch */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[24px] bg-black rounded-b-[14px] z-20 flex items-center justify-center">
-                            <div className="w-[40px] h-[8px] bg-[#2a2a2a] rounded-full"></div>
+                        {/* Screen with thinner bezel */}
+                        <div className="absolute inset-[3px] bg-black rounded-[34px] overflow-hidden">
+                          {/* Dynamic Island / Notch - more subtle */}
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[18px] bg-black rounded-b-[12px] z-20 flex items-center justify-center">
+                            <div className="w-[25px] h-[5px] bg-[#2a2a2a] rounded-full"></div>
                           </div>
                           
-                          {/* Screen content with proper aspect ratio and fit - IMPROVED */}
-                          <div className="w-full h-full flex items-center justify-center overflow-hidden py-[24px]">
-                            <div className="w-full h-full overflow-hidden">
+                          {/* Screen content with proper aspect ratio */}
+                          <div className="w-full h-full overflow-hidden pt-[18px] pb-[10px] px-[1px]">
+                            <AspectRatio ratio={9/19.5} className="w-full h-full">
                               <img 
                                 src={src}
                                 alt={`Saboris App Screenshot ${index + 1}`}
                                 className="h-full w-full object-contain"
                                 loading="lazy"
                               />
-                            </div>
+                            </AspectRatio>
                           </div>
                           
-                          {/* Home indicator */}
-                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[30%] h-[4px] bg-white rounded-full opacity-80"></div>
+                          {/* Home indicator - more subtle */}
+                          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-[25%] h-[3px] bg-white rounded-full opacity-70"></div>
                         </div>
                       </div>
                     </div>
