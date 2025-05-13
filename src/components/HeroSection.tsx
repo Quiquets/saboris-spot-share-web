@@ -139,7 +139,7 @@ const HeroSection = () => {
           <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
             {imagesLoaded ? (
               <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-                {/* Updated phone mockups with proper frames to match the provided screenshot */}
+                {/* Updated iPhone mockups with proper frames and correct screen ratio */}
                 {[
                   "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
                   "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
@@ -148,22 +148,36 @@ const HeroSection = () => {
                   "/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png"
                 ].map((src, index) => (
                   <div key={index} className="relative flex-shrink-0">
-                    {/* Phone frame with realistic rounded corners to match screenshot */}
+                    {/* iPhone frame with realistic dimensions and styling */}
                     <div className={`${isMobile ? 'w-[180px] h-[360px]' : 'w-[200px] h-[400px] md:w-[220px] md:h-[440px] lg:w-[240px] lg:h-[480px]'} relative`}>
-                      {/* Black phone outer frame with more rounded corners */}
-                      <div className="absolute inset-0 bg-black rounded-[32px] shadow-xl overflow-hidden">
-                        {/* Screen */}
-                        <div className="absolute inset-[1px] bg-white rounded-[30px] overflow-hidden">
+                      {/* Black phone outer frame with correct iPhone-like rounded corners */}
+                      <div className="absolute inset-0 bg-[#1a1a1a] rounded-[36px] shadow-lg overflow-hidden">
+                        {/* Side button */}
+                        <div className="absolute -right-[2px] top-[80px] h-[60px] w-[3px] bg-[#2a2a2a] rounded-l-md"></div>
+                        
+                        {/* Volume buttons */}
+                        <div className="absolute -left-[2px] top-[80px] h-[32px] w-[3px] bg-[#2a2a2a] rounded-r-md"></div>
+                        <div className="absolute -left-[2px] top-[130px] h-[32px] w-[3px] bg-[#2a2a2a] rounded-r-md"></div>
+                        
+                        {/* Screen with correct bezel */}
+                        <div className="absolute inset-[3px] bg-black rounded-[33px] overflow-hidden border border-[#2a2a2a]">
                           {/* Notch */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-black rounded-b-[14px] z-20"></div>
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[24px] bg-black rounded-b-[14px] z-20 flex items-center justify-center">
+                            <div className="w-[40px] h-[8px] bg-[#2a2a2a] rounded-full"></div>
+                          </div>
                           
-                          {/* Screen content */}
-                          <img 
-                            src={src}
-                            alt={`Saboris App Screenshot ${index + 1}`}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
+                          {/* Screen content with proper aspect ratio and fit */}
+                          <div className="w-full h-full flex items-center justify-center">
+                            <img 
+                              src={src}
+                              alt={`Saboris App Screenshot ${index + 1}`}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          
+                          {/* Home indicator */}
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[30%] h-[4px] bg-white rounded-full opacity-80"></div>
                         </div>
                       </div>
                     </div>

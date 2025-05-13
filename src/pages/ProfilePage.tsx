@@ -14,6 +14,7 @@ import ProfileUnauthenticated from '@/components/profile/ProfileUnauthenticated'
 import { useProfileData } from '@/hooks/useProfileData';
 import { useProfileEdit } from '@/hooks/useProfileEdit';
 import { useProfileReviews } from '@/hooks/useProfileReviews';
+import { supabaseService } from '@/services/supabaseService';
 
 const ProfilePage = () => {
   const { userId } = useParams();
@@ -22,6 +23,7 @@ const ProfilePage = () => {
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
+  const [viewedUser, setViewedUser] = useState(null);
   
   useEffect(() => {
     // Set document title based on whether viewing own profile or another user's
@@ -35,7 +37,22 @@ const ProfilePage = () => {
   useEffect(() => {
     // Determine if this is the user's own profile or someone else's
     if (user && userId) {
-      setIsOwnProfile(user.id === userId);
+      const isOwn = user.id === userId;
+      setIsOwnProfile(isOwn);
+      
+      // If not own profile, fetch the viewed user's data
+      if (!isOwn) {
+        const fetchViewedUserData = async () => {
+          try {
+            const userData = await supabaseService.getUserProfile(userId);
+            setViewedUser(userData);
+          } catch (error) {
+            console.error("Error fetching viewed user data:", error);
+          }
+        };
+        
+        fetchViewedUserData();
+      }
     } else {
       setIsOwnProfile(true); // Default to own profile if no userId in URL
     }
@@ -110,6 +127,16 @@ const ProfilePage = () => {
     openReviewDialog
   } = useProfileReviews();
   
+  // Determine which user data to display
+  const displayUser = isOwnProfile ? user : viewedUser || {
+    ...user,
+    id: targetUserId,
+    name: username || 'User',
+    username: username,
+    bio: bio,
+    avatar_url: profileImageUrl
+  };
+  
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
@@ -119,10 +146,10 @@ const ProfilePage = () => {
           {/* Profile Header */}
           <ProfileHeader 
             user={{
-              ...user,
-              username: isOwnProfile ? username || user.username : username,
-              bio: isOwnProfile ? bio || user.bio : bio,
-              avatar_url: isOwnProfile ? profileImageUrl || user.avatar_url : profileImageUrl
+              ...displayUser,
+              username: username || displayUser.username,
+              bio: bio || displayUser.bio,
+              avatar_url: profileImageUrl || displayUser.avatar_url
             }}
             isOwnProfile={isOwnProfile}
             profileStats={profileStats}
