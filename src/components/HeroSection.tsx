@@ -1,12 +1,15 @@
 
 import { Instagram } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const HeroSection = () => {
   // Ref for the scrolling text container
   const scrollTextRef = useRef<HTMLDivElement>(null);
   // State to track if the content is ready to animate
   const [isReady, setIsReady] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const isMobile = useIsMobile();
 
   // Effect to handle scrolling animation
   useEffect(() => {
@@ -27,7 +30,7 @@ const HeroSection = () => {
     // Run calculation after a small delay to ensure DOM is ready
     const timer = setTimeout(calculateInitialContent, 100);
     
-    const scrollSpeed = 1; // Controls the scrolling speed
+    const scrollSpeed = 0.5; // Reduced scrolling speed for better performance
     let animationFrameId: number;
     let scrollPosition = 0;
     
@@ -53,12 +56,45 @@ const HeroSection = () => {
     
     return () => {
       clearTimeout(timer);
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
   }, [isReady]);
 
+  // Preload images for better performance
+  useEffect(() => {
+    const imagePaths = [
+      "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
+      "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
+      "/lovable-uploads/f685ee6d-d291-411d-a8f5-6765d1be4ae9.png",
+      "/lovable-uploads/a32b5be2-a042-4f1c-805c-6d596e8e22c6.png",
+      "/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png"
+    ];
+    
+    let loadedCount = 0;
+    
+    imagePaths.forEach(path => {
+      const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === imagePaths.length) {
+          setImagesLoaded(true);
+        }
+      };
+      img.src = path;
+    });
+    
+    // If images take too long, proceed anyway
+    const timer = setTimeout(() => {
+      setImagesLoaded(true);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <section className="relative flex flex-col items-center justify-center px-0 py-12 bg-white overflow-hidden w-full">
+    <section className="relative flex flex-col items-center justify-center px-0 py-8 sm:py-12 bg-white overflow-hidden w-full">
       {/* Background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-[60%] -right-10 w-72 h-72 bg-saboris-primary/10 rounded-full blur-xl"></div>
@@ -71,9 +107,10 @@ const HeroSection = () => {
             <div 
               ref={scrollTextRef}
               className={`whitespace-nowrap text-white font-bold text-sm md:text-xl absolute top-1/2 left-0 -translate-y-1/2 flex ${!isReady ? 'opacity-0' : 'opacity-100'} transition-opacity`}
+              style={{ willChange: 'transform' }} // Optimize for animation performance
             >
               {/* Repeat the text enough times to fill the container initially */}
-              {Array.from({ length: 40 }).map((_, i) => (
+              {Array.from({ length: 20 }).map((_, i) => (
                 <span key={i} className="px-2 md:px-4">
                   APP COMING SOON
                   <span className="inline-block mx-2 md:mx-4">•</span>
@@ -90,71 +127,38 @@ const HeroSection = () => {
           Taste, Share, Explore
         </h2>
         
-        {/* Phone mockups in horizontal scrollable container - MOBILE OPTIMIZED */}
+        {/* Phone mockups with horizontal scrolling for mobile */}
         <div className="mt-6 mb-8 w-full relative z-10">
-          {/* Horizontal scrolling container for mobile */}
-          <div className="overflow-x-auto pb-4 hide-scrollbar">
-            <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-              {/* First mockup */}
-              <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
-                <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                  <img 
-                    src="/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png" 
-                    alt="Saboris App Screenshot" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+          <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
+            {imagesLoaded && (
+              <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
+                {/* Responsive phone mockups */}
+                {[
+                  "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
+                  "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
+                  "/lovable-uploads/f685ee6d-d291-411d-a8f5-6765d1be4ae9.png",
+                  "/lovable-uploads/a32b5be2-a042-4f1c-805c-6d596e8e22c6.png",
+                  "/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png"
+                ].map((src, index) => (
+                  <div key={index} className={`relative ${isMobile ? 'w-[180px]' : 'w-16 sm:w-20 md:w-40 lg:w-48'} ${isMobile ? 'h-[360px]' : 'h-32 sm:h-40 md:h-80 lg:h-96'} bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl`}>
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
+                    <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                      <img 
+                        src={src}
+                        alt={`Saboris App Screenshot ${index + 1}`}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-              
-              {/* Second mockup */}
-              <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
-                <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                  <img 
-                    src="/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png" 
-                    alt="Saboris Map Screenshot" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
+            )}
+            {!imagesLoaded && (
+              <div className="flex justify-center items-center h-[200px]">
+                <div className="animate-pulse h-6 w-6 rounded-full bg-saboris-primary"></div>
               </div>
-              
-              {/* Third mockup */}
-              <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
-                <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                  <img 
-                    src="/lovable-uploads/f685ee6d-d291-411d-a8f5-6765d1be4ae9.png" 
-                    alt="Saboris Map Explore Screenshot" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              {/* Fourth mockup */}
-              <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
-                <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                  <img 
-                    src="/lovable-uploads/a32b5be2-a042-4f1c-805c-6d596e8e22c6.png" 
-                    alt="Saboris Reviews Screenshot" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              {/* Fifth mockup */}
-              <div className="relative w-16 sm:w-20 md:w-40 lg:w-48 h-32 sm:h-40 md:h-80 lg:h-96 bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl">
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
-                <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                  <img 
-                    src="/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png" 
-                    alt="Saboris Profile Screenshot" 
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         
