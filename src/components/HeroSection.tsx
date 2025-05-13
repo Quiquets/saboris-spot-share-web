@@ -129,17 +129,17 @@ const HeroSection = () => {
         
         {/* Phone mockups with horizontal scrolling for mobile */}
         <div className="mt-6 mb-8 w-full relative z-10">
-          {/* Swipe indication for mobile */}
+          {/* Swipe indication for mobile - improved styling */}
           {isMobile && imagesLoaded && (
-            <div className="flex items-center justify-center gap-1 mb-2 text-saboris-gray animate-pulse">
-              <span className="text-xs">Swipe</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            <div className="flex items-center justify-center gap-2 mb-3 text-saboris-gray animate-pulse bg-white/80 py-1 px-3 rounded-full shadow-sm w-fit mx-auto">
+              <span className="text-sm font-medium">Scroll</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
             </div>
           )}
           <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
             {imagesLoaded && (
               <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-                {/* Responsive phone mockups with improved image sizing */}
+                {/* Responsive phone mockups - improved to match provided design */}
                 {[
                   "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
                   "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
@@ -147,15 +147,21 @@ const HeroSection = () => {
                   "/lovable-uploads/a32b5be2-a042-4f1c-805c-6d596e8e22c6.png",
                   "/lovable-uploads/c39f7e3b-83f4-4b04-8438-298158de0632.png"
                 ].map((src, index) => (
-                  <div key={index} className={`relative ${isMobile ? 'w-[180px]' : 'w-16 sm:w-20 md:w-40 lg:w-48'} ${isMobile ? 'h-[360px]' : 'h-32 sm:h-40 md:h-80 lg:h-96'} bg-black rounded-2xl md:rounded-3xl border-2 md:border-4 lg:border-8 border-black shadow-xl`}>
-                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/3 h-1 md:h-2 lg:h-5 bg-black rounded-b-md md:rounded-b-xl"></div>
-                    <div className="w-full h-full bg-gray-200 overflow-hidden rounded-lg md:rounded-2xl">
-                      <img 
-                        src={src}
-                        alt={`Saboris App Screenshot ${index + 1}`}
-                        className="h-full w-full object-cover object-top"
-                        loading="lazy"
-                      />
+                  <div key={index} className={`relative ${isMobile ? 'w-[230px]' : 'w-16 sm:w-20 md:w-40 lg:w-48'} ${isMobile ? 'h-[460px]' : 'h-32 sm:h-40 md:h-80 lg:h-96'}`}>
+                    {/* Outer frame */}
+                    <div className="absolute inset-0 bg-black rounded-[40px] shadow-xl">
+                      {/* Notch */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30%] h-[4%] bg-black rounded-b-xl"></div>
+                      
+                      {/* Screen with rounded corners */}
+                      <div className="absolute inset-[1px] rounded-[39px] overflow-hidden bg-white">
+                        <img 
+                          src={src}
+                          alt={`Saboris App Screenshot ${index + 1}`}
+                          className="h-full w-full object-cover object-top"
+                          loading="lazy"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

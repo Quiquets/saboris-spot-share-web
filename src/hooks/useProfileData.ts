@@ -128,9 +128,27 @@ export const useProfileData = (user: User | null, targetUserId?: string) => {
         };
       });
       
-      // Combine all places and sort by date (newest first)
-      // Use the type property to avoid duplicates
-      const allSharedPlaces = [...createdPlaces, ...reviewedPlaces]
+      // Combine all places, ensure no duplicates by place_id, and sort by date (newest first)
+      const placesMap = new Map<string, SharedPlace>();
+      
+      // First add created places to the map
+      createdPlaces.forEach(place => {
+        placesMap.set(place.place_id, place);
+      });
+      
+      // Then add reviews, but make sure not to add duplicates for the same place
+      reviewedPlaces.forEach(review => {
+        // Check if we already have a place with this place_id
+        const existingPlace = placesMap.get(review.place_id);
+        
+        // If no existing place, or if the review is newer, add/update the map
+        if (!existingPlace || review.created_at > existingPlace.created_at) {
+          placesMap.set(review.place_id, review);
+        }
+      });
+      
+      // Convert the map values back to an array and sort by date
+      const allSharedPlaces = Array.from(placesMap.values())
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       
       return allSharedPlaces;

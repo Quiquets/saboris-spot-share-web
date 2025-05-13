@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,11 +33,25 @@ const UserCard: React.FC<UserCardProps> = ({
   onFollow, 
   onUnfollow 
 }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/profile/${user.id}`);
+  };
+  
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation(); // Prevent card click
+    action();
+  };
+  
   return (
-    <Card className="overflow-hidden">
+    <Card 
+      className="overflow-hidden cursor-pointer transition-all hover:shadow-md"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <Link to={`/profile/${user.id}`} className="flex items-center flex-1 min-w-0">
+          <div className="flex items-center flex-1 min-w-0">
             <Avatar className="h-12 w-12 mr-4">
               <AvatarImage src={user.avatar_url || undefined} />
               <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
@@ -47,14 +61,14 @@ const UserCard: React.FC<UserCardProps> = ({
               <p className="font-medium truncate">{user.name}</p>
               <p className="text-sm text-gray-500 truncate">@{user.username}</p>
             </div>
-          </Link>
+          </div>
           
           {user.id !== currentUserId && (
             user.is_following ? (
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={onUnfollow}
+                onClick={(e) => handleButtonClick(e, onUnfollow)}
                 disabled={followLoading}
                 className="ml-2"
               >
@@ -70,7 +84,7 @@ const UserCard: React.FC<UserCardProps> = ({
             ) : (
               <Button 
                 size="sm"
-                onClick={onFollow}
+                onClick={(e) => handleButtonClick(e, onFollow)}
                 disabled={followLoading}
                 className="ml-2 bg-saboris-primary hover:bg-saboris-primary/90"
               >

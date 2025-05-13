@@ -1,38 +1,39 @@
-
 import React from 'react';
-import { ActiveFilters, FilterChangeHandler, PeopleFilterChangeHandler } from './FilterOptions';
-import PeopleFilter from './filters/PeopleFilter';
-import OccasionFilter from './filters/OccasionFilter';
-import FoodTypeFilter from './filters/FoodTypeFilter';
-import VibeFilter from './filters/VibeFilter';
-import PriceFilter from './filters/PriceFilter';
-import RatingFilters from './filters/RatingFilters';
-import ActiveFilterBadges from './filters/ActiveFilterBadges';
 import { useIsMobile } from '@/hooks/use-mobile';
+import ActiveFilterBadges from './ActiveFilterBadges';
+import OccasionFilter from './OccasionFilter';
+import FoodTypeFilter from './FoodTypeFilter';
+import VibeFilter from './VibeFilter';
+import PriceFilter from './PriceFilter';
+import RatingFilters from './RatingFilters';
 
-interface MapFiltersProps {
-  activeFilters: ActiveFilters;
-  handleFilterChange: FilterChangeHandler;
-  handlePeopleFilterChange: PeopleFilterChangeHandler;
-  toggleSortDirection: (category: string) => void;
-  isUserAuthenticated?: boolean;
+interface FilterProps {
+  activeFilters: {
+    occasion: string[];
+    foodType: string[];
+    vibe: string[];
+    price: string[];
+    rating: string;
+    sortDirection: 'asc' | 'desc';
+  };
+  handleFilterChange: (filterType: string, filterValue: string) => void;
+  toggleSortDirection: () => void;
+  isUserAuthenticated: boolean;
 }
 
-const MapFilters: React.FC<MapFiltersProps> = ({ 
-  activeFilters, 
-  handleFilterChange, 
-  handlePeopleFilterChange, 
+const MapFilters: React.FC<FilterProps> = ({
+  activeFilters,
+  handleFilterChange,
   toggleSortDirection,
-  isUserAuthenticated = false
+  isUserAuthenticated,
 }) => {
   const isMobile = useIsMobile();
-  
+
   return (
-    <div className="flex flex-col items-start w-full">
-      {/* People filter tabs - improved for mobile */}
-      <PeopleFilter 
-        activePeople={activeFilters.people}
-        handlePeopleFilterChange={handlePeopleFilterChange}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 md:p-4 w-full">
+      <ActiveFilterBadges
+        activeFilters={activeFilters}
+        handleFilterChange={handleFilterChange}
         isUserAuthenticated={isUserAuthenticated}
       />
 
@@ -73,15 +74,6 @@ const MapFilters: React.FC<MapFiltersProps> = ({
           />
         </div>
       </div>
-      
-      {/* Active filter badges */}
-      <ActiveFilterBadges 
-        activeOccasions={activeFilters.occasion}
-        activeFoodTypes={activeFilters.foodType}
-        activeVibes={activeFilters.vibe}
-        activePrices={activeFilters.price}
-        handleFilterChange={handleFilterChange}
-      />
     </div>
   );
 };

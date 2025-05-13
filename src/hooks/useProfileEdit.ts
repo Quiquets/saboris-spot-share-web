@@ -113,6 +113,20 @@ export const useProfileEdit = (
         const fileExt = profileImage.name.split('.').pop();
         const filePath = `${user.id}-${Date.now()}.${fileExt}`;
         
+        // First try to delete previous avatar if exists
+        if (user.avatar_url) {
+          try {
+            const prevFilePath = user.avatar_url.split('/').pop();
+            if (prevFilePath && prevFilePath.startsWith(user.id)) {
+              await supabase.storage.from('avatars').remove([prevFilePath]);
+              console.log("Previous avatar removed successfully");
+            }
+          } catch (error) {
+            console.error("Error removing previous avatar:", error);
+            // Continue even if this fails
+          }
+        }
+        
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(filePath, profileImage, {
