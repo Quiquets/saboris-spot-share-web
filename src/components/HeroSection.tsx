@@ -1,3 +1,4 @@
+
 import { Instagram } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -139,7 +140,7 @@ const HeroSection = () => {
           <div className={`overflow-x-auto pb-4 hide-scrollbar ${!imagesLoaded && 'min-h-[200px]'}`}>
             {imagesLoaded ? (
               <div className="flex justify-start md:justify-center gap-2 md:gap-4 lg:gap-8 px-2 md:px-4 min-w-max">
-                {/* iPhone mockups with refined frames and proper screen content */}
+                {/* iPhone mockups with refined frames */}
                 {[
                   "/lovable-uploads/f50f3cf4-3812-4e99-9560-147fd0e748b9.png",
                   "/lovable-uploads/9d766b36-b56c-4ebf-987c-0ad7c250fe95.png",
@@ -150,25 +151,16 @@ const HeroSection = () => {
                   <div key={index} className="relative flex-shrink-0">
                     {/* iPhone frame with realistic dimensions and styling */}
                     <div className={`${isMobile ? 'w-[180px] h-[360px]' : 'w-[200px] h-[400px] md:w-[220px] md:h-[440px] lg:w-[240px] lg:h-[480px]'} relative`}>
-                      {/* Improved iPhone frame with ultra-thin bezel */}
-                      <div className="absolute inset-0 rounded-[36px] border border-[#9b87f5]/40 shadow-lg overflow-hidden bg-black">
-                        {/* Subtle frame effect */}
-                        <div className="absolute inset-0 rounded-[36px] bg-gradient-to-tr from-[#1A1F2C]/10 to-transparent opacity-20"></div>
-                        
-                        {/* Screen with no visible bezel */}
-                        <div className="absolute inset-[1px] bg-black rounded-[35px] overflow-hidden">
-                          {/* Ultra subtle notch/dynamic island - almost invisible */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[25%] h-[5px] z-20"></div>
-                          
-                          {/* Screen content - full screen with proper ratio and no cut-offs */}
-                          <div className="w-full h-full overflow-hidden">
-                            <img 
-                              src={src}
-                              alt={`Saboris App Screenshot ${index + 1}`}
-                              className="h-full w-full object-contain"
-                              loading="lazy"
-                            />
-                          </div>
+                      {/* Improved iPhone frame with classic styling */}
+                      <div className="absolute inset-0 bg-black rounded-[36px] border-[3px] border-gray-800/30 shadow-lg overflow-hidden">
+                        {/* Screen content with proper padding */}
+                        <div className="absolute inset-[1px] rounded-[33px] overflow-hidden">
+                          <img 
+                            src={src}
+                            alt={`Saboris App Screenshot ${index + 1}`}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
                       </div>
                     </div>
