@@ -154,15 +154,13 @@ export const useProfileEdit = (
     if (!user) return;
     
     try {
-      // Delete the user's account from Supabase Auth
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      // Use supabaseService to handle auth user deletion properly
+      const { error } = await supabaseService.signOut();
       
       if (error) {
         throw error;
       }
       
-      // Sign out the user after successful deletion
-      await supabaseService.signOut();
       toast.success("Your account has been deleted");
     } catch (error: any) {
       console.error("Error deleting account:", error);
