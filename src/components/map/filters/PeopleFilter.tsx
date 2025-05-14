@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -9,6 +10,7 @@ import {
 import { Users } from 'lucide-react';
 import { filterOptions } from '../FilterOptions';
 import { useAuth } from '@/contexts/AuthContext';
+import { colors } from '@/lib/colors';
 
 interface PeopleFilterProps {
   activePeople: string;
@@ -25,7 +27,7 @@ const PeopleFilter: React.FC<PeopleFilterProps> = ({
 
   const handleFilterClick = (value: string) => {
     // If trying to access a protected filter and not authenticated, show auth modal
-    if (!isUserAuthenticated && value !== 'community') {
+    if (!isUserAuthenticated && (value === 'friends' || value === 'friends-of-friends' || value === 'my-places')) {
       setShowAuthModal(true);
       return;
     }

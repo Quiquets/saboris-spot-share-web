@@ -5,6 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { ProfileStats } from '@/services/supabaseService';
 import { User } from '@/types/global';
 import { LockIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import FollowButton from './FollowButton';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { colors } from '@/lib/colors';
 
 interface ProfileHeaderProps {
   user: User;
@@ -25,8 +30,35 @@ const ProfileHeader = ({
   fetchFollowers,
   fetchFollowing
 }: ProfileHeaderProps) => {
+  const { user: currentUser } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
   const avatarUrl = user?.avatar_url || `https://avatar.vercel.sh/${user?.email}.png`;
   const username = user?.username || 'Unknown';
+  
+  // Check if current user is following the profile user
+  useEffect(() => {
+    const checkFollowingStatus = async () => {
+      if (!currentUser || !user || isOwnProfile) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('follows')
+          .select('id')
+          .match({
+            follower_id: currentUser.id,
+            following_id: user.id
+          });
+          
+        if (!error) {
+          setIsFollowing(data && data.length > 0);
+        }
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      }
+    };
+    
+    checkFollowingStatus();
+  }, [currentUser, user, isOwnProfile]);
   
   const onPlacesClick = () => {
     // Scroll to places section or navigate to places page
@@ -38,6 +70,15 @@ const ProfileHeader = ({
   
   const onFollowingClick = async () => {
     await fetchFollowing();
+  };
+
+  const handleFollowStatusChange = () => {
+    // Refresh profile stats after follow/unfollow
+    if (isOwnProfile) {
+      fetchFollowing();
+    } else {
+      fetchFollowers();
+    }
   };
   
   return (
@@ -57,32 +98,41 @@ const ProfileHeader = ({
         <div className="flex-1 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold">{user.name}</h1>
-              <p className="text-gray-600">@{username}</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-saboris-gray">{user.name}</h1>
+              <p className="text-saboris-gray">@{username}</p>
             </div>
             
-            {/* Only show Edit Profile button for own profile */}
-            {isOwnProfile && (
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditProfileOpen(true)}
-                className="mt-2 sm:mt-0 w-full sm:w-auto"
-                size="sm"
-              >
-                Edit Profile
-              </Button>
-            )}
+            {/* Action Button: Edit Profile for own profile, Follow/Unfollow for others */}
+            <div className="mt-2 sm:mt-0">
+              {isOwnProfile ? (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditProfileOpen(true)}
+                  className="w-full sm:w-auto"
+                  size="sm"
+                >
+                  Edit Profile
+                </Button>
+              ) : currentUser ? (
+                <FollowButton 
+                  currentUser={currentUser}
+                  profileUser={user}
+                  isFollowing={isFollowing}
+                  onFollowStatusChange={handleFollowStatusChange}
+                />
+              ) : null}
+            </div>
           </div>
           
           {/* Bio */}
           {user?.bio && (
-            <p className="text-gray-700 mb-3 text-sm sm:text-base max-w-md mx-auto sm:mx-0">
+            <p className="text-saboris-gray mb-3 text-sm sm:text-base max-w-md mx-auto sm:mx-0">
               {user.bio}
             </p>
           )}
           
           {/* Private Account Badge */}
-          {isPrivate && isOwnProfile && (
+          {isPrivate && (
             <div className="mt-2 flex justify-center sm:justify-start">
               <Badge variant="outline" className="flex items-center gap-1">
                 <LockIcon className="h-3 w-3" /> Private Account
@@ -96,26 +146,26 @@ const ProfileHeader = ({
               className="text-center cursor-pointer px-2 py-1 hover:bg-gray-50 rounded-md" 
               onClick={onPlacesClick}
             >
-              <div className="font-semibold">{profileStats?.saved_places_count || 0}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Places</div>
+              <div className="font-semibold text-saboris-gray">{profileStats?.saved_places_count || 0}</div>
+              <div className="text-xs sm:text-sm text-saboris-gray">Places</div>
             </div>
             <div 
               className="text-center cursor-pointer px-2 py-1 hover:bg-gray-50 rounded-md" 
               onClick={onFollowersClick}
             >
-              <div className="font-semibold">{profileStats?.followers_count || 0}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Followers</div>
+              <div className="font-semibold text-saboris-gray">{profileStats?.followers_count || 0}</div>
+              <div className="text-xs sm:text-sm text-saboris-gray">Followers</div>
             </div>
             <div 
               className="text-center cursor-pointer px-2 py-1 hover:bg-gray-50 rounded-md" 
               onClick={onFollowingClick}
             >
-              <div className="font-semibold">{profileStats?.following_count || 0}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Following</div>
+              <div className="font-semibold text-saboris-gray">{profileStats?.following_count || 0}</div>
+              <div className="text-xs sm:text-sm text-saboris-gray">Following</div>
             </div>
             <div className="text-center px-2 py-1">
-              <div className="font-semibold">{profileStats?.reviews_count || 0}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Reviews</div>
+              <div className="font-semibold text-saboris-gray">{profileStats?.reviews_count || 0}</div>
+              <div className="text-xs sm:text-sm text-saboris-gray">Reviews</div>
             </div>
           </div>
         </div>

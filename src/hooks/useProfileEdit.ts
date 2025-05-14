@@ -46,16 +46,18 @@ export const useProfileEdit = (
       
       // First check if username is already taken (if changed)
       if (username !== user.username && username.trim() !== '') {
-        const { data: usernameCheck } = await supabase
+        const { data: usernameCheck, error: usernameError } = await supabase
           .from('users')
           .select('id')
           .eq('username', username)
           .neq('id', user.id)
           .single();
           
-        if (usernameCheck) {
-          toast.error("Username is already taken");
-          return false;
+        if (usernameCheck || usernameError) {
+          if (usernameCheck) {
+            toast.error("Username is already taken");
+            return false;
+          }
         }
       }
       
@@ -63,6 +65,17 @@ export const useProfileEdit = (
       let avatarUrl = user.avatar_url;
       if (profileImage) {
         try {
+          // Check if avatars bucket exists, if not, create it
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(b => b.name === 'avatars');
+          
+          if (!bucketExists) {
+            await supabase.storage.createBucket('avatars', { 
+              public: true,
+              fileSizeLimit: 2097152 // 2MB in bytes
+            });
+          }
+          
           // First try to delete previous avatar if exists
           if (user.avatar_url) {
             try {
@@ -80,7 +93,7 @@ export const useProfileEdit = (
           const fileExt = profileImage.name.split('.').pop();
           const filePath = `${user.id}-${Date.now()}.${fileExt}`;
           
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError, data } = await supabase.storage
             .from('avatars')
             .upload(filePath, profileImage, {
               cacheControl: '3600',
@@ -89,7 +102,8 @@ export const useProfileEdit = (
             
           if (uploadError) {
             console.error("Error uploading image:", uploadError);
-            throw new Error("Failed to upload profile image");
+            toast.error("Failed to upload profile image: " + uploadError.message);
+            return false;
           } else {
             const { data: urlData } = supabase.storage
               .from('avatars')
@@ -98,9 +112,9 @@ export const useProfileEdit = (
             avatarUrl = urlData.publicUrl;
             setProfileImageUrl(avatarUrl);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error uploading profile image:", error);
-          toast.error("Failed to upload profile image. Please try again later.");
+          toast.error("Failed to upload profile image: " + error.message);
           return false;
         }
       }
@@ -114,7 +128,12 @@ export const useProfileEdit = (
         is_private: isPrivate
       };
       
-      await supabaseService.updateUserProfile(user.id, updates);
+      const { error: updateError } = await supabaseService.updateUserProfile(user.id, updates);
+      
+      if (updateError) {
+        toast.error("Failed to update profile: " + updateError.message);
+        return false;
+      }
       
       // Refresh user data in auth context
       await refreshUserData();

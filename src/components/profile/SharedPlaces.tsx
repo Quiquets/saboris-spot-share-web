@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -6,6 +5,9 @@ import { SharedPlace } from '@/types/profile';
 import { Filter, Loader2, MapPin, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/auth';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { toast } from 'react-toastify';
 
 interface SharedPlacesProps {
   loading: boolean;
@@ -14,7 +16,47 @@ interface SharedPlacesProps {
   refreshPlaces: () => void;
 }
 
-const SharedPlaces = ({ loading, sharedPlaces, openReviewDialog, refreshPlaces }: SharedPlacesProps) => {
+const SharedPlaces = ({ 
+  loading, 
+  sharedPlaces, 
+  openReviewDialog,
+  refreshPlaces 
+}: SharedPlacesProps) => {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const isMobile = useIsMobile();
+  
+  const handleDelete = async (placeId: string, placeType: 'review' | 'place') => {
+    try {
+      setDeletingId(placeId);
+      
+      if (placeType === 'review') {
+        const { error } = await supabase
+          .from('reviews')
+          .delete()
+          .eq('id', placeId);
+          
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('places')
+          .delete()
+          .eq('id', placeId);
+          
+        if (error) throw error;
+      }
+      
+      // Refresh places after successful deletion
+      toast.success('Item deleted successfully');
+      await refreshPlaces();
+    } catch (error: any) {
+      console.error('Error deleting item:', error);
+      toast.error(error.message || 'Failed to delete item');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+  
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [currentFilter, setCurrentFilter] = useState('all');
 

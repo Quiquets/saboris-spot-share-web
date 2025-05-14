@@ -4,6 +4,7 @@ project_id = "kxqekqbizrxotlqljcpr"
 [storage]
 [storage.place-photos]
 public = true
+file_size_limit = "5MB"
 
 [storage.avatars]
 public = true

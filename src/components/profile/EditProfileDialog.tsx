@@ -12,6 +12,7 @@ import { Camera, Loader2, Save, Trash2 } from "lucide-react";
 import React, { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { colors } from "@/lib/colors";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -59,7 +60,10 @@ const EditProfileDialog = ({
         
         if (!bucketExists) {
           try {
-            await supabase.storage.createBucket('avatars', { public: true });
+            await supabase.storage.createBucket('avatars', { 
+              public: true,
+              fileSizeLimit: 2097152 // 2MB in bytes
+            });
             console.log("Created avatars bucket");
           } catch (error: any) {
             if (error.message !== "Bucket already exists") {
@@ -82,7 +86,7 @@ const EditProfileDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Your Profile</DialogTitle>
+          <DialogTitle className="text-saboris-gray">Edit Your Profile</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-5 py-4">
@@ -115,7 +119,7 @@ const EditProfileDialog = ({
           </div>
           
           <div>
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="username" className="text-saboris-gray">Username</Label>
             <Input 
               id="username" 
               value={username} 
@@ -125,7 +129,7 @@ const EditProfileDialog = ({
           </div>
           
           <div>
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location" className="text-saboris-gray">Location</Label>
             <Input 
               id="location" 
               value={userLocation} 
@@ -136,12 +140,12 @@ const EditProfileDialog = ({
           </div>
           
           <div>
-            <Label htmlFor="bio">Bio</Label>
+            <Label htmlFor="bio" className="text-saboris-gray">Bio</Label>
             <Textarea 
               id="bio" 
               value={bio} 
               onChange={(e) => setBio(e.target.value)}
-              className="mt-1 resize-none"
+              className="mt-1 resize-none text-saboris-gray"
               placeholder="Tell others about yourself..."
               rows={3}
             />
@@ -153,10 +157,10 @@ const EditProfileDialog = ({
               checked={isPrivate}
               onCheckedChange={setIsPrivate}
             />
-            <Label htmlFor="private-mode">
+            <Label htmlFor="private-mode" className="text-saboris-gray">
               Private Account
             </Label>
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-gray-100 text-saboris-gray px-2 py-0.5 rounded-full">
               {isPrivate ? "Only visible to followers" : "Visible to everyone"}
             </span>
           </div>

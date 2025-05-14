@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,6 +6,8 @@ import { toast } from 'sonner';
 import { mapStyles } from './MapStyles';
 import { safeGetUserLocation, communityRecommendations, loadGoogleMapsScript } from '@/utils/mapUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { colors } from '@/lib/colors';
 
 interface GoogleMapViewProps {
   className?: string;
@@ -41,31 +42,90 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className, activeFilters 
   const googleMapsLoadedRef = useRef<boolean>(false);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [userPlaces, setUserPlaces] = useState<Place[]>([]);
+  const [friendsPlaces, setFriendsPlaces] = useState<Place[]>([]);
   const [mapIsReady, setMapIsReady] = useState(false);
+  const { user } = useAuth();
 
   // Load community places from Supabase
   useEffect(() => {
-    const fetchCommunityPlaces = async () => {
+    const fetchPlaces = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch community places
+        const { data: communityData, error: communityError } = await supabase
           .from('places')
-          .select('id, name, lat, lng, description, category, tags');
+          .select('id, name, lat, lng, description, category, tags, created_by, reviews(photo_url)');
         
-        if (error) {
-          console.error("Error fetching places:", error);
+        if (communityError) {
+          console.error("Error fetching community places:", communityError);
           return;
         }
         
-        if (data) {
-          setPlaces(data as Place[]);
+        // Process community places
+        const processedCommunityPlaces = communityData?.map(place => ({
+          id: place.id,
+          name: place.name,
+          lat: place.lat,
+          lng: place.lng,
+          description: place.description,
+          category: place.category,
+          tags: place.tags,
+          created_by: place.created_by,
+          photo_url: place.reviews?.length > 0 ? place.reviews[0].photo_url : undefined,
+          type: 'community'
+        })) || [];
+        
+        setPlaces(processedCommunityPlaces);
+        
+        // If user is logged in, fetch friends' places
+        if (user) {
+          // Fetch user's places
+          const { data: userPlacesData } = await supabase
+            .from('places')
+            .select('id, name, lat, lng, description, category, tags, reviews(photo_url)')
+            .eq('created_by', user.id);
+            
+          if (userPlacesData) {
+            const processedUserPlaces = userPlacesData.map(place => ({
+              ...place,
+              photo_url: place.reviews?.length > 0 ? place.reviews[0].photo_url : undefined,
+              type: 'user'
+            }));
+            setUserPlaces(processedUserPlaces);
+          }
+          
+          // Fetch friends list
+          const { data: friendsData } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id);
+            
+          if (friendsData && friendsData.length > 0) {
+            const friendIds = friendsData.map(f => f.following_id);
+            
+            // Fetch friends' places
+            const { data: friendsPlacesData } = await supabase
+              .from('places')
+              .select('id, name, lat, lng, description, category, tags, created_by, reviews(photo_url)')
+              .in('created_by', friendIds);
+              
+            if (friendsPlacesData) {
+              const processedFriendsPlaces = friendsPlacesData.map(place => ({
+                ...place,
+                photo_url: place.reviews?.length > 0 ? place.reviews[0].photo_url : undefined,
+                type: 'friend'
+              }));
+              setFriendsPlaces(processedFriendsPlaces);
+            }
+          }
         }
       } catch (err) {
-        console.error("Error in fetchCommunityPlaces:", err);
+        console.error("Error fetching places:", err);
       }
     };
     
-    fetchCommunityPlaces();
-  }, []);
+    fetchPlaces();
+  }, [user]);
 
   // Load Google Maps script and initialize map
   useEffect(() => {
@@ -209,6 +269,67 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className, activeFilters 
     }
   }, []);
   
+  // Filter places based on active filters
+  const filterPlaces = useCallback(() => {
+    // Determine which set of places to show based on people filter
+    let filtered: any[] = [];
+    
+    if (!activeFilters || !activeFilters.people) {
+      // Default to community if no filter
+      filtered = [...places];
+    } else if (activeFilters.people === 'community') {
+      filtered = [...places];
+    } else if (activeFilters.people === 'my-places' && user) {
+      filtered = [...userPlaces];
+    } else if (activeFilters.people === 'friends' && user) {
+      filtered = [...friendsPlaces];
+    } else if (activeFilters.people === 'friends-of-friends' && user) {
+      // For simplicity, just showing friends' places for now
+      // In a real app, you'd need to fetch friends-of-friends data
+      filtered = [...friendsPlaces];
+    } else {
+      // Default to community
+      filtered = [...places];
+    }
+    
+    // Apply other filters
+    if (activeFilters) {
+      // Filter by occasion
+      if (activeFilters.occasion && activeFilters.occasion.length > 0) {
+        filtered = filtered.filter(place => 
+          place.tags?.some((tag: string) => activeFilters.occasion?.includes(tag))
+        );
+      }
+      
+      // Filter by food type
+      if (activeFilters.foodType && activeFilters.foodType.length > 0) {
+        filtered = filtered.filter(place => 
+          place.category && activeFilters.foodType?.includes(place.category.toLowerCase()) ||
+          place.tags?.some((tag: string) => activeFilters.foodType?.includes(tag))
+        );
+      }
+      
+      // Filter by vibe
+      if (activeFilters.vibe && activeFilters.vibe.length > 0) {
+        filtered = filtered.filter(place => 
+          place.tags?.some((tag: string) => activeFilters.vibe?.includes(tag))
+        );
+      }
+      
+      // Filter by price
+      if (activeFilters.price && activeFilters.price.length > 0) {
+        filtered = filtered.filter(place => 
+          place.tags?.some((tag: string) => {
+            const priceTags = ['low', 'medium', 'high', 'premium'];
+            return priceTags.some(price => tag.includes(price) && activeFilters.price?.includes(price));
+          })
+        );
+      }
+    }
+    
+    return filtered;
+  }, [places, userPlaces, friendsPlaces, activeFilters, user]);
+
   // Add markers to map when it's loaded
   const addMarkersToMap = useCallback(() => {
     if (!mapLoadedRef.current || !mapInstanceRef.current || !window.google?.maps) {
@@ -246,13 +367,18 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className, activeFilters 
           
           markersRef.current.push(marker);
           
-          // Create info window with place details
+          // Create info window with place details including photo if available
+          const photoHtml = place.photo_url 
+            ? `<img src="${place.photo_url}" style="width: 100%; height: 100px; object-fit: cover; margin-top: 8px; border-radius: 4px;">`
+            : '';
+            
           const infoContent = `
             <div style="padding: 8px; max-width: 200px;">
-              <h3 style="margin: 0; font-weight: bold;">${place.name}</h3>
-              ${place.description ? `<p style="margin-top: 4px;">${place.description}</p>` : ''}
-              ${place.category ? `<p style="margin-top: 4px; font-style: italic;">${place.category}</p>` : ''}
-              ${place.tags && place.tags.length > 0 ? `<p style="margin-top: 4px; font-size: 12px;">${place.tags.join(', ')}</p>` : ''}
+              <h3 style="margin: 0; font-weight: bold; color: #555555;">${place.name}</h3>
+              ${place.description ? `<p style="margin-top: 4px; color: #555555;">${place.description}</p>` : ''}
+              ${place.category ? `<p style="margin-top: 4px; font-style: italic; color: #555555;">${place.category}</p>` : ''}
+              ${place.tags && place.tags.length > 0 ? `<p style="margin-top: 4px; font-size: 12px; color: #777777;">${place.tags.join(', ')}</p>` : ''}
+              ${photoHtml}
             </div>
           `;
           
@@ -268,102 +394,53 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className, activeFilters 
         }
       });
 
-      // Also add community recommendations for additional places
-      communityRecommendations.forEach(location => {
-        try {
-          const marker = new window.google.maps.Marker({
-            position: { lat: location.lat, lng: location.lng },
-            map: mapInstanceRef.current,
-            title: location.title,
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              fillColor: "#EE8C80",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-              scale: 8,
+      // Also add community recommendations if showing community filter
+      if (!activeFilters || activeFilters.people === 'community') {
+        communityRecommendations.forEach(location => {
+          try {
+            const marker = new window.google.maps.Marker({
+              position: { lat: location.lat, lng: location.lng },
+              map: mapInstanceRef.current,
+              title: location.title,
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                fillColor: "#EE8C80",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 2,
+                scale: 8,
+              }
+            });
+            
+            markersRef.current.push(marker);
+            
+            // Create info window with location details
+            if (location.description) {
+              const infoContent = `
+                <div style="padding: 8px; max-width: 200px;">
+                  <h3 style="margin: 0; font-weight: bold; color: #555555;">${location.title}</h3>
+                  <p style="margin-top: 4px; color: #555555;">${location.description}</p>
+                  ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
+                </div>
+              `;
+              
+              const infoWindow = new window.google.maps.InfoWindow({
+                content: infoContent
+              });
+              
+              marker.addListener('click', () => {
+                infoWindow.open(mapInstanceRef.current, marker);
+              });
             }
-          });
-          
-          markersRef.current.push(marker);
-          
-          // Create info window with location details
-          if (location.description) {
-            const infoContent = `
-              <div style="padding: 8px; max-width: 200px;">
-                <h3 style="margin: 0; font-weight: bold;">${location.title}</h3>
-                <p style="margin-top: 4px;">${location.description}</p>
-                ${location.photo ? `<img src="${location.photo}" style="width: 100%; margin-top: 8px; border-radius: 4px;">` : ''}
-              </div>
-            `;
-            
-            const infoWindow = new window.google.maps.InfoWindow({
-              content: infoContent
-            });
-            
-            marker.addListener('click', () => {
-              infoWindow.open(mapInstanceRef.current, marker);
-            });
+          } catch (error) {
+            console.error("Error creating recommendation marker:", error);
           }
-        } catch (error) {
-          console.error("Error creating recommendation marker:", error);
-        }
-      });
+        });
+      }
     } catch (error) {
       console.error("Error adding markers to map:", error);
     }
-  }, [places, activeFilters]);
-  
-  // Filter places based on active filters
-  const filterPlaces = useCallback(() => {
-    if (!activeFilters || activeFilters.people !== 'community') {
-      // If people filter is not set to community or not present, just return original places
-      return places;
-    }
-
-    // Filter by occasion
-    let filtered = [...places];
-    
-    if (activeFilters.occasion && activeFilters.occasion.length > 0) {
-      filtered = filtered.filter(place => 
-        place.tags?.some(tag => activeFilters.occasion?.includes(tag))
-      );
-    }
-    
-    // Filter by food type
-    if (activeFilters.foodType && activeFilters.foodType.length > 0) {
-      filtered = filtered.filter(place => 
-        place.category && activeFilters.foodType?.includes(place.category.toLowerCase()) ||
-        place.tags?.some(tag => activeFilters.foodType?.includes(tag))
-      );
-    }
-    
-    // Filter by vibe
-    if (activeFilters.vibe && activeFilters.vibe.length > 0) {
-      filtered = filtered.filter(place => 
-        place.tags?.some(tag => activeFilters.vibe?.includes(tag))
-      );
-    }
-    
-    // Filter by price (if we have price tags in the data)
-    if (activeFilters.price && activeFilters.price.length > 0) {
-      filtered = filtered.filter(place => 
-        place.tags?.some(tag => {
-          const priceTags = ['low', 'medium', 'high', 'premium'];
-          return priceTags.some(price => tag.includes(price) && activeFilters.price?.includes(price));
-        })
-      );
-    }
-    
-    return filtered;
-  }, [places, activeFilters]);
-
-  // Update markers when filters change
-  useEffect(() => {
-    if (mapLoadedRef.current) {
-      addMarkersToMap();
-    }
-  }, [activeFilters, addMarkersToMap]);
+  }, [filterPlaces, activeFilters]);
   
   // Safe geolocation handler with improved error handling
   const handleGetUserLocation = useCallback(() => {
