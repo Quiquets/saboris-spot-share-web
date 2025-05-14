@@ -150,36 +150,25 @@ const HeroSection = () => {
                   <div key={index} className="relative flex-shrink-0">
                     {/* iPhone frame with realistic dimensions and styling */}
                     <div className={`${isMobile ? 'w-[180px] h-[360px]' : 'w-[200px] h-[400px] md:w-[220px] md:h-[440px] lg:w-[240px] lg:h-[480px]'} relative`}>
-                      {/* Improved iPhone frame with thinner bezel */}
-                      <div className="absolute inset-0 bg-[#1a1a1a] rounded-[36px] shadow-lg overflow-hidden">
-                        {/* Power button */}
-                        <div className="absolute -right-[1px] top-[80px] h-[60px] w-[2px] bg-[#2a2a2a] rounded-l-md"></div>
+                      {/* Improved iPhone frame with ultra-thin bezel */}
+                      <div className="absolute inset-0 rounded-[36px] border border-[#9b87f5]/40 shadow-lg overflow-hidden bg-black">
+                        {/* Subtle frame effect */}
+                        <div className="absolute inset-0 rounded-[36px] bg-gradient-to-tr from-[#1A1F2C]/10 to-transparent opacity-20"></div>
                         
-                        {/* Volume buttons */}
-                        <div className="absolute -left-[1px] top-[80px] h-[32px] w-[2px] bg-[#2a2a2a] rounded-r-md"></div>
-                        <div className="absolute -left-[1px] top-[130px] h-[32px] w-[2px] bg-[#2a2a2a] rounded-r-md"></div>
-                        
-                        {/* Screen with thinner bezel */}
-                        <div className="absolute inset-[3px] bg-black rounded-[34px] overflow-hidden">
-                          {/* Dynamic Island / Notch - more subtle */}
-                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-[18px] bg-black rounded-b-[12px] z-20 flex items-center justify-center">
-                            <div className="w-[25px] h-[5px] bg-[#2a2a2a] rounded-full"></div>
-                          </div>
+                        {/* Screen with no visible bezel */}
+                        <div className="absolute inset-[1px] bg-black rounded-[35px] overflow-hidden">
+                          {/* Ultra subtle notch/dynamic island - almost invisible */}
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[25%] h-[5px] z-20"></div>
                           
-                          {/* Screen content with proper aspect ratio */}
-                          <div className="w-full h-full overflow-hidden pt-[18px] pb-[10px] px-[1px]">
-                            <AspectRatio ratio={9/19.5} className="w-full h-full">
-                              <img 
-                                src={src}
-                                alt={`Saboris App Screenshot ${index + 1}`}
-                                className="h-full w-full object-contain"
-                                loading="lazy"
-                              />
-                            </AspectRatio>
+                          {/* Screen content - full screen with proper ratio and no cut-offs */}
+                          <div className="w-full h-full overflow-hidden">
+                            <img 
+                              src={src}
+                              alt={`Saboris App Screenshot ${index + 1}`}
+                              className="h-full w-full object-contain"
+                              loading="lazy"
+                            />
                           </div>
-                          
-                          {/* Home indicator - more subtle */}
-                          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-[25%] h-[3px] bg-white rounded-full opacity-70"></div>
                         </div>
                       </div>
                     </div>
