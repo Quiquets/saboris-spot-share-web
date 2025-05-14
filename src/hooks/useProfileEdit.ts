@@ -53,11 +53,14 @@ export const useProfileEdit = (
           .neq('id', user.id)
           .single();
           
-        if (usernameCheck || usernameError) {
-          if (usernameCheck) {
-            toast.error("Username is already taken");
-            return false;
-          }
+        if (usernameCheck) {
+          toast.error("Username is already taken");
+          return false;
+        }
+        
+        if (usernameError && usernameError.code !== 'PGRST116') { // PGRST116 means no rows returned
+          toast.error("Error checking username availability");
+          return false;
         }
       }
       
@@ -128,10 +131,10 @@ export const useProfileEdit = (
         is_private: isPrivate
       };
       
-      const { error: updateError } = await supabaseService.updateUserProfile(user.id, updates);
+      const result = await supabaseService.updateUserProfile(user.id, updates);
       
-      if (updateError) {
-        toast.error("Failed to update profile: " + updateError.message);
+      if (!result) {
+        toast.error("Failed to update profile");
         return false;
       }
       
@@ -155,10 +158,10 @@ export const useProfileEdit = (
     
     try {
       // Use supabaseService to handle auth user deletion properly
-      const { error } = await supabaseService.signOut();
+      const result = await supabaseService.signOut();
       
-      if (error) {
-        throw error;
+      if (!result) {
+        throw new Error("Failed to delete account");
       }
       
       toast.success("Your account has been deleted");

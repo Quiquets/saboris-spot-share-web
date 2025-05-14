@@ -50,11 +50,24 @@ export const useSavedPlaces = (
           
           const { data: friendsPlaces } = await supabase
             .from('wishlists')
-            .select('id, place_id, created_at, user_id, note, restaurant:place_id(id, name, description, category, tags, address)')
-            .in('user_id', friendIds);
+            .select('id, place_id, created_at, user_id, note, restaurant:place_id(id, name, description, category, tags, address)');
             
           if (friendsPlaces) {
-            setFriendsSavedPlaces(friendsPlaces as SavedRestaurant[]);
+            // Transform to match SavedRestaurant type
+            const transformedPlaces: SavedRestaurant[] = friendsPlaces.map(place => ({
+              id: place.id,
+              user_id: place.user_id,
+              place_id: place.place_id,
+              saved_at: new Date(place.created_at),
+              note: place.note,
+              restaurant: {
+                name: place.restaurant.name,
+                description: place.restaurant.description,
+                tags: place.restaurant.tags,
+                category: place.restaurant.category,
+              }
+            }));
+            setFriendsSavedPlaces(transformedPlaces);
           }
         }
       } catch (error) {
@@ -177,9 +190,43 @@ export const useSavedPlaces = (
     friendsSavedPlaces,
     loading,
     activeFilters,
-    handleFilterChange,
-    handlePeopleFilterChange,
-    toggleSortDirection,
+    handleFilterChange: (type: string, value: any) => {
+      setActiveFilters(prev => ({
+        ...prev,
+        [type]: value
+      }));
+    },
+    handlePeopleFilterChange: (value: string) => {
+      // Check authentication for friend-related filters
+      if ((value === 'friends' || value === 'friends-of-friends') && !user) {
+        setShowAuthModal(true);
+        return;
+      }
+      
+      setActiveFilters(prev => ({
+        ...prev,
+        people: value
+      }));
+    },
+    toggleSortDirection: (category: string) => {
+      const directionKey = {
+        'value': 'valueSortDirection',
+        'food-quality': 'foodSortDirection',
+        'service': 'serviceSortDirection',
+        'atmosphere': 'atmosphereSortDirection'
+      }[category] as keyof ActiveFilters;
+      
+      if (directionKey) {
+        const currentDirection = activeFilters[directionKey] as "asc" | "desc";
+        const newDirection = currentDirection === "desc" ? "asc" : "desc";
+        
+        setActiveFilters(prev => ({
+          ...prev,
+          [directionKey]: newDirection,
+          sortDirection: newDirection
+        }));
+      }
+    },
     filteredPlaces,
     handleRemoveFromWishlist
   };
