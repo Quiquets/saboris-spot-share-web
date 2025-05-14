@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -5,9 +6,10 @@ import { SharedPlace } from '@/types/profile';
 import { Filter, Loader2, MapPin, PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { useAuth } from '@/hooks/auth';
-import { useIsMobile } from '@/hooks/useIsMobile';
-import { toast } from 'react-toastify';
+import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SharedPlacesProps {
   loading: boolean;
@@ -69,7 +71,7 @@ const SharedPlaces = ({
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Your Shared Places</h2>
+        <h2 className="text-xl font-bold text-gray-700">Your Shared Places</h2>
         
         <Button 
           variant="outline" 
@@ -88,7 +90,7 @@ const SharedPlaces = ({
             </DialogHeader>
             
             <div className="flex flex-col gap-2 py-4">
-              <div className="font-medium text-gray-800">Sort by</div>
+              <div className="font-medium text-gray-700">Sort by</div>
               <div className="grid grid-cols-2 gap-2">
                 <Button 
                   variant={currentFilter === 'all' ? "default" : "outline"}
@@ -143,7 +145,7 @@ const SharedPlaces = ({
               
               <CardHeader className="py-3">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg text-gray-800">{place.place.name}</CardTitle>
+                  <CardTitle className="text-lg text-gray-700">{place.place.name}</CardTitle>
                 </div>
                 {place.place.category && (
                   <span className="inline-block px-2 py-1 bg-saboris-light text-saboris-primary text-xs rounded-full">
@@ -165,7 +167,7 @@ const SharedPlaces = ({
               <CardContent className="py-2">
                 {place.review_text ? (
                   <div>
-                    <h4 className="text-sm font-medium mb-1 text-gray-800">What made this place special?</h4>
+                    <h4 className="text-sm font-medium mb-1 text-gray-700">What made this place special?</h4>
                     <p className="text-sm text-gray-600 line-clamp-2">{place.review_text}</p>
                   </div>
                 ) : place.place.description ? (
@@ -210,7 +212,7 @@ const SharedPlaces = ({
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-100">
           <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-xl font-medium mb-2 text-gray-800">No shared places yet</h3>
+          <h3 className="text-xl font-medium mb-2 text-gray-700">No shared places yet</h3>
           <p className="text-gray-600 mb-4">Start adding your favorite places to share with others</p>
           <Button asChild className="bg-saboris-primary hover:bg-saboris-primary/90">
             <Link to="/add-place">
