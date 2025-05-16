@@ -144,7 +144,6 @@ export const useProfileEdit = (
 
       if (authUpdateError) {
         console.error("Error updating auth user metadata:", authUpdateError);
-        // Changed toast.warn to toast.warning
         toast.warning("Profile updated, but session might not reflect new avatar immediately.");
       }
       
@@ -171,11 +170,8 @@ export const useProfileEdit = (
     if (!user) return;
     
     try {
-      // Call signOut and handle potential issues if necessary, though it's void
       await supabaseService.signOut();
-      // Assuming signOut doesn't throw an error on success or is handled within supabaseService
       toast.success("Your account has been deleted");
-      // Potentially navigate user away or refresh UI to reflect signed-out state
     } catch (error: any) {
       console.error("Error deleting account:", error);
       toast.error("Failed to delete account. Please contact support.");

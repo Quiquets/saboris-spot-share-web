@@ -12,9 +12,6 @@ if (!rootElement) {
 } else {
   const root = createRoot(rootElement);
   
-  // Render the app with a small delay to ensure DOM is ready
-  // This can help with mobile initialization issues
-  setTimeout(() => {
-    root.render(<App />);
-  }, 0);
+  // Render the app immediately to prevent white screen
+  root.render(<App />);
 }

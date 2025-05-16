@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,6 +31,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       setPassword('');
       setName('');
       setActiveTab('signin');
+      setLoading(false); // Reset loading state when modal opens
     }
   }, [modalOpen]);
 
@@ -46,15 +46,20 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setLoading(true);
     
     try {
+      console.log("Attempting sign in with:", email);
       const user = await signIn(email, password);
       if (user) {
+        console.log("Sign in successful");
         handleClose();
-        toast.success("Signed in successfully!");
+        // Toast is shown by the AuthContext
+      } else {
+        console.log("Sign in failed - no user returned");
+        // Error toast is shown in AuthContext
+        setLoading(false); // Make sure to reset loading state on failure
       }
     } catch (error) {
-      console.error("Sign in error:", error);
-    } finally {
-      setLoading(false);
+      console.error("Sign in error in component:", error);
+      setLoading(false); // Make sure to reset loading state on exception
     }
   };
 
@@ -75,20 +80,22 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     
     try {
       await signUp(email, password, name);
-      // Don't close modal - user should verify email
+      // Keep modal open - user needs to verify email
+      setLoading(false); 
     } catch (error) {
       console.error("Sign up error:", error);
-    } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleAuth = async () => {
+    setLoading(true);
     try {
       await signInWithGoogle();
       // Modal will close automatically on redirect
     } catch (error) {
       console.error("Google sign in error:", error);
+      setLoading(false);
     }
   };
 

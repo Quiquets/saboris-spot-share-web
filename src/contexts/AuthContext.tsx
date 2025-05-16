@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User as AuthUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,36 +44,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Fetch user data after authentication
   const fetchUserData = async (userId: string) => {
+    if (!userId) {
+      console.error("Cannot fetch user data: No user ID provided");
+      return;
+    }
+    
     try {
       // Fetch saved places
       const savedPlaces = await supabaseService.getSavedRestaurants(userId);
       setSavedPlaces(savedPlaces);
       
-      // Fetch user reviews - we'll need to add this method to supabaseService
-      const { data: reviews } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('user_id', userId);
-      setUserReviews(reviews || []);
+      // Fetch user reviews
+      try {
+        const { data: reviews } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('user_id', userId);
+        setUserReviews(reviews || []);
+      } catch (reviewError) {
+        console.error("Error fetching reviews:", reviewError);
+        // Don't fail the entire fetch process if reviews fail
+      }
       
       // Fetch followers
-      const followers = await supabaseService.getFollowers(userId);
-      setFollowers(followers);
+      try {
+        const followers = await supabaseService.getFollowers(userId);
+        setFollowers(followers);
+      } catch (followersError) {
+        console.error("Error fetching followers:", followersError);
+        // Continue despite follower fetch errors
+      }
       
-      // Fetch following - we'll need to implement this
-      const { data: followingData } = await supabase
-        .from('follows')
-        .select('following_id, users!follows_following_id_fkey(*)')
-        .eq('follower_id', userId);
-      
-      const followingUsers = followingData?.map(item => ({
-        ...item.users,
-        email: item.users.username.includes('@') ? item.users.username : ''
-      })) || [];
-      
-      setFollowing(followingUsers);
+      // Fetch following
+      try {
+        const { data: followingData } = await supabase
+          .from('follows')
+          .select('following_id, users!follows_following_id_fkey(*)')
+          .eq('follower_id', userId);
+        
+        const followingUsers = followingData?.map(item => ({
+          ...item.users,
+          email: item.users.username.includes('@') ? item.users.username : ''
+        })) || [];
+        
+        setFollowing(followingUsers);
+      } catch (followingError) {
+        console.error("Error fetching following:", followingError);
+        // Continue despite following fetch errors
+      }
     } catch (error) {
       console.error("Error fetching user data:", error);
+      // Don't throw, allow partial data loading
     }
   };
   
@@ -142,12 +162,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log("Setting up auth state listener");
     
+    // Keep track of auth initialization
+    let isInitialized = false;
+    
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log("Auth state changed:", event);
         
-        // Update session and user synchronously
+        // Update session and user synchronously to prevent UI flicker
         setSession(currentSession);
         setAuthUser(currentSession?.user || null);
         
@@ -163,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               await fetchUserData(currentSession.user.id);
               
               // Handle redirect after login
-              if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !isInitialized) {
                 console.log("Handling redirect after login");
                 const redirectPath = localStorage.getItem('redirectAfterLogin');
                 if (redirectPath) {
@@ -177,6 +200,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } catch (error) {
               console.error("Error fetching user profile:", error);
               toast.error("Could not load your profile. Please try again.");
+            } finally {
+              if (!isInitialized) {
+                isInitialized = true;
+                setLoading(false);
+              }
             }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
@@ -189,6 +217,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           // Redirect to home page after sign out
           navigate('/');
+          
+          if (!isInitialized) {
+            isInitialized = true;
+            setLoading(false);
+          }
         }
       }
     );
@@ -218,6 +251,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Don't throw here to prevent blocking auth initialization
           }
         }
+        
+        isInitialized = true;
+        setLoading(false);
       } catch (error: any) {
         console.error("Error fetching session:", error);
         
@@ -231,7 +267,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           toast.error("Authentication error. Please try signing in again.");
         }
-      } finally {
+        
+        isInitialized = true;
         setLoading(false);
       }
     };
@@ -246,8 +283,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Enhanced sign in with better error handling
   const enhancedSignIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in...");
       const result = await supabaseService.signIn(email, password);
       if (!result) {
+        console.error("Sign in failed - no result returned");
         toast.error("Login failed. Please check your credentials and try again.");
       }
       return result;
