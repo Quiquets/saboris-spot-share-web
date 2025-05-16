@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseService } from '@/services/supabaseService';
@@ -31,9 +32,8 @@ export const useProfileEdit = (
       }
       
       setProfileImage(file);
-      // Create a preview URL
       const objectUrl = URL.createObjectURL(file);
-      setProfileImageUrl(objectUrl); // This updates the preview in the dialog
+      setProfileImageUrl(objectUrl);
     }
   };
 
@@ -43,7 +43,6 @@ export const useProfileEdit = (
     try {
       setIsSubmitting(true);
       
-      // First check if username is already taken (if changed)
       if (username !== user.username && username.trim() !== '') {
         const { data: usernameCheck, error: usernameError } = await supabase
           .from('users')
@@ -58,39 +57,36 @@ export const useProfileEdit = (
           return false;
         }
         
-        if (usernameError && usernameError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        if (usernameError && usernameError.code !== 'PGRST116') {
           toast.error("Error checking username availability");
           setIsSubmitting(false);
           return false;
         }
       }
       
-      let newAvatarDatabaseUrl = user.avatar_url; // Keep current avatar if no new one is uploaded
+      let newAvatarDatabaseUrl = user.avatar_url; 
 
-      if (profileImage) { // A new image file has been selected
+      if (profileImage) {
         try {
-          // Check if avatars bucket exists, if not, create it
           const { data: buckets } = await supabase.storage.listBuckets();
           const bucketExists = buckets?.some(b => b.name === 'avatars');
           
           if (!bucketExists) {
             await supabase.storage.createBucket('avatars', { 
               public: true,
-              fileSizeLimit: 2097152 // 2MB in bytes
+              fileSizeLimit: 2097152 
             });
           }
           
-          // Attempt to delete previous avatar if it exists and belongs to the user
           if (user.avatar_url) {
             const prevFilePathParts = user.avatar_url.split('/');
             const prevFileName = prevFilePathParts.pop();
-            if (prevFileName && prevFileName.startsWith(user.id)) { // Basic check to see if it's likely their file
+            if (prevFileName && prevFileName.startsWith(user.id)) {
               try {
                 await supabase.storage.from('avatars').remove([prevFileName]);
                 console.log("Previous avatar removed successfully");
               } catch (error) {
                 console.error("Error removing previous avatar, continuing:", error);
-                // Continue even if this fails, to allow uploading the new one
               }
             }
           }
@@ -98,11 +94,12 @@ export const useProfileEdit = (
           const fileExt = profileImage.name.split('.').pop();
           const filePath = `${user.id}-${Date.now()}.${fileExt}`;
           
-          const { error: uploadError, data: uploadData } = await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from('avatars')
             .upload(filePath, profileImage, {
               cacheControl: '3600',
-              upsert: true // Upsert is true, so it can overwrite if somehow filename clashes, though Date.now() makes it unlikely
+              upsert: true,
+              contentType: profileImage.type,
             });
             
           if (uploadError) {
@@ -116,10 +113,6 @@ export const useProfileEdit = (
               .getPublicUrl(filePath);
               
             newAvatarDatabaseUrl = urlData.publicUrl;
-            // setProfileImageUrl(newAvatarDatabaseUrl); // Update local preview with the actual storage URL
-                                                    // This is already done by handleFileChange with a blob URL
-                                                    // but could be updated here to the final URL.
-                                                    // For now, the user sees the blob preview until save.
           }
         } catch (error: any) {
           console.error("Error uploading profile image:", error);
@@ -129,12 +122,11 @@ export const useProfileEdit = (
         }
       }
       
-      // Update user profile in public.users table
       const updates = {
         bio: bio.trim(),
-        username: username.trim() || user.username, // Ensure username isn't empty
+        username: username.trim() || user.username,
         location: userLocation.trim(),
-        avatar_url: newAvatarDatabaseUrl, // Use the new (or existing) avatar URL
+        avatar_url: newAvatarDatabaseUrl,
         is_private: isPrivate
       };
       
@@ -146,27 +138,21 @@ export const useProfileEdit = (
         return false;
       }
       
-      // IMPORTANT: Update the user metadata in Supabase Auth as well
-      // This ensures the auth session's user object also has the new avatar_url
       const { error: authUpdateError } = await supabase.auth.updateUser({
         data: { avatar_url: newAvatarDatabaseUrl }
       });
 
       if (authUpdateError) {
         console.error("Error updating auth user metadata:", authUpdateError);
-        toast.warn("Profile updated, but session might not reflect new avatar immediately.");
-        // Continue even if this fails, as the main profile is updated.
+        // Changed toast.warn to toast.warning
+        toast.warning("Profile updated, but session might not reflect new avatar immediately.");
       }
       
-      // Refresh user data in auth context (fetches from public.users)
       await refreshUserData(); 
-      // Refresh profile page specific data
       await fetchProfileData(); 
       
-      // Explicitly set the profileImageUrl state to the final new URL from storage
-      // This ensures any component using profileImageUrl prop gets the final URL.
       if (profileImage && newAvatarDatabaseUrl) {
-        setProfileImageUrl(newAvatarDatabaseUrl);
+        setProfileImageUrl(newAvatarDatabaseUrl); 
       }
       
       toast.success("Profile updated successfully");
@@ -177,7 +163,7 @@ export const useProfileEdit = (
       return false;
     } finally {
       setIsSubmitting(false);
-      setProfileImage(null); // Clear the selected file after attempting to save
+      setProfileImage(null); 
     }
   };
 
@@ -185,10 +171,11 @@ export const useProfileEdit = (
     if (!user) return;
     
     try {
-      await supabaseService.signOut(); // Don't check the result since we know it's void
-      
-      // Just continue with success message after sign out attempt
+      // Call signOut and handle potential issues if necessary, though it's void
+      await supabaseService.signOut();
+      // Assuming signOut doesn't throw an error on success or is handled within supabaseService
       toast.success("Your account has been deleted");
+      // Potentially navigate user away or refresh UI to reflect signed-out state
     } catch (error: any) {
       console.error("Error deleting account:", error);
       toast.error("Failed to delete account. Please contact support.");
