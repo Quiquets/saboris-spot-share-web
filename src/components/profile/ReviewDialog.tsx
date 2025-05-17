@@ -159,6 +159,7 @@ const ReviewDialog = ({ isOpen, onOpenChange, selectedPlace, onPlaceDeleted }: R
                   onChange={setPhotos}
                   maxImages={3} 
                   itemId={selectedPlace.id} // Pass review_id as itemId for path construction
+                  bucketName="post-pictures" // Reviews photos go to post-pictures
                 />
               </div>
             </div>

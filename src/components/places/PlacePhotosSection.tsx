@@ -6,19 +6,19 @@ import { FormValues } from '@/types/place';
 interface PlacePhotosSectionProps {
   form: UseFormReturn<FormValues>;
   googleMapPhoto: string | null;
-  // We could pass placeId here if we are editing an existing place.
-  // For new places, placeId won't exist yet.
-  // Let's assume form.getValues().id might contain it if editing.
 }
 
 export function PlacePhotosSection({ form, googleMapPhoto }: PlacePhotosSectionProps) {
-  const placeId = form.getValues().id; // Attempt to get placeId if editing
+  // Assuming FormValues might have an 'id' property when editing an existing place.
+  // The TS error indicates 'id' is not directly on FormValues.
+  // Using 'as any' as a temporary workaround. The FormValues type itself might need adjustment.
+  const placeId = (form.getValues() as any).id || (form.getValues() as any).place_id; 
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <FormField
         control={form.control}
-        name="photo_urls" // This field should store array of strings (URLs)
+        name="photo_urls" 
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
@@ -33,7 +33,8 @@ export function PlacePhotosSection({ form, googleMapPhoto }: PlacePhotosSectionP
                   form.setValue('photo_urls', newUrls, { shouldValidate: true, shouldDirty: true });
                 }}
                 maxImages={3}
-                itemId={placeId} // Pass placeId if available
+                itemId={placeId} 
+                bucketName="post-pictures" // Explicitly set bucket for place photos
               />
             </FormControl>
             <FormMessage />
