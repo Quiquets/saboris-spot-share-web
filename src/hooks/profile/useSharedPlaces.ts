@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -14,7 +13,7 @@ export const useSharedPlaces = (userId: string | null) => {
       // Get places created by this user
       const { data: placesData, error: placesError } = await supabase
         .from('places')
-        .select('id, name, description, category, address, tags, created_by, created_at')
+        .select('id, name, description, category, address, tags, created_by, created_at, photo_urls')
         .eq('created_by', userId);
       
       if (placesError) throw placesError;
@@ -22,12 +21,12 @@ export const useSharedPlaces = (userId: string | null) => {
       // Get reviews created by this user
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, text, photo_url, places:place_id(id, name, description, category, address, tags, created_by)')
+        .select('id, place_id, created_at, rating_food, rating_service, rating_atmosphere, text, photo_urls, places:place_id(id, name, description, category, address, tags, created_by, photo_urls)')
         .eq('user_id', userId);
       
       if (reviewsError) {
         console.error("Error fetching reviews:", reviewsError);
-        // Return only places data if reviews query fails
+        // Fallback to places data only
         const createdPlaces: SharedPlace[] = (placesData || []).map(place => ({
           id: place.id,
           place_id: place.id,
@@ -40,6 +39,7 @@ export const useSharedPlaces = (userId: string | null) => {
             category: place.category,
             address: place.address
           },
+          photo_urls: place.photo_urls || [],
           type: 'place'
         }));
         
@@ -60,6 +60,7 @@ export const useSharedPlaces = (userId: string | null) => {
           category: place.category,
           address: place.address
         },
+        photo_urls: place.photo_urls || [],
         type: 'place'
       }));
       
@@ -76,14 +77,14 @@ export const useSharedPlaces = (userId: string | null) => {
           : undefined;
             
         return {
-          id: review.id,
+          id: review.id, // This is review_id
           place_id: review.place_id,
           created_at: new Date(review.created_at),
-          created_by: userId,
-          place: review.places || { name: 'Unknown Place' },
+          created_by: userId, // The review author
+          place: review.places || { name: 'Unknown Place' }, // place details
           rating: avgRating,
           review_text: review.text,
-          photo_urls: review.photo_url ? [review.photo_url] : [],
+          photo_urls: review.photo_urls || [], // Use photo_urls from reviews table
           type: 'review'
         };
       });

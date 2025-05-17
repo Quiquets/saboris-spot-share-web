@@ -1,4 +1,3 @@
-
 import { FormField, FormLabel, FormItem, FormControl, FormMessage } from '@/components/ui/form';
 import { ImageUpload } from '@/components/places/ImageUpload';
 import { UseFormReturn } from 'react-hook-form';
@@ -7,14 +6,19 @@ import { FormValues } from '@/types/place';
 interface PlacePhotosSectionProps {
   form: UseFormReturn<FormValues>;
   googleMapPhoto: string | null;
+  // We could pass placeId here if we are editing an existing place.
+  // For new places, placeId won't exist yet.
+  // Let's assume form.getValues().id might contain it if editing.
 }
 
 export function PlacePhotosSection({ form, googleMapPhoto }: PlacePhotosSectionProps) {
+  const placeId = form.getValues().id; // Attempt to get placeId if editing
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <FormField
         control={form.control}
-        name="photo_urls"
+        name="photo_urls" // This field should store array of strings (URLs)
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-xl font-semibold mb-6 text-gray-800 flex items-center gap-2">
@@ -24,12 +28,16 @@ export function PlacePhotosSection({ form, googleMapPhoto }: PlacePhotosSectionP
             <FormControl>
               <ImageUpload
                 images={field.value || []}
-                onChange={field.onChange}
+                onChange={(newUrls) => {
+                  field.onChange(newUrls);
+                  form.setValue('photo_urls', newUrls, { shouldValidate: true, shouldDirty: true });
+                }}
                 maxImages={3}
+                itemId={placeId} // Pass placeId if available
               />
             </FormControl>
             <FormMessage />
-            {googleMapPhoto && field.value?.length === 0 && (
+            {googleMapPhoto && (!field.value || field.value.length === 0) && (
               <div className="mt-3">
                 <p className="text-sm text-gray-500">Google Maps photo available:</p>
                 <div className="mt-2 relative h-40 w-40">

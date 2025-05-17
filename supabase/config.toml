@@ -1,12 +1,14 @@
-
 project_id = "kxqekqbizrxotlqljcpr"
 
-[storage]
-[storage.place-photos]
+[storage.profilepicture]
 public = true
-file_size_limit = "5MB"
+file_size_limit = "2MB" # Corresponds to SQL
 
-[storage.avatars]
+[storage."post-pictures"]
 public = true
-file_size_limit = "2MB"
+file_size_limit = "5MB" # Corresponds to SQL
 
+# Removed [storage.avatars] and [storage.place-photos] as they are superseded by the new buckets.
+# If any other part of the app still refers to 'avatars' or 'place-photos' buckets by name directly
+# and expects config here, those parts would need updating too.
+# Based on the request, these changes should cover the primary upload points.

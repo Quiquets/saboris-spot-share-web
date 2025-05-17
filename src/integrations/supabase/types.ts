@@ -259,7 +259,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          photo_url: string | null
+          photo_urls: string[] | null
           place_id: string
           rating_atmosphere: number | null
           rating_food: number | null
@@ -272,7 +272,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          photo_url?: string | null
+          photo_urls?: string[] | null
           place_id: string
           rating_atmosphere?: number | null
           rating_food?: number | null
@@ -285,7 +285,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          photo_url?: string | null
+          photo_urls?: string[] | null
           place_id?: string
           rating_atmosphere?: number | null
           rating_food?: number | null

@@ -1,51 +1,20 @@
-
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Image, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthContext } from "@/contexts/AuthContext";
 
 interface ImageUploadProps {
   images: string[];
   onChange: (urls: string[]) => void;
   maxImages?: number;
+  itemId?: string;
 }
 
-export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProps) {
+export function ImageUpload({ images, onChange, maxImages = 3, itemId }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-
-  const ensurePlacePhotosBucketExists = async (): Promise<boolean> => {
-    try {
-      // Check if place-photos bucket exists
-      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      
-      if (bucketsError) {
-        console.error("Error checking buckets:", bucketsError);
-        return false;
-      }
-      
-      const bucketExists = buckets?.some(b => b.name === 'place-photos');
-      
-      // If place-photos bucket doesn't exist, create it
-      if (!bucketExists) {
-        const { error: createError } = await supabase.storage.createBucket('place-photos', { 
-          public: true 
-        });
-        
-        if (createError) {
-          console.error("Error creating place-photos bucket:", createError);
-          return false;
-        }
-        
-        console.log("Created place-photos bucket successfully");
-      }
-      
-      return true;
-    } catch (error) {
-      console.error("Error ensuring place-photos bucket exists:", error);
-      return false;
-    }
-  };
+  const { user } = useContext(AuthContext);
 
   const uploadImage = async (file: File) => {
     if (images.length >= maxImages) {
@@ -61,38 +30,35 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
     setIsUploading(true);
 
     try {
-      // Ensure bucket exists
-      const bucketExists = await ensurePlacePhotosBucketExists();
-      
-      if (!bucketExists) {
-        toast.error("Failed to create storage bucket for images");
-        return;
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      let fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
+      let filePath = `${fileName}`;
+      if (user?.id && itemId) {
+        filePath = `${user.id}/${itemId}/${fileName}`;
+      } else if (user?.id) {
+        filePath = `${user.id}/${fileName}`;
       }
       
-      // Create a unique file name
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Upload to Supabase Storage
       const { error } = await supabase.storage
-        .from('place-photos')
+        .from('post-pictures')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true
+          upsert: false,
+          contentType: file.type,
         });
 
       if (error) throw error;
 
-      // Get public URL
       const { data: publicURLData } = supabase.storage
-        .from('place-photos')
+        .from('post-pictures')
         .getPublicUrl(filePath);
 
-      onChange([...images, publicURLData.publicUrl]);
+      const newImageUrl = `${publicURLData.publicUrl}?v=${Date.now()}`;
+      onChange([...images, newImageUrl]);
       toast.success("Image uploaded successfully");
     } catch (error: any) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading image to post-pictures:", error);
       toast.error(error.message || "Failed to upload image");
     } finally {
       setIsUploading(false);
@@ -100,15 +66,17 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
   };
 
   const removeImage = (index: number) => {
+    const imageUrlToRemove = images[index];
+    console.log("Removing image locally:", imageUrlToRemove);
     const newImages = [...images];
     newImages.splice(index, 1);
     onChange(newImages);
+    toast.info("Image removed from current selection. Save changes to make it permanent.");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       uploadImage(e.target.files[0]);
-      // Reset the input value so the same file can be selected again
       e.target.value = '';
     }
   };
@@ -142,7 +110,7 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
             variant="outline"
             className="h-24 w-24 border-dashed"
             disabled={isUploading}
-            onClick={() => document.getElementById('photo-upload')?.click()}
+            onClick={() => document.getElementById('photo-upload-post')?.click()}
           >
             {isUploading ? (
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -150,7 +118,7 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
               <Image className="h-6 w-6" />
             )}
             <input
-              id="photo-upload"
+              id="photo-upload-post"
               type="file"
               className="hidden"
               accept="image/*"
@@ -161,7 +129,7 @@ export function ImageUpload({ images, onChange, maxImages = 3 }: ImageUploadProp
         )}
       </div>
       <p className="text-sm text-gray-500">
-        Upload up to {maxImages} photos of this place (max 5MB each)
+        Upload up to {maxImages} photos (max 5MB each) to 'post-pictures' bucket.
       </p>
     </div>
   );

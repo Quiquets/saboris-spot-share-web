@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseService } from '@/services/supabaseService';
@@ -20,18 +19,18 @@ export const useProfileEdit = (
   setProfileImageUrl: (value: string | null) => void,
   fetchProfileData: () => Promise<void>
 ) => {
-  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 2 * 1024 * 1024) { // 2MB max
+      if (file.size > 2 * 1024 * 1024) { // 2MB max for profilepicture
         toast.error("Image too large. Please select an image less than 2MB");
         return;
       }
       
-      setProfileImage(file);
+      setProfileImageFile(file);
       const objectUrl = URL.createObjectURL(file);
       setProfileImageUrl(objectUrl);
     }
@@ -66,57 +65,63 @@ export const useProfileEdit = (
       
       let newAvatarDatabaseUrl = user.avatar_url; 
 
-      if (profileImage) {
+      if (profileImageFile) {
         try {
-          const { data: buckets } = await supabase.storage.listBuckets();
-          const bucketExists = buckets?.some(b => b.name === 'avatars');
-          
-          if (!bucketExists) {
-            await supabase.storage.createBucket('avatars', { 
-              public: true,
-              fileSizeLimit: 2097152 
-            });
-          }
-          
+          // No need to check/create bucket, SQL migration did this.
+          // Delete previous image if it exists and was managed by this system.
           if (user.avatar_url) {
-            const prevFilePathParts = user.avatar_url.split('/');
-            const prevFileName = prevFilePathParts.pop();
-            if (prevFileName && prevFileName.startsWith(user.id)) {
-              try {
-                await supabase.storage.from('avatars').remove([prevFileName]);
-                console.log("Previous avatar removed successfully");
-              } catch (error) {
-                console.error("Error removing previous avatar, continuing:", error);
-              }
+            const urlParts = user.avatar_url.split('/');
+            const bucketName = urlParts.find(part => part === 'profilepicture' || part === 'avatars'); // Check for old and new bucket
+            if (bucketName) {
+                const oldFileNameWithQuery = urlParts.pop();
+                if (oldFileNameWithQuery) {
+                    const oldFileName = oldFileNameWithQuery.split('?')[0]; // Remove query params
+                    const oldFilePathInBucket = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
+                    const fullOldPath = `${oldFilePathInBucket}/${oldFileName}`.replace(/^\/+/, ''); // ensure no leading slash
+
+                    // Ensure path is not just bucket name
+                    if (fullOldPath !== bucketName && fullOldPath.includes(user.id)) {
+                         try {
+                            console.log(`Attempting to remove old avatar: ${bucketName}/${fullOldPath}`);
+                            await supabase.storage.from(bucketName).remove([fullOldPath]);
+                            console.log("Previous avatar removed successfully from bucket:", bucketName);
+                        } catch (removeError) {
+                            console.error("Error removing previous avatar, continuing:", removeError);
+                        }
+                    }
+                }
             }
           }
           
-          const fileExt = profileImage.name.split('.').pop();
-          const filePath = `${user.id}-${Date.now()}.${fileExt}`;
+          const fileExt = profileImageFile.name.split('.').pop();
+          const timestamp = Date.now();
+          // Path format: user.id/timestamp_filename.ext
+          const filePath = `${user.id}/${timestamp}_${profileImageFile.name.replace(/[^a-zA-Z0-9._-]/g, '')}`; // Sanitize filename
           
           const { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, profileImage, {
+            .from('profilepicture') // Changed bucket name
+            .upload(filePath, profileImageFile, {
               cacheControl: '3600',
-              upsert: true,
-              contentType: profileImage.type,
+              upsert: false, // Set to false to avoid overwriting if a file with the exact same path somehow exists
+              contentType: profileImageFile.type,
             });
             
           if (uploadError) {
-            console.error("Error uploading image:", uploadError);
+            console.error("Error uploading image to profilepicture:", uploadError);
             toast.error("Failed to upload profile image: " + uploadError.message);
             setIsSubmitting(false);
             return false;
           } else {
             const { data: urlData } = supabase.storage
-              .from('avatars')
+              .from('profilepicture')
               .getPublicUrl(filePath);
-              
-            newAvatarDatabaseUrl = urlData.publicUrl;
+            
+            // Add cache-busting query param
+            newAvatarDatabaseUrl = `${urlData.publicUrl}?v=${Date.now()}`;
           }
         } catch (error: any) {
-          console.error("Error uploading profile image:", error);
-          toast.error("Failed to upload profile image: " + error.message);
+          console.error("Error processing profile image:", error);
+          toast.error("Failed to process profile image: " + error.message);
           setIsSubmitting(false);
           return false;
         }
@@ -126,10 +131,11 @@ export const useProfileEdit = (
         bio: bio.trim(),
         username: username.trim() || user.username,
         location: userLocation.trim(),
-        avatar_url: newAvatarDatabaseUrl,
+        avatar_url: newAvatarDatabaseUrl, // This will be the new URL with cache-busting
         is_private: isPrivate
       };
       
+      // Update custom users table
       const result = await supabaseService.updateUserProfile(user.id, updates);
       
       if (!result) {
@@ -138,8 +144,9 @@ export const useProfileEdit = (
         return false;
       }
       
+      // Update Supabase Auth user metadata
       const { error: authUpdateError } = await supabase.auth.updateUser({
-        data: { avatar_url: newAvatarDatabaseUrl }
+        data: { avatar_url: newAvatarDatabaseUrl } // Save URL with cache-busting to auth metadata
       });
 
       if (authUpdateError) {
@@ -150,8 +157,9 @@ export const useProfileEdit = (
       await refreshUserData(); 
       await fetchProfileData(); 
       
-      if (profileImage && newAvatarDatabaseUrl) {
-        setProfileImageUrl(newAvatarDatabaseUrl); 
+      // Ensure the UI uses the new URL (it should be set by refreshUserData/fetchProfileData, but explicitly set here too)
+      if (newAvatarDatabaseUrl) {
+         setProfileImageUrl(newAvatarDatabaseUrl);
       }
       
       toast.success("Profile updated successfully");
@@ -162,7 +170,7 @@ export const useProfileEdit = (
       return false;
     } finally {
       setIsSubmitting(false);
-      setProfileImage(null); 
+      setProfileImageFile(null); 
     }
   };
 
@@ -170,8 +178,10 @@ export const useProfileEdit = (
     if (!user) return;
     
     try {
-      await supabaseService.signOut();
-      toast.success("Your account has been deleted");
+      await supabaseService.signOut(); // This should ideally call a function that also deletes user data from Supabase
+      // Actual user deletion from auth and database needs a backend function or specific Supabase setup.
+      // For now, it just signs out.
+      toast.success("Your account has been deleted"); // This message might be misleading if account isn't fully deleted.
     } catch (error: any) {
       console.error("Error deleting account:", error);
       toast.error("Failed to delete account. Please contact support.");
@@ -179,7 +189,7 @@ export const useProfileEdit = (
   };
 
   return {
-    profileImage,
+    profileImageFile,
     isSubmitting,
     handleFileChange,
     handleSaveProfile,
