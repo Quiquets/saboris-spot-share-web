@@ -14,47 +14,63 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileEdit } from "@/hooks/useProfileEdit";
 import { useProfileReviews } from "@/hooks/useProfileReviews";
 import { supabaseService } from "@/services/supabaseService";
+import { User } from "@/types/global";
 
 const ProfilePage = () => {
-  const { userId } = useParams<{ userId?: string }>();
+  const { userId: routeUserId } = useParams<{ userId?: string }>();
   const { user, loading: authLoading, refreshUserData } = useAuth();
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const [isOwnProfile, setIsOwnProfile] = useState(true);
-  const [viewedUser, setViewedUser] = useState<any>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [viewedUser, setViewedUser] = useState<User | null>(null);
 
   // Determine if we're viewing our own profile or someone else's
   useEffect(() => {
-    if (user && userId) {
-      const own = user.id === userId;
+    if (authLoading) return;
+
+    const currentViewingUserId = routeUserId || user?.id;
+
+    if (user && currentViewingUserId) {
+      const own = user.id === currentViewingUserId;
       setIsOwnProfile(own);
       if (!own) {
-        supabaseService.getUserProfile(userId!)
-          .then((u) => setViewedUser(u))
+        supabaseService.getUserProfile(currentViewingUserId)
+          .then((profile) => setViewedUser(profile))
           .catch(console.error);
+      } else {
+        setViewedUser(user as User);
       }
+    } else if (!user && routeUserId) {
+      setIsOwnProfile(false);
+      supabaseService.getUserProfile(routeUserId)
+          .then((profile) => setViewedUser(profile))
+          .catch(console.error);
     }
-  }, [user, userId]);
+  }, [user, routeUserId, authLoading]);
 
   if (authLoading) return <ProfileLoading />;
   if (!user) return <ProfileUnauthenticated />;
 
-  const targetUserId = userId || user.id;
+  const targetUserId = routeUserId || user?.id;
+
+  if (!targetUserId) {
+    return <ProfileUnauthenticated />;
+  }
 
   // 1) Fetch all profile data (including name & username)
   const {
     sharedPlaces,
     profileStats,
-    loading,
+    loading: profileDataLoading,
     isPrivate,
     setIsPrivate,
     followers,
     following,
     bio,
     setBio,
-    name,           // ← display name
+    name,
     setName,
     username,
     setUsername,
@@ -75,7 +91,6 @@ const ProfilePage = () => {
     handleDeleteAccount,
   } = useProfileEdit(
     user,
-    // on successful save, also refresh auth and close dialog
     async () => {
       await refreshUserData();
       await fetchProfileData();
@@ -104,17 +119,19 @@ const ProfilePage = () => {
     openReviewDialog,
   } = useProfileReviews();
 
-  // Who to show in header
-  const displayUser = isOwnProfile
-    ? user
-    : viewedUser || {
-        ...user,
-        id: targetUserId,
-        name,
-        username,
-        bio,
-        avatar_url: profileImageUrl,
-      };
+  // Determine who to show in header
+  const displayUserForHeader = isOwnProfile ? user : viewedUser;
+
+  if (profileDataLoading && !displayUserForHeader) return <ProfileLoading />;
+
+  const headerUser = displayUserForHeader || {
+    id: targetUserId,
+    name: name || "User",
+    username: username || "username",
+    bio: bio || "",
+    avatar_url: profileImageUrl || undefined,
+    email: "",
+  } as User;
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -124,13 +141,7 @@ const ProfilePage = () => {
         <div className="max-w-5xl mx-auto">
           {/* Profile Header */}
           <ProfileHeader
-            user={{
-              ...displayUser,
-              name: displayUser.name,
-              username,
-              bio,
-              avatar_url: profileImageUrl,
-            }}
+            user={headerUser}
             isOwnProfile={isOwnProfile}
             profileStats={profileStats}
             isPrivate={isPrivate}
@@ -148,7 +159,7 @@ const ProfilePage = () => {
           />
 
           {/* Edit Profile Dialog (own profile only) */}
-          {isOwnProfile && (
+          {isOwnProfile && user && (
             <EditProfileDialog
               isOpen={isEditProfileOpen}
               onOpenChange={setIsEditProfileOpen}
@@ -182,19 +193,24 @@ const ProfilePage = () => {
           />
 
           {/* Review Dialog */}
-          <ReviewDialog
-            isOpen={isReviewDialogOpen}
-            onOpenChange={setIsReviewDialogOpen}
-            selectedPlace={selectedPlace}
-            onPlaceDeleted={fetchProfileData}
-          />
+          {selectedPlace && (
+            <ReviewDialog
+              isOpen={isReviewDialogOpen}
+              onOpenChange={setIsReviewDialogOpen}
+              selectedPlace={selectedPlace}
+              onPlaceDeleted={fetchProfileData}
+            />
+          )}
 
           {/* Shared Places grid */}
           <SharedPlaces
-             loading={loading}
-              sharedPlaces={sharedPlaces}
-              openReviewDialog={openReviewDialog}
-              refreshPlaces={fetchProfileData}
+            loading={profileDataLoading}
+            sharedPlaces={sharedPlaces}
+            openReviewDialog={isOwnProfile ? openReviewDialog : () => {
+              if (selectedPlace) toast.info(`Viewing details for ${selectedPlace.place.name}`);
+            }}
+            refreshPlaces={fetchProfileData}
+            isOwnProfile={isOwnProfile}
           />
         </div>
       </div>

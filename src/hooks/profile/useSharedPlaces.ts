@@ -15,6 +15,7 @@ export function useSharedPlaces(userId: string | null) {
 
     try {
       // 1) Your own created places (no photos on places table)
+      // Removed image_url from select
       const { data: placesData, error: placesError } = await supabase
         .from('places')
         .select('id,name,description,category,address,tags,created_by,created_at')
@@ -23,39 +24,39 @@ export function useSharedPlaces(userId: string | null) {
 
       // 2) Your reviews, joining full place record
       const { data: reviewsData, error: reviewsError } = await supabase
-  .from('reviews')
-  .select(`
-    id,
-    user_id,
-    place_id,
-    rating_food,
-    rating_service,
-    rating_atmosphere,
-    rating_value,
-    text,
-    tagged_friends,
-    created_at,
-    photo_urls,
-    places (
-      id,
-      name,
-      description,
-      category,
-      address,
-      tags,
-      created_by,
-      created_at
-    )
-  `)
-  .eq('user_id', userId);
-if (reviewsError) throw reviewsError;
+        .from('reviews')
+        .select(`
+          id,
+          user_id,
+          place_id,
+          rating_food,
+          rating_service,
+          rating_atmosphere,
+          rating_value,
+          text,
+          tagged_friends,
+          created_at,
+          photo_urls,
+          places (
+            id,
+            name,
+            description,
+            category,
+            address,
+            tags,
+            created_by,
+            created_at
+          )
+        `)
+        .eq('user_id', userId);
+      if (reviewsError) throw reviewsError;
 
       // 3) Map “place” items
       const created: SharedPlace[] = (placesData || []).map(p => ({
         id: p.id,
         place_id: p.id,
         created_at: new Date(p.created_at),
-        created_by: p.created_by!,
+        created_by: p.created_by!, // Non-null assertion, ensure this is always true or handle null
         place: {
           name: p.name,
           description: p.description || undefined,
@@ -63,7 +64,7 @@ if (reviewsError) throw reviewsError;
           category: p.category || undefined,
           address: p.address || undefined,
         },
-        photo_urls: [],         // places table has no photos
+        photo_urls: [], // Places created but not reviewed don't have photos directly from 'places' table
         type: 'place'
       }));
 
@@ -78,19 +79,22 @@ if (reviewsError) throw reviewsError;
         const avgRating = ratings.length
           ? Math.round(ratings.reduce((a, b) => a + b, 0) / ratings.length)
           : undefined;
+        
+        // Ensure r.places is not null before accessing its properties
+        const placeDetails = r.places ? {
+            name: r.places.name,
+            description: r.places.description || undefined,
+            tags: r.places.tags || [],
+            category: r.places.category || undefined,
+            address: r.places.address || undefined,
+        } : { name: 'Unknown Place' }; // Fallback for place details
 
         return {
           id: r.id,
           place_id: r.place_id,
           created_at: new Date(r.created_at),
           created_by: r.user_id,
-          place: {
-            name: r.places.name,
-            description: r.places.description || undefined,
-            tags: r.places.tags || [],
-            category: r.places.category || undefined,
-            address: r.places.address || undefined,
-          },
+          place: placeDetails,
           rating: avgRating,
           review_text: r.text || undefined,
           photo_urls: r.photo_urls || [],  // review’s uploaded photos

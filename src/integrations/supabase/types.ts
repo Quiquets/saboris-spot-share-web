@@ -334,6 +334,7 @@ export type Database = {
           created_at: string
           id: string
           is_private: boolean | null
+          isCommunitymemeber: boolean
           location: string | null
           name: string
           username: string
@@ -344,6 +345,7 @@ export type Database = {
           created_at?: string
           id: string
           is_private?: boolean | null
+          isCommunitymemeber?: boolean
           location?: string | null
           name: string
           username: string
@@ -354,6 +356,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_private?: boolean | null
+          isCommunitymemeber?: boolean
           location?: string | null
           name?: string
           username?: string
