@@ -15,6 +15,7 @@ import { useProfileEdit } from "@/hooks/useProfileEdit";
 import { useProfileReviews } from "@/hooks/useProfileReviews";
 import { supabaseService } from "@/services/supabaseService";
 import { User } from "@/types/global";
+import { toast } from "sonner";
 
 const ProfilePage = () => {
   const { userId: routeUserId } = useParams<{ userId?: string }>();
@@ -51,11 +52,16 @@ const ProfilePage = () => {
   }, [user, routeUserId, authLoading]);
 
   if (authLoading) return <ProfileLoading />;
-  if (!user) return <ProfileUnauthenticated />;
-
+  
+  // If not logged in and trying to view a specific profile, allow it but set isOwnProfile to false
+  // If not logged in and no routeUserId, show unauthenticated page
+  if (!user && !routeUserId) return <ProfileUnauthenticated />;
+  
   const targetUserId = routeUserId || user?.id;
 
   if (!targetUserId) {
+    // This case should ideally not be reached if the above condition is handled,
+    // but as a fallback:
     return <ProfileUnauthenticated />;
   }
 
@@ -122,16 +128,21 @@ const ProfilePage = () => {
   // Determine who to show in header
   const displayUserForHeader = isOwnProfile ? user : viewedUser;
 
-  if (profileDataLoading && !displayUserForHeader) return <ProfileLoading />;
+  if (profileDataLoading && !displayUserForHeader && !routeUserId) return <ProfileLoading />;
+  
+  // If viewing another profile and viewedUser is still loading, show loading.
+  // This prevents headerUser from being prematurely set with possibly stale data.
+  if (!isOwnProfile && routeUserId && !viewedUser && profileDataLoading) return <ProfileLoading />;
 
-  const headerUser = displayUserForHeader || {
+
+  const headerUser = displayUserForHeader || (viewedUser && !isOwnProfile ? viewedUser : {
     id: targetUserId,
     name: name || "User",
     username: username || "username",
     bio: bio || "",
     avatar_url: profileImageUrl || undefined,
-    email: "",
-  } as User;
+    email: "", // Should be fetched if needed and available
+  } as User);
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -206,8 +217,15 @@ const ProfilePage = () => {
           <SharedPlaces
             loading={profileDataLoading}
             sharedPlaces={sharedPlaces}
-            openReviewDialog={isOwnProfile ? openReviewDialog : () => {
-              if (selectedPlace) toast.info(`Viewing details for ${selectedPlace.place.name}`);
+            openReviewDialog={isOwnProfile ? openReviewDialog : (place) => { // Ensure 'place' is passed if needed by toast or other logic
+              // If it's not our own profile, clicking a place might show details or a toast
+              // The original code had selectedPlace which might be stale or not set correctly here
+              // It's better to use the 'place' argument if SharedPlaces provides it on click
+              if (place && place.place) { // Check if place and place.place are defined
+                toast.info(`Viewing details for ${place.place.name}`);
+              } else if (selectedPlace && selectedPlace.place) { // Fallback to selectedPlace if 'place' is not directly provided
+                 toast.info(`Viewing details for ${selectedPlace.place.name}`);
+              }
             }}
             refreshPlaces={fetchProfileData}
             isOwnProfile={isOwnProfile}
