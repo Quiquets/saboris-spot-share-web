@@ -103,114 +103,100 @@ export function AddPlaceForm() {
   };
   
   const onSubmit = async (values: FormValues) => {
-    if (!user) {
-      toast.error("You must be signed in to add a place");
-      return;
+  if (!user) {
+    toast.error("You must be signed in to add a place");
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    // 1) Determine which photos to save
+    let finalPhotoUrls = values.photo_urls?.length
+      ? values.photo_urls
+      : googleMapPhoto
+        ? [googleMapPhoto]
+        : [];
+
+    // 2) Combine tags
+    const allTags: string[] = [
+      ...(values.occasions || []),
+      ...(values.vibes || []),
+      ...(values.cuisine ? [values.cuisine] : [])
+    ];
+
+    // 3) Insert into places
+    const { data: placeData, error: placeError } = await supabase
+      .from("places")
+      .insert({
+        name: values.place_name,
+        address: values.address,
+        lat: values.lat,
+        lng: values.lng,
+        category: values.place_type,
+        description: values.description || "",
+        tags: allTags,
+        created_by: user.id
+      })
+      .select()
+      .single();
+    if (placeError || !placeData) throw placeError ?? new Error("Place insert failed");
+
+    // 4) Insert into reviews with ALL photo URLs
+    const taggedFriendsStr = values.tagged_friends?.length
+      ? values.tagged_friends.join(",")
+      : null;
+
+    const { data: reviewData, error: reviewError } = await supabase
+      .from("reviews")
+      .insert({
+        user_id: user.id,
+        place_id: placeData.id,
+        rating_food: values.rating_food,
+        rating_service: values.rating_service,
+        rating_atmosphere: values.rating_atmosphere,
+        rating_value: values.rating_value,
+        text: values.description,
+        photo_urls: finalPhotoUrls,       // ← store entire array
+        tagged_friends: taggedFriendsStr
+      })
+      .select()
+      .single();
+    if (reviewError) throw reviewError;
+
+    // 5) Wishlist
+    await supabase.from("wishlists").insert({
+      user_id: user.id,
+      place_id: placeData.id,
+      note: `${values.price_range} · ${values.description || "No description"}`
+    });
+
+    // 6) Share with friends
+    if (values.tagged_friends?.length) {
+      const notifications = values.tagged_friends.map(friendId => ({
+        user_id: friendId,
+        sender_id: user.id,
+        place_id: placeData.id,
+        type: "place_share"
+      }));
+      await supabase.from("notifications").insert(notifications);
     }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Use Google photo if no photos were uploaded
-      let finalPhotoUrls = values.photo_urls || [];
-      if (finalPhotoUrls.length === 0 && googleMapPhoto) {
-        finalPhotoUrls = [googleMapPhoto];
-      }
-      
-      // Combine all tags (occasions, cuisine, and vibes) into a single array
-      // This matches the database schema which has only a "tags" column
-      const allTags: string[] = [
-        ...(values.occasions || []), 
-        ...(values.vibes || [])
-      ];
-      
-      // Add cuisine to tags if it exists
-      if (values.cuisine) {
-        allTags.push(values.cuisine);
-      }
-      
-      // 1. Insert into places table with correct tags structure
-      const { data: placeData, error: placeError } = await supabase
-        .from('places')
-        .insert({
-          name: values.place_name,
-          address: values.address,
-          lat: values.lat,
-          lng: values.lng,
-          category: values.place_type,
-          description: values.description || '',
-          tags: allTags, // Use combined tags array instead of separate fields
-          created_by: user.id
-        })
-        .select()
-        .single();
-        
-      if (placeError) throw placeError;
-      
-      // 2. Insert into reviews table with rating_value
-      // Convert tagged_friends array to string for storage
-      const taggedFriendsStr = values.tagged_friends && values.tagged_friends.length > 0 
-        ? values.tagged_friends.join(',') 
-        : null;
-        
-      const { data: reviewData, error: reviewError } = await supabase
-        .from('reviews')
-        .insert({
-          user_id: user.id,
-          place_id: placeData.id,
-          rating_food: values.rating_food,
-          rating_service: values.rating_service,
-          rating_atmosphere: values.rating_atmosphere,
-          rating_value: values.rating_value,
-          text: values.description,
-          photo_url: finalPhotoUrls.length > 0 ? finalPhotoUrls[0] : null,
-          tagged_friends: taggedFriendsStr // Store as comma-separated string
-        })
-        .select()
-        .single();
-      
-      if (reviewError) {
-        console.error("Review error:", reviewError);
-        throw reviewError;
-      }
-      
-      // 3. Add to user's wishlist
-      await supabase
-        .from('wishlists')
-        .insert({
-          user_id: user.id,
-          place_id: placeData.id,
-          note: `${values.price_range} · ${values.description || 'No description'}`
-        });
-      
-      // 4. Share with selected friends if any
-      if (values.tagged_friends && values.tagged_friends.length > 0) {
-        const notifications = values.tagged_friends.map(friendId => ({
-          user_id: friendId,
-          sender_id: user.id,
-          place_id: placeData.id,
-          type: 'place_share'
-        }));
-        
-        await supabase.from('notifications').insert(notifications);
-      }
-      
-      toast.success("Place added and shared successfully!");
-      
-      // Show friend selector if not shown, otherwise navigate to profile
-      if (showFriendSelector) {
-        navigate('/profile');
-      } else {
-        setShowFriendSelector(true);
-        setIsSubmitting(false);
-      }
-      
-    } catch (error: any) {
-      console.error("Error adding place:", error);
-      toast.error(error.message || "Failed to add place");
-      setIsSubmitting(false);
+
+    toast.success("Place added and shared successfully!");
+    // decide where to navigate…
+    if (showFriendSelector) {
+      navigate("/profile");
+    } else {
+      setShowFriendSelector(true);
     }
-  };
+
+  } catch (err: any) {
+    console.error("Error adding place:", err);
+    toast.error(err.message || "Failed to add place");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="flex-grow w-full px-4 py-8 md:py-12 max-w-[1440px] mx-auto">

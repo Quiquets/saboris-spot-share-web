@@ -8,6 +8,7 @@ export const useProfileSettings = (userId: string | null) => {
   const [username, setUsername] = useState('');
   const [userLocation, setUserLocation] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [name, setName] = useState("");
 
   const fetchProfileSettings = async () => {
     if (!userId) return;
@@ -16,6 +17,7 @@ export const useProfileSettings = (userId: string | null) => {
       const userProfile = await supabaseService.getUserProfile(userId);
       
       setIsPrivate(userProfile?.is_private || false);
+      setName(userProfile?.name || "");
       setBio(userProfile?.bio || '');
       setUsername(userProfile?.username || '');
       setUserLocation(userProfile?.location || '');
@@ -29,6 +31,8 @@ export const useProfileSettings = (userId: string | null) => {
   };
 
   return {
+     name,
+    setName,
     isPrivate,
     setIsPrivate,
     bio,

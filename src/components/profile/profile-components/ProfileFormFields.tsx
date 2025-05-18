@@ -1,9 +1,11 @@
-
+// src/components/profile/profile-components/ProfileFormFields.tsx
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-interface ProfileFormFieldsProps {
+export interface ProfileFormFieldsProps {
+  name: string;
+  setName: (value: string) => void;
   username: string;
   setUsername: (value: string) => void;
   userLocation: string;
@@ -13,41 +15,67 @@ interface ProfileFormFieldsProps {
 }
 
 export const ProfileFormFields = ({
+  name,
+  setName,
   username,
   setUsername,
   userLocation,
   setUserLocation,
   bio,
-  setBio
+  setBio,
 }: ProfileFormFieldsProps) => {
   return (
     <>
+      {/* Display Name */}
       <div>
-        <Label htmlFor="username" className="text-saboris-gray">Username</Label>
-        <Input 
-          id="username" 
-          value={username} 
-          onChange={(e) => setUsername(e.target.value)}
+        <Label htmlFor="name" className="text-saboris-gray">
+          Name
+        </Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="mt-1"
+          placeholder="Your display name"
         />
       </div>
-      
+
+      {/* Username */}
       <div>
-        <Label htmlFor="location" className="text-saboris-gray">Location</Label>
-        <Input 
-          id="location" 
-          value={userLocation} 
+        <Label htmlFor="username" className="text-saboris-gray">
+          Username
+        </Label>
+        <Input
+          id="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="mt-1"
+          placeholder="@your_username"
+        />
+      </div>
+
+      {/* Location */}
+      <div>
+        <Label htmlFor="location" className="text-saboris-gray">
+          Location
+        </Label>
+        <Input
+          id="location"
+          value={userLocation}
           onChange={(e) => setUserLocation(e.target.value)}
           className="mt-1"
           placeholder="City, Country"
         />
       </div>
-      
+
+      {/* Bio */}
       <div>
-        <Label htmlFor="bio" className="text-saboris-gray">Bio</Label>
-        <Textarea 
-          id="bio" 
-          value={bio} 
+        <Label htmlFor="bio" className="text-saboris-gray">
+          Bio
+        </Label>
+        <Textarea
+          id="bio"
+          value={bio}
           onChange={(e) => setBio(e.target.value)}
           className="mt-1 resize-none text-saboris-gray"
           placeholder="Tell others about yourself..."

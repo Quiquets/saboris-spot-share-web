@@ -14,10 +14,12 @@ export const useProfileData = (user: User | null, targetUserId?: string) => {
   
   // Import functionality from specialized hooks
   const { sharedPlaces, fetchSharedPlaces } = useSharedPlaces(activeUserId);
+  
   const { profileStats, fetchProfileStats } = useProfileStats(activeUserId);
   const { 
     isPrivate, setIsPrivate,
     bio, setBio,
+    name, setName,
     username, setUsername,
     userLocation, setUserLocation,
     profileImageUrl, setProfileImageUrl,
@@ -63,6 +65,8 @@ export const useProfileData = (user: User | null, targetUserId?: string) => {
     following,
     bio,
     setBio,
+    name,
+    setName,
     username,
     setUsername,
     userLocation,
