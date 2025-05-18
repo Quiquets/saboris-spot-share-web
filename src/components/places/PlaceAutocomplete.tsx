@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
@@ -27,33 +26,37 @@ interface PlaceAutocompleteProps {
   value: string;
   onPlaceSelect: (details: PlaceDetails) => void;
   disabled?: boolean;
+  types?: string[]; // Added types prop
+  placeholder?: string; // Added placeholder prop
 }
 
-export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutocompleteProps) {
+export function PlaceAutocomplete({
+  value,
+  onPlaceSelect,
+  disabled,
+  types = ['establishment'], // Default to establishment
+  placeholder = "Search for a restaurant, bar, or café..." // Default placeholder
+}: PlaceAutocompleteProps) {
   const [input, setInput] = useState(value);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPredictions, setShowPredictions] = useState(false);
-  const [userLocation, setUserLocation] = useState<google.maps.LatLng | null>(null);
-  
+  const [userLoc, setUserLoc] = useState<google.maps.LatLng | null>(null); // Renamed to avoid conflict
+
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const autocompleteSessionToken = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
-  
+
   // Initialize Google Places API services and get user location when component mounts
   useEffect(() => {
     const initGooglePlaces = () => {
       if (window.google && window.google.maps && window.google.maps.places) {
-        console.log("Initializing Google Places services");
+        console.log("Initializing Google Places services for PlaceAutocomplete");
         autocompleteService.current = new window.google.maps.places.AutocompleteService();
-        
-        // Need a DOM element for PlacesService even if we don't show the map
         const mapDiv = document.createElement('div');
         placesService.current = new window.google.maps.places.PlacesService(mapDiv);
-        
-        // Create a new session token for better pricing
         autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken();
-        
+
         // Get user location
         getUserLocation()
           .then(position => {
@@ -61,15 +64,14 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
               position.coords.latitude,
               position.coords.longitude
             );
-            setUserLocation(latLng);
-            console.log("User location set:", position.coords.latitude, position.coords.longitude);
+            setUserLoc(latLng); // Use renamed state setter
+            console.log("User location set for PlaceAutocomplete:", position.coords.latitude, position.coords.longitude);
           })
           .catch(error => {
-            console.warn("Could not get user location:", error);
-            // Continue without user location
+            console.warn("Could not get user location for PlaceAutocomplete:", error);
           });
       } else {
-        console.warn("Google Maps API not loaded yet, retrying in 500ms");
+        console.warn("Google Maps API not loaded yet for PlaceAutocomplete, retrying in 500ms");
         setTimeout(initGooglePlaces, 500);
       }
     };
@@ -91,7 +93,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
     const newInput = e.target.value;
     setInput(newInput);
     
-    if (newInput.length > 2 && autocompleteService.current) {
+    if (newInput.length > 0 && autocompleteService.current && autocompleteSessionToken.current) { // Changed length to > 0 for city search
       setIsLoading(true);
       setShowPredictions(true);
       
@@ -99,26 +101,31 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       const request: google.maps.places.AutocompletionRequest = {
         input: newInput,
         sessionToken: autocompleteSessionToken.current,
-        types: ['establishment'],
+        types: types, // Use the types prop
       };
       
       // If we have user location, add location bias
-      if (userLocation) {
-        request.location = userLocation;
+      if (userLoc && types.includes('establishment')) { // Location bias primarily for establishments
+        request.location = userLoc;
         request.radius = 50000; // 50km radius, adjust as needed
       }
       
+      // For city searches, componentRestrictions might be useful, e.g. restricting to a country
+      // if (types.includes('(cities)')) {
+      //   // request.componentRestrictions = { country: 'us' }; // Example: restrict to US
+      // }
+      
       autocompleteService.current.getPlacePredictions(
         request,
-        (predictions, status) => {
+        (newPredictions, status) => { // Renamed predictions to newPredictions
           setIsLoading(false);
           
-          if (status !== google.maps.places.PlacesServiceStatus.OK || !predictions) {
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !newPredictions) {
             setPredictions([]);
             return;
           }
           
-          setPredictions(predictions);
+          setPredictions(newPredictions);
         }
       );
     } else {
@@ -134,29 +141,48 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       placesService.current.getDetails(
         {
           placeId: prediction.place_id,
-          fields: ['name', 'formatted_address', 'geometry', 'photos'],
+          fields: ['name', 'formatted_address', 'geometry', 'photos', 'address_components'], // Added address_components
           sessionToken: autocompleteSessionToken.current,
         },
         (place, status) => {
           setIsLoading(false);
           setShowPredictions(false);
-          
+          autocompleteSessionToken.current = new window.google.maps.places.AutocompleteSessionToken(); // Refresh token
+
           if (status !== google.maps.places.PlacesServiceStatus.OK || !place) {
             console.error('Error fetching place details');
             return;
           }
           
           // Create a new token for the next place search
-          autocompleteSessionToken.current = new google.maps.places.AutocompleteSessionToken();
-          
-          // Extract photo URLs if available
           const photoUrls: string[] = [];
           if (place.photos && place.photos.length > 0) {
-            photoUrls.push(place.photos[0].getUrl({ maxWidth: 800, maxHeight: 600 }));
+            place.photos.slice(0, 1).forEach(photo => { // Take first photo
+              if (photo && typeof photo.getUrl === 'function') {
+                photoUrls.push(photo.getUrl({ maxWidth: 800, maxHeight: 600 }));
+              }
+            });
           }
-          
+
+          // For city types, we might want to extract just the city name
+          // For now, we'll use formatted_address for cities or name for establishments
+          let displayName = place.name || '';
+          if (types.includes('(cities)') && place.address_components) {
+            const cityComponent = place.address_components.find(comp => comp.types.includes('locality'));
+            const countryComponent = place.address_components.find(comp => comp.types.includes('country'));
+            if (cityComponent) {
+              displayName = cityComponent.long_name;
+              if (countryComponent) {
+                displayName += `, ${countryComponent.short_name}`;
+              }
+            } else {
+              // Fallback if specific city component not found but it is a city type search
+              displayName = place.formatted_address || prediction.description;
+            }
+          }
+
           const placeDetails: PlaceDetails = {
-            name: place.name || '',
+            name: displayName, // Use modified display name
             address: place.formatted_address || '',
             lat: place.geometry?.location?.lat() || 0,
             lng: place.geometry?.location?.lng() || 0,
@@ -164,7 +190,7 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
             photos: photoUrls,
           };
           
-          setInput(placeDetails.name);
+          setInput(placeDetails.name); // Set input to the (potentially) city name
           onPlaceSelect(placeDetails);
         }
       );
@@ -183,11 +209,11 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       <div className="relative">
         <Input
           type="text"
-          placeholder="Search for a restaurant, bar, or café..."
+          placeholder={placeholder}
           value={input}
           onChange={handleInputChange}
           onFocus={() => {
-            if (input.length > 2) {
+            if (input.length > 0 && predictions.length > 0) { // Show if there are predictions
               setShowPredictions(true);
             }
           }}
@@ -203,12 +229,12 @@ export function PlaceAutocomplete({ value, onPlaceSelect, disabled }: PlaceAutoc
       </div>
       
       {showPredictions && predictions.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           {predictions.map((prediction) => (
             <li
               key={prediction.place_id}
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-              onMouseDown={() => handlePredictionClick(prediction)}
+              onMouseDown={() => handlePredictionClick(prediction)} // Changed to onMouseDown
             >
               <div className="font-medium">
                 {prediction.structured_formatting.main_text}

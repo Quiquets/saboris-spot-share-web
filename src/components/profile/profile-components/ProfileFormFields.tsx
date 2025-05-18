@@ -1,7 +1,9 @@
+
 // src/components/profile/profile-components/ProfileFormFields.tsx
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PlaceAutocomplete } from "@/components/places/PlaceAutocomplete";
 
 export interface ProfileFormFieldsProps {
   name: string;
@@ -54,18 +56,24 @@ export const ProfileFormFields = ({
         />
       </div>
 
-      {/* Location */}
+      {/* Location with PlaceAutocomplete */}
       <div>
         <Label htmlFor="location" className="text-saboris-gray">
           Location
         </Label>
-        <Input
-          id="location"
+        <PlaceAutocomplete
           value={userLocation}
-          onChange={(e) => setUserLocation(e.target.value)}
-          className="mt-1"
-          placeholder="City, Country"
+          onPlaceSelect={(details) => {
+            // For cities, details.name might be "City, Country" or just "City"
+            // details.address will be the full formatted address.
+            // We want to store a simple string like "City, Country Abbreviation"
+            setUserLocation(details.name); // details.name is now formatted like "City, CC" by PlaceAutocomplete
+          }}
+          types={['(cities)']}
+          placeholder="Enter your city"
         />
+        {/* Fallback or info text if needed */}
+        {/* <p className="text-xs text-gray-500 mt-1">e.g., London, UK</p> */}
       </div>
 
       {/* Bio */}

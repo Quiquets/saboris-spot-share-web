@@ -38,30 +38,36 @@ const ProfilePage = () => {
       setIsOwnProfile(own);
       if (!own) {
         supabaseService.getUserProfile(currentViewingUserId)
-          .then((profile) => setViewedUser(profile))
-          .catch(console.error);
+          .then((profile) => {
+            setViewedUser(profile);
+            if (!profile) console.warn(`No profile found for user ID: ${currentViewingUserId}`);
+          })
+          .catch(error => console.error("Error fetching viewed user profile:", error));
       } else {
-        setViewedUser(user as User);
+        setViewedUser(user as User); // Cast to User, assuming `user` from useAuth matches the User type
       }
     } else if (!user && routeUserId) {
+      // Not logged in, but viewing a specific profile
       setIsOwnProfile(false);
       supabaseService.getUserProfile(routeUserId)
-          .then((profile) => setViewedUser(profile))
-          .catch(console.error);
+          .then((profile) => {
+            setViewedUser(profile);
+            if (!profile) console.warn(`No profile found for user ID: ${routeUserId}`);
+          })
+          .catch(error => console.error("Error fetching viewed user profile:", error));
+    } else {
+      // Not logged in and no specific profile ID in route (e.g. /profile)
+      // This case should lead to ProfileUnauthenticated
     }
   }, [user, routeUserId, authLoading]);
 
   if (authLoading) return <ProfileLoading />;
   
-  // If not logged in and trying to view a specific profile, allow it but set isOwnProfile to false
-  // If not logged in and no routeUserId, show unauthenticated page
   if (!user && !routeUserId) return <ProfileUnauthenticated />;
   
   const targetUserId = routeUserId || user?.id;
 
   if (!targetUserId) {
-    // This case should ideally not be reached if the above condition is handled,
-    // but as a fallback:
     return <ProfileUnauthenticated />;
   }
 
@@ -80,7 +86,7 @@ const ProfilePage = () => {
     setName,
     username,
     setUsername,
-    userLocation,
+    userLocation, // <-- We get userLocation here
     setUserLocation,
     profileImageUrl,
     setProfileImageUrl,
@@ -96,10 +102,10 @@ const ProfilePage = () => {
     handleSaveProfile,
     handleDeleteAccount,
   } = useProfileEdit(
-    user,
+    user, // Pass the authenticated user object
     async () => {
-      await refreshUserData();
-      await fetchProfileData();
+      await refreshUserData(); // Refresh global user data from AuthContext
+      await fetchProfileData(); // Refetch all profile-specific data
       setIsEditProfileOpen(false);
     },
     bio,
@@ -114,7 +120,7 @@ const ProfilePage = () => {
     setIsPrivate,
     profileImageUrl,
     setProfileImageUrl,
-    fetchProfileData
+    fetchProfileData // Pass fetchProfileData to refresh after edits
   );
 
   // 3) Reviews dialog
@@ -125,24 +131,29 @@ const ProfilePage = () => {
     openReviewDialog,
   } = useProfileReviews();
 
-  // Determine who to show in header
-  const displayUserForHeader = isOwnProfile ? user : viewedUser;
-
-  if (profileDataLoading && !displayUserForHeader && !routeUserId) return <ProfileLoading />;
+  const displayUserForHeaderLogic = () => {
+    if (isOwnProfile && user) return user;
+    if (!isOwnProfile && viewedUser) return viewedUser;
+    // Fallback if still loading or user data is sparse
+    return {
+        id: targetUserId,
+        name: name || "User",
+        username: username || "username",
+        bio: bio || "",
+        avatar_url: profileImageUrl || undefined,
+        email: "", // Placeholder, actual email usually not shown publicly
+        isCommunitymemeber: (isOwnProfile && user?.isCommunitymemeber) || (!isOwnProfile && viewedUser?.isCommunitymemeber) || false,
+        location: userLocation || ""
+    } as User; // Cast to User, ensure all required fields are present or optional
+  };
   
-  // If viewing another profile and viewedUser is still loading, show loading.
-  // This prevents headerUser from being prematurely set with possibly stale data.
+  const headerUser = displayUserForHeaderLogic();
+  const effectiveUserLocation = isOwnProfile ? (user?.location || userLocation) : (viewedUser?.location || userLocation);
+
+  // Loading states
+  if (profileDataLoading && !headerUser.id && !routeUserId) return <ProfileLoading />;
   if (!isOwnProfile && routeUserId && !viewedUser && profileDataLoading) return <ProfileLoading />;
 
-
-  const headerUser = displayUserForHeader || (viewedUser && !isOwnProfile ? viewedUser : {
-    id: targetUserId,
-    name: name || "User",
-    username: username || "username",
-    bio: bio || "",
-    avatar_url: profileImageUrl || undefined,
-    email: "", // Should be fetched if needed and available
-  } as User);
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -152,7 +163,7 @@ const ProfilePage = () => {
         <div className="max-w-5xl mx-auto">
           {/* Profile Header */}
           <ProfileHeader
-            user={headerUser}
+            user={headerUser} // Pass the determined headerUser
             isOwnProfile={isOwnProfile}
             profileStats={profileStats}
             isPrivate={isPrivate}
@@ -167,14 +178,15 @@ const ProfilePage = () => {
               setShowFollowing(true);
               setShowFollowers(false);
             }}
+            userLocation={effectiveUserLocation} // Pass userLocation here
           />
 
           {/* Edit Profile Dialog (own profile only) */}
-          {isOwnProfile && user && (
+          {isOwnProfile && user && ( // Ensure user is not null for EditProfileDialog
             <EditProfileDialog
               isOpen={isEditProfileOpen}
               onOpenChange={setIsEditProfileOpen}
-              user={user}
+              user={user} // Pass the authenticated user
               name={name}
               setName={setName}
               username={username}
@@ -209,27 +221,26 @@ const ProfilePage = () => {
               isOpen={isReviewDialogOpen}
               onOpenChange={setIsReviewDialogOpen}
               selectedPlace={selectedPlace}
-              onPlaceDeleted={fetchProfileData}
+              onPlaceDeleted={fetchProfileData} // Refresh all data if a place/review is deleted
             />
           )}
 
           {/* Shared Places grid */}
-          <SharedPlaces
-            loading={profileDataLoading}
-            sharedPlaces={sharedPlaces}
-            openReviewDialog={isOwnProfile ? openReviewDialog : (place) => { // Ensure 'place' is passed if needed by toast or other logic
-              // If it's not our own profile, clicking a place might show details or a toast
-              // The original code had selectedPlace which might be stale or not set correctly here
-              // It's better to use the 'place' argument if SharedPlaces provides it on click
-              if (place && place.place) { // Check if place and place.place are defined
-                toast.info(`Viewing details for ${place.place.name}`);
-              } else if (selectedPlace && selectedPlace.place) { // Fallback to selectedPlace if 'place' is not directly provided
-                 toast.info(`Viewing details for ${selectedPlace.place.name}`);
-              }
-            }}
-            refreshPlaces={fetchProfileData}
-            isOwnProfile={isOwnProfile}
-          />
+          <div id="shared-places-section"> {/* Added ID for scrolling */}
+            <SharedPlaces
+              loading={profileDataLoading}
+              sharedPlaces={sharedPlaces}
+              openReviewDialog={isOwnProfile ? openReviewDialog : (place) => { 
+                if (place && place.place) { 
+                  toast.info(`Viewing details for ${place.place.name}`);
+                } else if (selectedPlace && selectedPlace.place) { 
+                   toast.info(`Viewing details for ${selectedPlace.place.name}`);
+                }
+              }}
+              refreshPlaces={fetchProfileData} // Refresh all data
+              isOwnProfile={isOwnProfile}
+            />
+          </div>
         </div>
       </div>
 
