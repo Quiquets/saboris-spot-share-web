@@ -44,10 +44,9 @@ const ProfilePage = () => {
           })
           .catch(error => console.error("Error fetching viewed user profile:", error));
       } else {
-        setViewedUser(user as User); // Cast to User, assuming `user` from useAuth matches the User type
+        setViewedUser(user as User); 
       }
     } else if (!user && routeUserId) {
-      // Not logged in, but viewing a specific profile
       setIsOwnProfile(false);
       supabaseService.getUserProfile(routeUserId)
           .then((profile) => {
@@ -55,9 +54,6 @@ const ProfilePage = () => {
             if (!profile) console.warn(`No profile found for user ID: ${routeUserId}`);
           })
           .catch(error => console.error("Error fetching viewed user profile:", error));
-    } else {
-      // Not logged in and no specific profile ID in route (e.g. /profile)
-      // This case should lead to ProfileUnauthenticated
     }
   }, [user, routeUserId, authLoading]);
 
@@ -86,7 +82,7 @@ const ProfilePage = () => {
     setName,
     username,
     setUsername,
-    userLocation, // <-- We get userLocation here
+    userLocation, 
     setUserLocation,
     profileImageUrl,
     setProfileImageUrl,
@@ -102,10 +98,10 @@ const ProfilePage = () => {
     handleSaveProfile,
     handleDeleteAccount,
   } = useProfileEdit(
-    user, // Pass the authenticated user object
+    user, 
     async () => {
-      await refreshUserData(); // Refresh global user data from AuthContext
-      await fetchProfileData(); // Refetch all profile-specific data
+      await refreshUserData(); 
+      await fetchProfileData(); 
       setIsEditProfileOpen(false);
     },
     bio,
@@ -120,7 +116,7 @@ const ProfilePage = () => {
     setIsPrivate,
     profileImageUrl,
     setProfileImageUrl,
-    fetchProfileData // Pass fetchProfileData to refresh after edits
+    fetchProfileData
   );
 
   // 3) Reviews dialog
@@ -134,17 +130,23 @@ const ProfilePage = () => {
   const displayUserForHeaderLogic = () => {
     if (isOwnProfile && user) return user;
     if (!isOwnProfile && viewedUser) return viewedUser;
-    // Fallback if still loading or user data is sparse
+    
+    // Define a type that includes the optional property for casting
+    type UserWithCommunityStatus = User & { isCommunitymemeber?: boolean };
+
     return {
         id: targetUserId,
         name: name || "User",
         username: username || "username",
         bio: bio || "",
         avatar_url: profileImageUrl || undefined,
-        email: "", // Placeholder, actual email usually not shown publicly
-        isCommunitymemeber: (isOwnProfile && user?.isCommunitymemeber) || (!isOwnProfile && viewedUser?.isCommunitymemeber) || false,
+        email: "", 
+        // Corrected access to isCommunitymemeber using type assertion
+        isCommunitymemeber: (isOwnProfile && (user as UserWithCommunityStatus)?.isCommunitymemeber) || 
+                           (!isOwnProfile && (viewedUser as UserWithCommunityStatus)?.isCommunitymemeber) || 
+                           false,
         location: userLocation || ""
-    } as User; // Cast to User, ensure all required fields are present or optional
+    } as User; 
   };
   
   const headerUser = displayUserForHeaderLogic();
@@ -191,8 +193,8 @@ const ProfilePage = () => {
               setName={setName}
               username={username}
               setUsername={setUsername}
-              userLocation={userLocation}
-              setUserLocation={setUserLocation}
+              userLocation={userLocation} // This is passed to EditProfileDialog
+              setUserLocation={setUserLocation} // This is passed to EditProfileDialog
               bio={bio}
               setBio={setBio}
               isPrivate={isPrivate}

@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,15 +85,15 @@ const ProfileHeader = ({
     await fetchFollowing();
   };
 
-  const handleFollowStatusChange = (followed: boolean) => {
-    setIsFollowing(followed); // Update local state immediately
-    // Refresh profile stats are typically handled by the parent by refetching data.
-    // Consider if profileStats needs explicit refresh here or if parent handles it.
-    // For simplicity, parent should refetch.
-    if (typeof profileStats?.followers_count === 'number') {
-        // This is a bit of a hack, ideally parent refetches
-        // For now, let's assume parent will refresh counts via fetchProfileData after follow/unfollow
-    }
+  // Changed signature to () => void to match FollowButton's expected prop type
+  const handleFollowStatusChange = () => {
+    // Optimistically toggle the local state.
+    // The FollowButton component is assumed to handle the actual API call and database update.
+    // This function is called after the action, to update the UI of this component.
+    setIsFollowing(prevIsFollowing => !prevIsFollowing);
+    // Potentially, the parent component (ProfilePage) should be notified to refresh profileStats
+    // if follower counts need to be updated immediately here.
+    // However, FollowButton might already trigger broader data refreshes or the parent handles this.
   };
   
   // Type guard for user object
@@ -122,7 +121,7 @@ const ProfileHeader = ({
             <div>
               {/* Community Member Ribbon */}
               {hasCommunityMemberProperty(user) && user.isCommunitymemeber && (
-                <Badge className="mb-1 bg-pink-500 text-white border-pink-500 hover:bg-pink-600 text-xs px-2 py-0.5">
+                <Badge className="mb-1 bg-saboris-primary text-white border-saboris-primary hover:bg-saboris-primary/90 text-xs px-2 py-0.5">
                   <AwardIcon className="h-3 w-3 mr-1" />
                   Saboris Community Member
                 </Badge>
@@ -148,7 +147,7 @@ const ProfileHeader = ({
                 >
                   Edit Profile
                 </Button>
-              ) : currentUser && user?.id ? ( // Ensure user.id exists for FollowButton
+              ) : currentUser && user?.id ? // Ensure user.id exists for FollowButton
                 <FollowButton 
                   currentUser={currentUser}
                   profileUser={user} // Pass the full user object
