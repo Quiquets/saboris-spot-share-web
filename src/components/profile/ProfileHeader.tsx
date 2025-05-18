@@ -1,14 +1,14 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProfileStats } from '@/services/supabaseService';
-import { User } from '@/types/global'; // Assuming User type includes isCommunitymemeber and location
-import { LockIcon, MapPinIcon, AwardIcon } from 'lucide-react'; // Added MapPinIcon and AwardIcon
+import { User } from '@/types/global';
+import { LockIcon, MapPinIcon, AwardIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import FollowButton from './FollowButton';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-// import { colors } from '@/lib/colors'; // colors not used
 
 interface ProfileHeaderProps {
   user: User;
@@ -18,7 +18,7 @@ interface ProfileHeaderProps {
   setIsEditProfileOpen: (value: boolean) => void;
   fetchFollowers: () => Promise<void>;
   fetchFollowing: () => Promise<void>;
-  userLocation?: string | null; // Added userLocation
+  userLocation?: string | null;
 }
 
 const ProfileHeader = ({ 
@@ -34,12 +34,9 @@ const ProfileHeader = ({
   const { user: currentUser } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   
-  // Use user.avatar_url if available, otherwise a fallback.
-  // The user object passed to ProfileHeader should ideally have the most up-to-date avatar_url.
   const avatarUrl = user?.avatar_url ? `${user.avatar_url}?t=${new Date().getTime()}` : `https://avatar.vercel.sh/${user?.email || user?.id}.png`;
   const username = user?.username || 'Unknown';
   
-  // Check if current user is following the profile user
   useEffect(() => {
     const checkFollowingStatus = async () => {
       if (!currentUser || !user || isOwnProfile || !user.id) return;
@@ -63,14 +60,12 @@ const ProfileHeader = ({
       }
     };
     
-    if (user?.id) { // Ensure user.id is available
+    if (user?.id) {
         checkFollowingStatus();
     }
   }, [currentUser, user, isOwnProfile]);
   
   const onPlacesClick = () => {
-    // Scroll to places section or navigate to places page
-    // This could be implemented by scrolling to an element with a specific ID.
     const placesSection = document.getElementById('shared-places-section');
     if (placesSection) {
       placesSection.scrollIntoView({ behavior: 'smooth' });
@@ -85,18 +80,10 @@ const ProfileHeader = ({
     await fetchFollowing();
   };
 
-  // Changed signature to () => void to match FollowButton's expected prop type
   const handleFollowStatusChange = () => {
-    // Optimistically toggle the local state.
-    // The FollowButton component is assumed to handle the actual API call and database update.
-    // This function is called after the action, to update the UI of this component.
     setIsFollowing(prevIsFollowing => !prevIsFollowing);
-    // Potentially, the parent component (ProfilePage) should be notified to refresh profileStats
-    // if follower counts need to be updated immediately here.
-    // However, FollowButton might already trigger broader data refreshes or the parent handles this.
   };
   
-  // Type guard for user object
   const hasCommunityMemberProperty = (u: any): u is User & { isCommunitymemeber?: boolean } => {
     return u && typeof u.isCommunitymemeber !== 'undefined';
   };
@@ -107,7 +94,6 @@ const ProfileHeader = ({
         {/* Profile Image - Centered on mobile */}
         <div className="relative flex justify-center w-full sm:w-auto">
           <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-white shadow">
-            {/* Added object-cover for better image display */}
             <AvatarImage src={avatarUrl} className="object-cover" /> 
             <AvatarFallback className="bg-saboris-primary/20 text-xl sm:text-2xl">
               {user?.name?.charAt(0)?.toUpperCase() || '?'}
@@ -119,9 +105,9 @@ const ProfileHeader = ({
         <div className="flex-1 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1">
             <div>
-              {/* Community Member Ribbon */}
+              {/* Community Member Ribbon - Updated color */}
               {hasCommunityMemberProperty(user) && user.isCommunitymemeber && (
-                <Badge className="mb-1 bg-saboris-primary text-white border-saboris-primary hover:bg-saboris-primary/90 text-xs px-2 py-0.5">
+                <Badge className="mb-1 bg-[#FF7F50] text-white border-[#FF7F50] hover:bg-[#FF7F50]/90 text-xs px-2 py-0.5">
                   <AwardIcon className="h-3 w-3 mr-1" />
                   Saboris Community Member
                 </Badge>
@@ -147,10 +133,10 @@ const ProfileHeader = ({
                 >
                   Edit Profile
                 </Button>
-              ) : currentUser && user?.id ? // Ensure user.id exists for FollowButton
+              ) : currentUser && user?.id ? (
                 <FollowButton 
                   currentUser={currentUser}
-                  profileUser={user} // Pass the full user object
+                  profileUser={user}
                   onFollowStatusChange={handleFollowStatusChange}
                 />
               ) : null}
@@ -178,7 +164,7 @@ const ProfileHeader = ({
             <div 
               className="text-center cursor-pointer px-2 py-1 hover:bg-gray-50 rounded-md" 
               onClick={onPlacesClick}
-              id="profile-places-stat" // Added ID for potential scrolling
+              id="profile-places-stat"
             >
               <div className="font-semibold text-saboris-gray">{profileStats?.saved_places_count || 0}</div>
               <div className="text-xs sm:text-sm text-saboris-gray">Places</div>
@@ -209,3 +195,4 @@ const ProfileHeader = ({
 };
 
 export default ProfileHeader;
+
