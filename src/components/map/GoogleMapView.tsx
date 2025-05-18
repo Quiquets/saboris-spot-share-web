@@ -1,12 +1,14 @@
-
+// src/components/map/GoogleMapView.tsx
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Target } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Correct paths into your map/ directory
 import { useMapInitialization } from '@/hooks/map/useMapInitialization';
 import { useMapMarkers } from '@/hooks/map/useMapMarkers';
-import { usePlacesData } from '@/hooks/map/usePlacesData';
+import { useExplorePlaces } from '@/hooks/map/useExplorePlaces';
 import { MapLoading } from './map-components/MapLoading';
 
 interface GoogleMapViewProps {
@@ -21,65 +23,85 @@ interface GoogleMapViewProps {
   };
 }
 
-const GoogleMapView: React.FC<GoogleMapViewProps> = ({ className, activeFilters }) => {
+const GoogleMapView: React.FC<GoogleMapViewProps> = ({
+  className,
+  activeFilters,
+}) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
 
-  // Use custom hooks to separate concerns
-  const { places, userPlaces, friendsPlaces } = usePlacesData();
-  const { 
-    mapInstance, 
-    mapIsReady, 
-    userLocation, 
-    initializeMap
-  } = useMapInitialization(mapContainerRef, setIsLoadingMap);
-  const { 
-    addMarkersToMap, 
-    addUserMarker
-  } = useMapMarkers(mapInstance, mapIsReady);
+  // Map your filter UI into the hook’s expected keys
+  const peopleScope: 'my' | 'friends' | 'fof' =
+    activeFilters?.people === 'my-places'
+      ? 'my'
+      : activeFilters?.people === 'friends'
+      ? 'friends'
+      : activeFilters?.people === 'friends-of-friends'
+      ? 'fof'
+      : 'my';
 
-  // Initialize map when component mounts
+  // 1) Fetch grouped & averaged explore data
+  const { places, loading: exploreLoading } = useExplorePlaces(peopleScope);
+
+  // 2) Initialize Google Map
+  const {
+    mapInstance,
+    mapIsReady,
+    userLocation,
+    initializeMap,
+  } = useMapInitialization(mapContainerRef, setIsLoadingMap);
+
+  // 3) Whenever places change, drop coral-pink pins
+  useMapMarkers(mapInstance, places);
+
+  // Run map setup once
   useEffect(() => {
     initializeMap();
   }, [initializeMap]);
 
-  // Add markers to map when data or filters change
-  useEffect(() => {
-    if (mapIsReady && places.length > 0) {
-      addMarkersToMap(places, userPlaces, friendsPlaces, activeFilters);
-    }
-  }, [mapIsReady, places, userPlaces, friendsPlaces, activeFilters, addMarkersToMap]);
-  
-  // Handle user location button click
+  // “Find Me” button logic
   const handleGetUserLocation = () => {
     if (!mapIsReady) {
-      toast.error("Map not ready. Please wait for the map to load completely.");
+      toast.error('Map not ready. Please wait for the map to load completely.');
       return;
     }
-    
     if (userLocation && mapInstance) {
       mapInstance.panTo(userLocation);
-      addUserMarker(userLocation);
-      toast.success("Location found. Showing recommendations near you!");
+      // Inline creation of a user‐location marker
+      new google.maps.Marker({
+        position: userLocation,
+        map: mapInstance,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6,
+          fillColor: '#FF6B81',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+        },
+      });
+      toast.success('Location found. Showing recommendations near you!');
     } else {
-      toast.error("Could not get your location. Please check your browser settings.");
+      toast.error(
+        'Could not get your location. Please check your browser settings.'
+      );
     }
   };
 
   return (
-    <Card className={`overflow-hidden shadow-lg relative ${className}`}>
+    <Card className={`overflow-hidden shadow-lg relative ${className ?? ''}`}>
       {isLoadingMap && <MapLoading />}
-      
-      <div 
-        ref={mapContainerRef} 
+
+      <div
+        ref={mapContainerRef}
         className="w-full h-full"
         style={{ display: isLoadingMap ? 'none' : 'block' }}
       />
-      
+
       <div className="absolute bottom-4 right-4">
-        <Button 
+        <Button
           onClick={handleGetUserLocation}
-          variant="secondary" 
+          variant="secondary"
           className="shadow-md flex items-center gap-2"
         >
           <Target className="h-4 w-4 text-saboris-primary" />
