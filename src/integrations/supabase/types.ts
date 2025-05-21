@@ -416,11 +416,19 @@ export type Database = {
         Returns: number
       }
       get_user_feed: {
-        Args: {
-          requesting_user_id: string
-          page_limit: number
-          page_offset: number
-        }
+        Args:
+          | {
+              requesting_user_id: string
+              page_limit: number
+              page_offset: number
+            }
+          | {
+              requesting_user_id: string
+              page_limit: number
+              page_offset: number
+              p_people_filter?: string
+              p_time_filter?: string
+            }
         Returns: {
           post_id: string
           post_type: string
