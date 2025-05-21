@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SearchUsersPage from "./pages/SearchUsersPage";
+import FeedPage from "./pages/FeedPage"; // Import the new FeedPage
 import { AuthProvider } from "./contexts/AuthContext";
 import PageLoadingAnimation from "./components/PageLoadingAnimation";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -30,6 +31,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/feed" element={ // Add the new Feed route
+              <ProtectedRoute featureName="User Feed">
+                <FeedPage />
+              </ProtectedRoute>
+            } />
             <Route path="/add" element={
               <ProtectedRoute featureName="Add Place">
                 <AddPlacePage />

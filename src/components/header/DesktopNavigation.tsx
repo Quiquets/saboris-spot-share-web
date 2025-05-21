@@ -1,7 +1,7 @@
 
 import { cn } from '@/lib/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, PlusCircle, Heart, Search } from 'lucide-react';
+import { MapPin, PlusCircle, Heart, Search, LayoutGrid } from 'lucide-react'; // Added LayoutGrid for Feed
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItemProps {
@@ -15,14 +15,14 @@ interface NavItemProps {
 const DesktopNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, setShowAuthModal } = useAuth();
+  const { user, setShowAuthModal, setFeatureName } = useAuth(); // Updated setFeatureName usage
 
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
   // Handle protected route navigation
-  const navigateProtected = (path: string, featureName: string) => {
+  const navigateProtected = (path: string, featureNameValue: string) => {
     // Map is no longer protected, navigating directly
     if (path === '/map') {
       navigate(path);
@@ -35,15 +35,16 @@ const DesktopNavigation = () => {
       return true;
     } else {
       localStorage.setItem('redirectAfterLogin', path);
+      setFeatureName(featureNameValue); // Set feature name for AuthModal context
       setShowAuthModal(true);
       return false;
     }
   };
 
-  const NavItem = ({ path, label, icon, protected: isProtected, featureName }: NavItemProps) => {
+  const NavItem = ({ path, label, icon, protected: isProtected, featureName: navItemFeatureName }: NavItemProps) => {
     const handleClick = () => {
-      if (isProtected) {
-        return navigateProtected(path, featureName || '');
+      if (isProtected && navItemFeatureName) { // Ensure featureName is passed for protected routes
+        return navigateProtected(path, navItemFeatureName);
       } else {
         navigate(path);
         return true;
@@ -70,6 +71,13 @@ const DesktopNavigation = () => {
     <div className="flex items-center space-x-2">
       <NavItem path="/" label="Home" />
       <NavItem path="/map" label="Explore" icon={<MapPin className="h-4 w-4 mr-1" />} />
+      <NavItem 
+        path="/feed" 
+        label="Feed" 
+        icon={<LayoutGrid className="h-4 w-4 mr-1" />} // Added Feed NavItem
+        protected 
+        featureName="User Feed" 
+      />
       <NavItem 
         path="/add" 
         label="Share" 

@@ -415,6 +415,32 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: number
       }
+      get_user_feed: {
+        Args: {
+          requesting_user_id: string
+          page_limit: number
+          page_offset: number
+        }
+        Returns: {
+          post_id: string
+          post_type: string
+          post_created_at: string
+          post_user_id: string
+          post_user_name: string
+          post_user_username: string
+          post_user_avatar_url: string
+          place_id: string
+          place_name: string
+          review_id: string
+          review_text: string
+          review_photo_urls: string[]
+          review_rating_food: number
+          review_rating_service: number
+          review_rating_value: number
+          review_rating_atmosphere: number
+          average_rating: number
+        }[]
+      }
       is_following: {
         Args: { follower_uuid: string; following_uuid: string }
         Returns: boolean
