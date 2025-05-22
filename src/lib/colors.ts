@@ -1,4 +1,3 @@
-
 // Text color constants to maintain consistency across the app
 export const colors = {
   text: {
@@ -9,5 +8,6 @@ export const colors = {
   brand: {
     primary: "#EE8C80", // Saboris primary color
     light: "#FFDEE2", // Saboris light color
+    coralPink: '#EE8C80', // Coral pink for community member banner
   }
 };

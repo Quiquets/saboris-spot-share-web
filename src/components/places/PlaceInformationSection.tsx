@@ -1,4 +1,3 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { MapPin } from 'lucide-react';
@@ -11,12 +10,14 @@ interface PlaceInformationSectionProps {
   form: UseFormReturn<FormValues>;
   handlePlaceSelect: (placeDetails: any) => void;
   isSubmitting: boolean;
+  placeAutocompleteTypes?: string[]; // Add this prop
 }
 
 export function PlaceInformationSection({ 
   form, 
   handlePlaceSelect, 
-  isSubmitting 
+  isSubmitting,
+  placeAutocompleteTypes = ['restaurant', 'cafe', 'bar'], // Default to allowed types
 }: PlaceInformationSectionProps) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -37,6 +38,8 @@ export function PlaceInformationSection({
                   value={field.value}
                   onPlaceSelect={handlePlaceSelect}
                   disabled={isSubmitting}
+                  types={placeAutocompleteTypes}
+                  placeholder="Search for a restaurant, bar, or café..."
                 />
               </FormControl>
               <FormMessage />

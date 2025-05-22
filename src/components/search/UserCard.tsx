@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -59,7 +58,10 @@ const UserCard: React.FC<UserCardProps> = ({
             
             <div className="truncate">
               <p className="font-medium truncate">{user.name}</p>
-              <p className="text-sm text-gray-500 truncate">@{user.username}</p>
+              <p className="text-sm truncate">
+                <span className="text-saboris-primary">@</span>
+                <span className="text-gray-500">{user.username}</span>
+              </p>
             </div>
           </div>
           

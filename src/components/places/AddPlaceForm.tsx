@@ -208,6 +208,8 @@ export function AddPlaceForm() {
               form={form} 
               handlePlaceSelect={handlePlaceSelect}
               isSubmitting={isSubmitting}
+              // Ensure PlaceAutocomplete receives correct types
+              placeAutocompleteTypes={['restaurant', 'cafe', 'bar']}
             />
             
             {/* Details (cuisine, vibes, occasions, price) */}

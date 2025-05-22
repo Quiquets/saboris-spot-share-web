@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -112,7 +111,10 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
                   </Avatar>
                   <div className="truncate">
                     <p className="font-medium text-gray-800 truncate">{user.name}</p>
-                    <p className="text-sm text-gray-500 truncate">@{user.username}</p>
+                    <p className="text-sm truncate">
+                      <span className="text-[#EE8C80]">@</span>
+                      <span className="text-gray-500">{user.username}</span>
+                    </p>
                   </div>
                 </div>
                 {/* Don't show follow button for user's own profile */}

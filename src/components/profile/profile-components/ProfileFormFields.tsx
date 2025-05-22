@@ -1,17 +1,17 @@
-
 // src/components/profile/profile-components/ProfileFormFields.tsx
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PlaceAutocomplete } from "@/components/places/PlaceAutocomplete";
+import type { PlaceDetails } from "@/types/place"; // Add this import
 
 export interface ProfileFormFieldsProps {
   name: string;
   setName: (value: string) => void;
   username: string;
   setUsername: (value: string) => void;
-  userLocation: string;
-  setUserLocation: (value: string) => void;
+  userLocation: string | PlaceDetails; // Accept PlaceDetails for consistency
+  setUserLocation: (value: string | PlaceDetails) => void; // Accept PlaceDetails for consistency
   bio: string;
   setBio: (value: string) => void;
 }
@@ -62,15 +62,13 @@ export const ProfileFormFields = ({
           Location
         </Label>
         <PlaceAutocomplete
-          value={userLocation}
+          value={typeof userLocation === "string" ? userLocation : userLocation?.name || ""}
           onPlaceSelect={(details) => {
-            // For cities, details.name might be "City, Country" or just "City"
-            // details.address will be the full formatted address.
-            // We want to store a simple string like "City, Country Abbreviation"
-            setUserLocation(details.name); // details.name is now formatted like "City, CC" by PlaceAutocomplete
+            setUserLocation(details); // Pass full details for consistency
           }}
           types={['(cities)']}
           placeholder="Enter your city"
+          disabled={false}
         />
         {/* Fallback or info text if needed */}
         {/* <p className="text-xs text-gray-500 mt-1">e.g., London, UK</p> */}

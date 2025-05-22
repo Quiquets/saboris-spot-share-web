@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import FollowButton from '../FollowButton'; // Adjusted path
@@ -22,12 +21,13 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({
   onFollowStatusChange,
 }) => {
   return (
-    <div className="mt-2 sm:mt-0">
+
+    <div className="-mt-24 -sm:mt-20">
       {isOwnProfile ? (
         <Button
           variant="outline"
           onClick={() => setIsEditProfileOpen(true)}
-          className="w-full sm:w-auto"
+          className= "bg-white border-[#F88379] text-[#F88379] hover:bg-[#F88379]/10"
           size="sm"
         >
           Edit Profile

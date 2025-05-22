@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,7 +59,12 @@ const UserMenu = () => {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none text-gray-800">{user.name || user.username}</p>
-              {user.username && <p className="text-xs leading-none text-muted-foreground">@{user.username}</p>}
+              {user.username && (
+                <p className="text-xs leading-none">
+                  <span className="text-saboris-primary">@</span>
+                  <span className="text-muted-foreground">{user.username}</span>
+                </p>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

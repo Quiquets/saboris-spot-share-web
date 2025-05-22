@@ -26,15 +26,15 @@ interface PlaceAutocompleteProps {
   value: string;
   onPlaceSelect: (details: PlaceDetails) => void;
   disabled?: boolean;
-  types?: string[]; // Added types prop
-  placeholder?: string; // Added placeholder prop
+  types?: string[]; // Allowed types
+  placeholder?: string;
 }
 
 export function PlaceAutocomplete({
   value,
   onPlaceSelect,
   disabled,
-  types = ['establishment'], // Default to establishment
+  types = ['restaurant', 'cafe', 'bar'], // Only allow these types by default
   placeholder = "Search for a restaurant, bar, or café..." // Default placeholder
 }: PlaceAutocompleteProps) {
   const [input, setInput] = useState(value);
@@ -93,39 +93,35 @@ export function PlaceAutocomplete({
     const newInput = e.target.value;
     setInput(newInput);
     
-    if (newInput.length > 0 && autocompleteService.current && autocompleteSessionToken.current) { // Changed length to > 0 for city search
+    if (newInput.length > 0 && autocompleteService.current && autocompleteSessionToken.current) {
       setIsLoading(true);
       setShowPredictions(true);
       
-      // Create request with location bias if available
       const request: google.maps.places.AutocompletionRequest = {
         input: newInput,
         sessionToken: autocompleteSessionToken.current,
-        types: types, // Use the types prop
+        types: types, // Only allow restaurants, cafes, bars
       };
       
-      // If we have user location, add location bias
-      if (userLoc && types.includes('establishment')) { // Location bias primarily for establishments
+      if (userLoc && types.some(t => t === 'establishment' || t === 'restaurant' || t === 'cafe' || t === 'bar')) {
         request.location = userLoc;
-        request.radius = 50000; // 50km radius, adjust as needed
+        request.radius = 50000;
       }
-      
-      // For city searches, componentRestrictions might be useful, e.g. restricting to a country
-      // if (types.includes('(cities)')) {
-      //   // request.componentRestrictions = { country: 'us' }; // Example: restrict to US
-      // }
       
       autocompleteService.current.getPlacePredictions(
         request,
-        (newPredictions, status) => { // Renamed predictions to newPredictions
+        (newPredictions, status) => {
           setIsLoading(false);
-          
           if (status !== google.maps.places.PlacesServiceStatus.OK || !newPredictions) {
             setPredictions([]);
             return;
           }
-          
-          setPredictions(newPredictions);
+          // Filter predictions to only those that are restaurants, cafes, bars, or locals
+          const allowedTypes = ['restaurant', 'cafe', 'bar', 'food', 'point_of_interest'];
+          const filtered = newPredictions.filter(pred =>
+            pred.types?.some(type => allowedTypes.includes(type))
+          );
+          setPredictions(filtered);
         }
       );
     } else {

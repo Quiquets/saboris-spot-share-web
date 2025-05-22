@@ -5,6 +5,7 @@ export interface ReviewerInfo {
   ratingOverall: number;
   ratingValue?: number;
   ratingAtmosphere?: number;
+  reviewText?: string; // Add this line
 }
 
 export interface ExplorePlace {

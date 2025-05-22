@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Check, Loader2, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -145,7 +144,10 @@ export function FriendSelector({ selectedFriends, onChange }: FriendSelectorProp
                   </Avatar>
                   <div>
                     <p className="font-medium">{friend.name}</p>
-                    <p className="text-sm text-gray-500">@{friend.username}</p>
+                    <p className="text-sm text-gray-500">
+                      <span className="text-[#EE8C80]">@</span>
+                      <span>{friend.username}</span>
+                    </p>
                   </div>
                 </div>
                 <div className="h-5 w-5 rounded-full border flex items-center justify-center">

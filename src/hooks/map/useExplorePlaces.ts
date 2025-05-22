@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ExplorePlace, ReviewerInfo } from "@/types/explore";
 
-export function useExplorePlaces(filter: "my" | "friends" | "fof") {
+export function useExplorePlaces(filter: "my" | "friends" | "fof" | "community") {
   const { user } = useAuth();
   const [places, setPlaces] = useState<ExplorePlace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,9 +14,11 @@ export function useExplorePlaces(filter: "my" | "friends" | "fof") {
     setLoading(true);
 
     (async () => {
-      // 1) Build the list of user-IDs to include
-      let ids = [user.id];
-      if (filter !== "my") {
+      let ids: string[] = [user.id];
+      let filterCommunity = false;
+      if (filter === "community") {
+        filterCommunity = true;
+      } else if (filter !== "my") {
         const { data: friends = [] } = await supabase
           .from("follows")
           .select("following_id")
@@ -34,25 +36,45 @@ export function useExplorePlaces(filter: "my" | "friends" | "fof") {
           const fofIds = fofRows.map((f) => f.following_id);
           ids = Array.from(new Set([...friendIds, ...fofIds]));
         }
+        // Debug log
+        console.log("useExplorePlaces: filter:", filter, "ids:", ids);
       }
 
-      // 2) One joined query on `wishlists` (the table that holds saved places)
-      const { data: rawData, error } = await supabase
-        .from("wishlists")
+      // --- NEW: Fetch reviews directly and map to ExplorePlace[] ---
+      let reviewsQuery = supabase
+        .from("reviews")
         .select(`
+          id,
+          user_id,
           place_id,
-          places!inner(name, category, lat, lng),
-          reviews!inner(
-            user_id,
-            photo_urls,
-            rating_overall,
-            rating_value,
-            rating_atmosphere
+          rating_atmosphere,
+          rating_food,
+          rating_service,
+          rating_value,
+          rating_overall,
+          text,
+          photo_urls,
+          places (
+            id,
+            name,
+            category,
+            lat,
+            lng
           ),
-          users!reviews_user_fkey(name)
-        `)
-        .in("user_id", ids);
+          users:user_id (
+            id,
+            name,
+            isCommunitymemeber
+          )
+        `);
 
+      if (filterCommunity) {
+        reviewsQuery = reviewsQuery.eq("users.isCommunitymemeber", true);
+      } else {
+        reviewsQuery = reviewsQuery.in("user_id", ids);
+      }
+
+      const { data: reviewsData, error } = await reviewsQuery;
       if (error) {
         console.error("fetchExplorePlaces error:", error);
         setPlaces([]);
@@ -60,34 +82,29 @@ export function useExplorePlaces(filter: "my" | "friends" | "fof") {
         return;
       }
 
-      // 3) Cast to any[] so we can pick off the joined fields
-      const rows = (rawData ?? []) as any[];
-
-      // 4) Group by place_id
+      // Group reviews by place_id
       const groups: Record<string, any[]> = {};
-      rows.forEach((r) => {
-        (groups[r.place_id] ||= []).push(r);
+      (reviewsData ?? []).forEach((r) => {
+        if (r.places && r.places.id) {
+          (groups[r.place_id] ||= []).push(r);
+        }
       });
 
-      // 5) Map into our ExplorePlace[]
+      // Map to ExplorePlace[]
       const result: ExplorePlace[] = Object.values(groups).map((grp) => {
         const first = grp[0];
         const loc = { lat: first.places.lat, lng: first.places.lng };
-
-        // build the list of reviewers
         const reviewers: ReviewerInfo[] = grp.map((r) => ({
-          userId: r.reviews.user_id,
-          userName: r.users.name,
-          photoUrls: r.reviews.photo_urls,
-          ratingOverall: r.reviews.rating_overall,
-          ratingValue: r.reviews.rating_value,
-          ratingAtmosphere: r.reviews.rating_atmosphere,
+          userId: r.user_id,
+          userName: r.users?.name || "Unknown",
+          photoUrls: r.photo_urls || [],
+          ratingOverall: r.rating_overall ?? 0,
+          ratingValue: r.rating_value ?? undefined,
+          ratingAtmosphere: r.rating_atmosphere ?? undefined,
+          reviewText: r.text || "",
         }));
-
-        // helper for averages
         const avg = (arr: number[]) =>
-          arr.reduce((sum, x) => sum + x, 0) / arr.length;
-
+          arr.length ? arr.reduce((sum, x) => sum + x, 0) / arr.length : 0;
         return {
           placeId: first.place_id,
           name: first.places.name,

@@ -24,7 +24,7 @@ export function useMapMarkers(
         position: place.location,
         map,
         icon: {
-          url: "/icons/coral-pin.png",
+          url: "/icons/coral-pin.png", // Coral pink pin for community
           scaledSize: new google.maps.Size(32, 32),
         },
       });

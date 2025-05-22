@@ -31,13 +31,15 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   const [isLoadingMap, setIsLoadingMap] = useState(true);
 
   // Map your filter UI into the hook’s expected keys
-  const peopleScope: 'my' | 'friends' | 'fof' =
+  const peopleScope: 'my' | 'friends' | 'fof' | 'community' =
     activeFilters?.people === 'my-places'
       ? 'my'
       : activeFilters?.people === 'friends'
       ? 'friends'
       : activeFilters?.people === 'friends-of-friends'
       ? 'fof'
+      : activeFilters?.people === 'community'
+      ? 'community'
       : 'my';
 
   // 1) Fetch grouped & averaged explore data

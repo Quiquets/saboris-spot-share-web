@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,12 +18,13 @@ export const SavedPlacesGrid: React.FC<SavedPlacesGridProps> = ({ places, handle
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
       {places.map((place) => (
         <Card key={place.id} className="overflow-hidden hover:shadow-md transition-shadow">
-          <div className="aspect-video w-full overflow-hidden bg-gray-100">
+          <div className="aspect-video w-full overflow-hidden bg-gray-100 flex items-center justify-center">
             <img 
               src={`https://source.unsplash.com/random/400x300?restaurant,${place.restaurant.name}`}
               alt={place.restaurant.name} 
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-md" // Added rounded-md for miniature effect
               loading="lazy"
+              style={{ objectFit: 'cover', width: '100%', height: '100%', maxHeight: 120 }} // Ensures miniature
             />
           </div>
           
