@@ -1,6 +1,6 @@
-// src/components/feed/FeedPage.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { useFeed } from '@/hooks/useFeed';
+import type { FeedPost, PeopleFilterOption } from '@/services/feedService';
 import FeedItem from '@/components/feed/FeedItem';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -9,19 +9,17 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import PeopleFilter from '@/components/map/filters/PeopleFilter';
-import type { PeopleFilterOption, TimeFilterOption } from '@/services/feedService';
+import FoodTypeFilter from '@/components/map/filters/FoodTypeFilter';
+import { Card } from '@/components/ui/card';
 
 const FeedPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
-
-  // Use the same toggle values as Explore/Saved
   const [activePeopleFilter, setActivePeopleFilter] = useState<
     'my' | 'friends' | 'friends-of-friends'
   >('friends-of-friends');
-  const [activeTimeFilter, setActiveTimeFilter] =
-    useState<TimeFilterOption>('7 days');
+  const [activeFoodTypes, setActiveFoodTypes] = useState<string[]>([]);
+  const [minAvgRating, setMinAvgRating] = useState<number>(0);
 
-  // Map our UI values to feedService enums
   const feedPeople: PeopleFilterOption =
     activePeopleFilter === 'my'
       ? 'my_friends'
@@ -30,17 +28,20 @@ const FeedPage: React.FC = () => {
       : 'community';
 
   const {
-    feedPages,
+    data,
     fetchNextPage,
     hasNextPage,
     isLoading,
     isError,
     error,
     isFetchingNextPage,
-  } = useFeed(feedPeople, activeTimeFilter);
+  } = useFeed(feedPeople);
 
-  const observer = useRef<IntersectionObserver | null>(null);
-  const lastRef = React.useCallback(
+  // now data.pages: FeedPost[][] — we flatten it
+  const feedPosts: FeedPost[] = data?.pages.flat() ?? [];
+
+  const observer = useRef<IntersectionObserver>();
+  const lastRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (isLoading || isFetchingNextPage) return;
       observer.current?.disconnect();
@@ -53,6 +54,18 @@ const FeedPage: React.FC = () => {
     },
     [fetchNextPage, hasNextPage, isLoading, isFetchingNextPage]
   );
+
+  // Filter feedPosts by food type and minimum average rating
+  const filteredFeedPosts = feedPosts.filter(post => {
+    // Filter by food type if any selected
+    const foodTypeMatch =
+      activeFoodTypes.length === 0 ||
+      (post.cuisineOptions && activeFoodTypes.includes(post.cuisineOptions));
+    // Filter by minimum average rating
+    const avgRating = post.average_rating ?? 0;
+    const ratingMatch = minAvgRating === 0 || avgRating >= minAvgRating;
+    return foodTypeMatch && ratingMatch;
+  });
 
   if (authLoading) {
     return (
@@ -72,9 +85,7 @@ const FeedPage: React.FC = () => {
         <Header />
         <main className="flex-grow flex flex-col items-center justify-center text-center p-4">
           <h2 className="text-2xl font-semibold mb-4">Access Your Feed</h2>
-          <p className="mb-6 text-gray-600">
-            Please log in to see your personalized feed.
-          </p>
+          <p className="mb-6 text-gray-600">Please log in to see your personalized feed.</p>
           <Button asChild>
             <Link to="/">Log In / Sign Up</Link>
           </Button>
@@ -88,44 +99,32 @@ const FeedPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-saboris-primary mb-6">
-          Your Feed
+        <h1 className="text-lg sm:text-xl md:text-3xl font-bold text-center mb-3 md:mb-6 text-saboris-primary flex items-center justify-center">
         </h1>
 
-        <div className="max-w-2xl mx-auto mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1">
-              Show posts from:
-            </p>
+        {/* Filters styled like SavedPlacesFilters */}
+        <Card className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 md:p-4 w-full mb-4 md:mb-6 max-w-2xl mx-auto">
+          <div className="flex flex-col gap-3">
             <PeopleFilter
               activePeople={activePeopleFilter}
-              handlePeopleFilterChange={value =>
-                setActivePeopleFilter(
-                  value as 'my' | 'friends' | 'friends-of-friends'
-                )
+              handlePeopleFilterChange={(v) =>
+                setActivePeopleFilter(v as 'my' | 'friends' | 'friends-of-friends')
               }
               isUserAuthenticated={!!user}
             />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1">
-              Time range:
-            </p>
-            {/* Basic select for TimeFilter - you might want to use your shadcn/ui Select component */}
-            <select 
-              value={activeTimeFilter} 
-              onChange={(e) => setActiveTimeFilter(e.target.value as TimeFilterOption)}
-              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-saboris-primary focus:border-saboris-primary"
-            >
-              <option value="1 day">Last 24 hours</option>
-              <option value="7 days">Last 7 days</option>
-              <option value="30 days">Last 30 days</option>
-              <option value="all_time">All time</option>
-            </select>
-          </div>
-        </div>
+            <div className="w-full">
+              <FoodTypeFilter
+                activeFoodTypes={activeFoodTypes}
+                handleFilterChange={(_, value) => setActiveFoodTypes(value)}
+              />
 
-        {isLoading && !feedPages.length && (
+            
+                
+            </div>
+          </div>
+        </Card>
+
+        {isLoading && filteredFeedPosts.length === 0 && (
           <div className="flex justify-center py-10">
             <Loader2 className="h-10 w-10 animate-spin text-saboris-primary" />
           </div>
@@ -137,14 +136,10 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {!isLoading && !isError && !feedPages.length && (
+        {!isLoading && !isError && filteredFeedPosts.length === 0 && (
           <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow text-center">
-            <h2 className="text-xl font-semibold mb-2">
-              No posts match these filters.
-            </h2>
-            <p className="mb-4">
-              Try broadening your filter or follow more community members.
-            </p>
+            <h2 className="text-xl font-semibold mb-2">No posts match these filters.</h2>
+            <p className="mb-4">Try broadening your filter or follow more community members.</p>
             <div className="space-x-2">
               <Button asChild variant="outline">
                 <Link to="/map">Explore Places</Link>
@@ -157,9 +152,9 @@ const FeedPage: React.FC = () => {
         )}
 
         <div className="max-w-2xl mx-auto space-y-6">
-          {feedPages.map((post, idx) => {
+          {filteredFeedPosts.map((post, idx) => {
             const key = `${post.post_id}-${idx}`;
-            if (idx === feedPages.length - 1) {
+            if (idx === filteredFeedPosts.length - 1) {
               return (
                 <div ref={lastRef} key={key}>
                   <FeedItem post={post} />
@@ -184,7 +179,7 @@ const FeedPage: React.FC = () => {
           </div>
         )}
 
-        {!isLoading && !hasNextPage && feedPages.length > 0 && (
+        {!isLoading && !hasNextPage && filteredFeedPosts.length > 0 && (
           <p className="text-center text-gray-500 mt-8">
             You’ve reached the end of your feed.
           </p>

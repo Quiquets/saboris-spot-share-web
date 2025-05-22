@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ProfileStats } from '@/services/supabaseService';
 import { User } from '@/types/global';
@@ -89,12 +88,11 @@ const ProfileHeader = ({
     // For now, assuming FollowButton or parent component handles stat refresh.
   };
   
-  // Type guard for user object to check for isCommunitymemeber
-  // This could also be defined as a utility if used elsewhere.
-  const hasCommunityMemberProperty = (u: any): u is User & { isCommunitymemeber?: boolean } => {
-    return u && typeof u.isCommunitymemeber !== 'undefined';
+  // Type guard for user object to check for isCommunitymember
+  const hasCommunityMemberProperty = (u: any): u is User & { isCommunitymember?: boolean } => {
+    return u && typeof u.isCommunitymember !== 'undefined';
   };
-  const isCommunityMember = hasCommunityMemberProperty(user) && user.isCommunitymemeber === true;
+  const isCommunityMember = hasCommunityMemberProperty(user) && user.isCommunitymember === true;
 
 
   return (

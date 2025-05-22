@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -37,7 +36,7 @@ const PeopleFilter: React.FC<PeopleFilterProps> = ({
   };
   
   return (
-    <div className="w-full">
+    <div className="w-full px-0 md:px-0 mb-3">
       <ToggleGroup 
         type="single" 
         value={activePeople} 

@@ -140,7 +140,7 @@ export function ImageUpload({
         )}
       </div>
       <p className="text-sm text-gray-500">
-        You can upload up to {maxImages} photos (max 3MB each) to “{bucketName}.”
+        You can upload up to {maxImages} photos (max 5MB each) to “{bucketName}.”
       </p>
     </div>
   );

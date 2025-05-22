@@ -1,10 +1,11 @@
-// src/hooks/map/useExplorePlaces.ts
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import type { ExplorePlace, ReviewerInfo } from "@/types/explore";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { ExplorePlace, ReviewerInfo } from '@/types/explore';
 
-export function useExplorePlaces(filter: "my" | "friends" | "fof" | "community") {
+export function useExplorePlaces(
+  filter: 'my' | 'friends' | 'fof' | 'community'
+) {
   const { user } = useAuth();
   const [places, setPlaces] = useState<ExplorePlace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,34 +16,30 @@ export function useExplorePlaces(filter: "my" | "friends" | "fof" | "community")
 
     (async () => {
       let ids: string[] = [user.id];
-      let filterCommunity = false;
-      if (filter === "community") {
-        filterCommunity = true;
-      } else if (filter !== "my") {
-        const { data: friends = [] } = await supabase
-          .from("follows")
-          .select("following_id")
-          .eq("follower_id", user.id);
+      const isCommunity = filter === 'community';
 
+      if (!isCommunity && filter !== 'my') {
+        const { data: friends = [] } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
         const friendIds = friends.map((f) => f.following_id);
-        if (filter === "friends") {
+
+        if (filter === 'friends') {
           ids = friendIds;
         } else {
-          // friends-of-friends
-          const { data: fofRows = [] } = await supabase
-            .from("follows")
-            .select("following_id")
-            .in("follower_id", friendIds);
-          const fofIds = fofRows.map((f) => f.following_id);
-          ids = Array.from(new Set([...friendIds, ...fofIds]));
+          const { data: fof = [] } = await supabase
+            .from('follows')
+            .select('following_id')
+            .in('follower_id', friendIds);
+          ids = Array.from(
+            new Set([...friendIds, ...fof.map((f) => f.following_id)])
+          );
         }
-        // Debug log
-        console.log("useExplorePlaces: filter:", filter, "ids:", ids);
       }
 
-      // --- NEW: Fetch reviews directly and map to ExplorePlace[] ---
-      let reviewsQuery = supabase
-        .from("reviews")
+      let q = supabase
+        .from('reviews')
         .select(`
           id,
           user_id,
@@ -51,7 +48,6 @@ export function useExplorePlaces(filter: "my" | "friends" | "fof" | "community")
           rating_food,
           rating_service,
           rating_value,
-          rating_overall,
           text,
           photo_urls,
           places (
@@ -64,47 +60,48 @@ export function useExplorePlaces(filter: "my" | "friends" | "fof" | "community")
           users:user_id (
             id,
             name,
-            isCommunitymemeber
+            isCommunitymember
           )
         `);
 
-      if (filterCommunity) {
-        reviewsQuery = reviewsQuery.eq("users.isCommunitymemeber", true);
+      if (isCommunity) {
+        q = q.eq('users.isCommunitymember', true);
       } else {
-        reviewsQuery = reviewsQuery.in("user_id", ids);
+        q = q.in('user_id', ids);
       }
 
-      const { data: reviewsData, error } = await reviewsQuery;
-      if (error) {
-        console.error("fetchExplorePlaces error:", error);
+      const { data: reviews, error } = await q;
+      if (error || !Array.isArray(reviews)) {
+        console.error('fetchExplorePlaces error:', error);
         setPlaces([]);
         setLoading(false);
         return;
       }
 
-      // Group reviews by place_id
-      const groups: Record<string, any[]> = {};
-      (reviewsData ?? []).forEach((r) => {
-        if (r.places && r.places.id) {
+      // Group by place_id
+      const groups: Record<string, typeof reviews> = {};
+      reviews.forEach((r) => {
+        if (r.places?.id) {
           (groups[r.place_id] ||= []).push(r);
         }
       });
 
-      // Map to ExplorePlace[]
+      // Build ExplorePlace[]
       const result: ExplorePlace[] = Object.values(groups).map((grp) => {
         const first = grp[0];
         const loc = { lat: first.places.lat, lng: first.places.lng };
         const reviewers: ReviewerInfo[] = grp.map((r) => ({
           userId: r.user_id,
-          userName: r.users?.name || "Unknown",
+          userName: r.users?.name || 'Unknown',
           photoUrls: r.photo_urls || [],
-          ratingOverall: r.rating_overall ?? 0,
+          ratingOverall: 0,
           ratingValue: r.rating_value ?? undefined,
           ratingAtmosphere: r.rating_atmosphere ?? undefined,
-          reviewText: r.text || "",
+          reviewText: r.text || '',
         }));
         const avg = (arr: number[]) =>
-          arr.length ? arr.reduce((sum, x) => sum + x, 0) / arr.length : 0;
+          arr.reduce((sum, x) => sum + x, 0) / (arr.length || 1);
+
         return {
           placeId: first.place_id,
           name: first.places.name,
