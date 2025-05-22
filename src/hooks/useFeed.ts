@@ -1,7 +1,10 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { fetchFeed, PeopleFilterOption, TimeFilterOption } from '@/services/feedService';
+import { supabase } from '@/integrations/supabase/client';
+import type { PeopleFilterOption, TimeFilterOption } from '@/services/feedService'; // TimeFilterOption is now updated
+import { ITEMS_PER_PAGE } from '@/services/feedService'; // Import ITEMS_PER_PAGE
 import { useAuth } from '@/contexts/AuthContext';
+import type { FeedPost } from '@/types/feed'; // Use FeedPost type from @/types/feed
 
 export const useFeed = (peopleFilter: PeopleFilterOption, timeFilter: TimeFilterOption) => {
   const { user } = useAuth();
@@ -14,25 +17,35 @@ export const useFeed = (peopleFilter: PeopleFilterOption, timeFilter: TimeFilter
     isError,
     error,
     isFetchingNextPage,
-    refetch, // Added refetch for when filters change significantly if needed, though queryKey change handles it
-  } = useInfiniteQuery({
-    queryKey: ['feed', user?.id, peopleFilter, timeFilter], // Include filters in queryKey
-    queryFn: ({ pageParam }) => {
+    refetch,
+  } = useInfiniteQuery<FeedPost[], Error, FeedPost[], FeedPost[], number>({
+    queryKey: ['feed', user?.id, peopleFilter, timeFilter],
+    queryFn: async ({ pageParam }) => {
       if (!user?.id) return Promise.resolve([]);
-      return fetchFeed(user.id, pageParam, peopleFilter, timeFilter);
+
+      const { data: feedData, error: rpcError } = await supabase.rpc('get_user_feed', {
+        requesting_user_id: user.id,
+        page_limit: ITEMS_PER_PAGE,
+        page_offset: pageParam * ITEMS_PER_PAGE,
+        p_people_filter: peopleFilter,
+        p_time_filter: timeFilter,
+      });
+
+      if (rpcError) {
+        console.error('Error fetching feed from RPC:', rpcError);
+        throw rpcError;
+      }
+      return (feedData as FeedPost[]) || [];
     },
     getNextPageParam: (lastPage, allPages) => {
-      // If the last page had items, there might be a next page.
-      // ITEMS_PER_PAGE is defined in feedService, assuming it's 10
-      const ITEMS_PER_PAGE = 10; 
       return lastPage.length === ITEMS_PER_PAGE ? allPages.length : undefined;
     },
     initialPageParam: 0,
-    enabled: !!user?.id, // Only run query if user is logged in
+    enabled: !!user?.id,
   });
 
   return {
-    feedPages: data?.pages.flat() || [], // Flattened array of all feed posts
+    feedPages: data?.pages.flat() || [],
     fetchNextPage,
     hasNextPage,
     isLoading,
@@ -42,3 +55,4 @@ export const useFeed = (peopleFilter: PeopleFilterOption, timeFilter: TimeFilter
     refetch,
   };
 };
+

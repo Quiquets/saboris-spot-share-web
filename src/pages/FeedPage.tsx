@@ -9,8 +9,6 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import PeopleFilter from '@/components/map/filters/PeopleFilter';
-import FoodTypeFilter from '@/components/map/filters/FoodTypeFilter';
-import PriceFilter from '@/components/map/filters/PriceFilter';
 import type { PeopleFilterOption, TimeFilterOption } from '@/services/feedService';
 
 const FeedPage: React.FC = () => {
@@ -94,7 +92,7 @@ const FeedPage: React.FC = () => {
           Your Feed
         </h1>
 
-        <div className="max-w-2xl mx-auto mb-6 space-y-4">
+        <div className="max-w-2xl mx-auto mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm font-medium text-gray-700 mb-1">
               Show posts from:
@@ -108,6 +106,22 @@ const FeedPage: React.FC = () => {
               }
               isUserAuthenticated={!!user}
             />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-1">
+              Time range:
+            </p>
+            {/* Basic select for TimeFilter - you might want to use your shadcn/ui Select component */}
+            <select 
+              value={activeTimeFilter} 
+              onChange={(e) => setActiveTimeFilter(e.target.value as TimeFilterOption)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-saboris-primary focus:border-saboris-primary"
+            >
+              <option value="1 day">Last 24 hours</option>
+              <option value="7 days">Last 7 days</option>
+              <option value="30 days">Last 30 days</option>
+              <option value="all_time">All time</option>
+            </select>
           </div>
         </div>
 
