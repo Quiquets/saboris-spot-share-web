@@ -1,6 +1,5 @@
 import React from 'react';
 import { ActiveFilters } from '@/components/map/FilterOptions';
-import PeopleFilter from '@/components/map/filters/PeopleFilter';
 import OccasionFilter from '@/components/map/filters/OccasionFilter';
 import FoodTypeFilter from '@/components/map/filters/FoodTypeFilter';
 import VibeFilter from '@/components/map/filters/VibeFilter';
@@ -24,16 +23,7 @@ export const SavedPlacesFilters: React.FC<SavedPlacesFiltersProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 md:p-4 w-full mb-4 md:mb-6">
-      {/* People filter positioned above other filters */}
-      <div className="mb-3">
-        <PeopleFilter
-          activePeople={activeFilters.people} 
-          handlePeopleFilterChange={handlePeopleFilterChange}
-          isUserAuthenticated={isUserAuthenticated}
-        />
-      </div>
-      
-      {/* Other filters */}
+
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 w-full">
         <div>
           <OccasionFilter 
