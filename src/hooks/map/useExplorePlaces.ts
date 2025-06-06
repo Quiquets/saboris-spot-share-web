@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,12 +61,12 @@ export function useExplorePlaces(
           users:user_id (
             id,
             name,
-            isCommunitymember
+            isCommunityMember
           )
         `);
 
       if (isCommunity) {
-        q = q.eq('users.isCommunitymember', true);
+        q = q.eq('users.isCommunityMember', true);
       } else {
         q = q.in('user_id', ids);
       }
@@ -78,6 +79,8 @@ export function useExplorePlaces(
         return;
       }
 
+      console.log('Raw reviews data:', reviews);
+
       // Group by place_id
       const groups: Record<string, typeof reviews> = {};
       reviews.forEach((r) => {
@@ -86,40 +89,61 @@ export function useExplorePlaces(
         }
       });
 
+      console.log('Grouped reviews:', groups);
+
       // Build ExplorePlace[]
       const result: ExplorePlace[] = Object.values(groups).map((grp) => {
         const first = grp[0];
         const loc = { lat: first.places.lat, lng: first.places.lng };
-        const reviewers: ReviewerInfo[] = grp.map((r) => ({
-          userId: r.user_id,
-          userName: r.users?.name || 'Unknown',
-          photoUrls: r.photo_urls || [],
-          ratingOverall: 0,
-          ratingValue: r.rating_value ?? undefined,
-          ratingAtmosphere: r.rating_atmosphere ?? undefined,
-          reviewText: r.text || '',
-        }));
-        const avg = (arr: number[]) =>
-          arr.reduce((sum, x) => sum + x, 0) / (arr.length || 1);
+        
+        // Calculate overall rating for each reviewer
+        const reviewers: ReviewerInfo[] = grp.map((r) => {
+          const ratings = [
+            r.rating_food,
+            r.rating_service,
+            r.rating_atmosphere,
+            r.rating_value
+          ].filter((rating) => rating !== null && rating !== undefined);
+          
+          const overallRating = ratings.length > 0 
+            ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+            : 0;
 
-        return {
+          return {
+            userId: r.user_id,
+            userName: r.users?.name || 'Unknown',
+            photoUrls: r.photo_urls || [],
+            ratingOverall: overallRating,
+            ratingValue: r.rating_value ?? undefined,
+            ratingAtmosphere: r.rating_atmosphere ?? undefined,
+            reviewText: r.text || '',
+          };
+        });
+
+        // Calculate averages
+        const avg = (arr: number[]) =>
+          arr.length > 0 ? arr.reduce((sum, x) => sum + x, 0) / arr.length : 0;
+
+        const overallRatings = reviewers.map(r => r.ratingOverall).filter(r => r > 0);
+        const valueRatings = reviewers.map(r => r.ratingValue).filter(r => r !== undefined) as number[];
+        const atmosphereRatings = reviewers.map(r => r.ratingAtmosphere).filter(r => r !== undefined) as number[];
+
+        const place: ExplorePlace = {
           placeId: first.place_id,
           name: first.places.name,
           category: first.places.category,
           location: loc,
           reviewers,
-          avgOverall: avg(reviewers.map((r) => r.ratingOverall)),
-          avgValue:
-            reviewers[0].ratingValue != null
-              ? avg(reviewers.map((r) => r.ratingValue!))
-              : undefined,
-          avgAtmosphere:
-            reviewers[0].ratingAtmosphere != null
-              ? avg(reviewers.map((r) => r.ratingAtmosphere!))
-              : undefined,
+          avgOverall: avg(overallRatings),
+          avgValue: valueRatings.length > 0 ? avg(valueRatings) : undefined,
+          avgAtmosphere: atmosphereRatings.length > 0 ? avg(atmosphereRatings) : undefined,
         };
+
+        console.log('Built place:', place);
+        return place;
       });
 
+      console.log('Final result:', result);
       setPlaces(result);
       setLoading(false);
     })();
