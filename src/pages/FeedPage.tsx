@@ -55,7 +55,7 @@ const FeedPage: React.FC = () => {
     [fetchNextPage, hasNextPage, isLoading, isFetchingNextPage]
   );
 
-  // Filter feedPosts by food type and minimum average rating
+  // Filter feedPosts by food type, minimum average rating, and community member status
   const filteredFeedPosts = feedPosts.filter(post => {
     // Filter by food type if any selected
     const foodTypeMatch =
@@ -64,7 +64,9 @@ const FeedPage: React.FC = () => {
     // Filter by minimum average rating
     const avgRating = post.average_rating ?? 0;
     const ratingMatch = minAvgRating === 0 || avgRating >= minAvgRating;
-    return foodTypeMatch && ratingMatch;
+    // Only show posts where the author is a community member
+    const isCommunityMember = post.user?.isCommunityMember === true;
+    return foodTypeMatch && ratingMatch && isCommunityMember;
   });
 
   if (authLoading) {

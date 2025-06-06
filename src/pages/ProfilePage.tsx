@@ -132,7 +132,7 @@ const ProfilePage = () => {
     if (!isOwnProfile && viewedUser) return viewedUser;
     
     // Define a type that includes the optional property for casting
-    type UserWithCommunityStatus = User & { isCommunitymember?: boolean };
+    type UserWithCommunityStatus = User & { is_CommunityMember?: boolean };
 
     return {
         id: targetUserId,
@@ -141,9 +141,8 @@ const ProfilePage = () => {
         bio: bio || "",
         avatar_url: profileImageUrl || undefined,
         email: "", 
-        // Corrected access to isCommunitymember using type assertion
-        isCommunitymember: (isOwnProfile && (user as UserWithCommunityStatus)?.isCommunitymember) || 
-                           (!isOwnProfile && (viewedUser as UserWithCommunityStatus)?.isCommunitymember) || 
+        is_CommunityMember: (isOwnProfile && (user as UserWithCommunityStatus)?.is_CommunityMember) || 
+                           (!isOwnProfile && (viewedUser as UserWithCommunityStatus)?.is_CommunityMember) || 
                            false,
         location: userLocation || ""
     } as User; 

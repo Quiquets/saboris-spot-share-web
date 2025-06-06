@@ -88,11 +88,11 @@ const ProfileHeader = ({
     // For now, assuming FollowButton or parent component handles stat refresh.
   };
   
-  // Type guard for user object to check for isCommunitymember
-  const hasCommunityMemberProperty = (u: any): u is User & { isCommunitymember?: boolean } => {
-    return u && typeof u.isCommunitymember !== 'undefined';
+  // Type guard for user object to check for is_CommunityMember
+  const hasCommunityMemberProperty = (u: any): u is User & { is_CommunityMember?: boolean } => {
+    return u && typeof u.is_CommunityMember !== 'undefined';
   };
-  const isCommunityMember = hasCommunityMemberProperty(user) && user.isCommunitymember === true;
+  const isCommunityMember = hasCommunityMemberProperty(user) && user.is_CommunityMember === true;
 
 
   return (

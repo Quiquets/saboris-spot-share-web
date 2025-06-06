@@ -16,9 +16,9 @@ export function useExplorePlaces(
 
     (async () => {
       let ids: string[] = [user.id];
-      const isCommunity = filter === 'community';
+      const isCommunityMember = filter === 'community';
 
-      if (!isCommunity && filter !== 'my') {
+      if (!isCommunityMember && filter !== 'my') {
         const { data: friends = [] } = await supabase
           .from('follows')
           .select('following_id')
@@ -38,8 +38,8 @@ export function useExplorePlaces(
         }
       }
 
-      let q = supabase
-        .from('reviews')
+      let reviewsQuery = supabase
+        .from("reviews")
         .select(`
           id,
           user_id,
@@ -50,7 +50,7 @@ export function useExplorePlaces(
           rating_value,
           text,
           photo_urls,
-          places (
+          places:place_id (
             id,
             name,
             category,
@@ -60,17 +60,17 @@ export function useExplorePlaces(
           users:user_id (
             id,
             name,
-            isCommunitymember
+            isCommunityMember
           )
         `);
 
-      if (isCommunity) {
-        q = q.eq('users.isCommunitymember', true);
+      if (isCommunityMember) {
+        reviewsQuery = reviewsQuery.eq("users.isCommunityMember", true);
       } else {
-        q = q.in('user_id', ids);
+        reviewsQuery = reviewsQuery.in("user_id", ids);
       }
 
-      const { data: reviews, error } = await q;
+      const { data: reviews, error } = await reviewsQuery;
       if (error || !Array.isArray(reviews)) {
         console.error('fetchExplorePlaces error:', error);
         setPlaces([]);
@@ -80,24 +80,25 @@ export function useExplorePlaces(
 
       // Group by place_id
       const groups: Record<string, typeof reviews> = {};
-      reviews.forEach((r) => {
-        if (r.places?.id) {
+      reviews.forEach((r: any) => {
+        if (r.places && r.places.id) {
           (groups[r.place_id] ||= []).push(r);
         }
       });
 
       // Build ExplorePlace[]
-      const result: ExplorePlace[] = Object.values(groups).map((grp) => {
+      const result: ExplorePlace[] = Object.values(groups).map((grp: any[]) => {
         const first = grp[0];
         const loc = { lat: first.places.lat, lng: first.places.lng };
         const reviewers: ReviewerInfo[] = grp.map((r) => ({
           userId: r.user_id,
           userName: r.users?.name || 'Unknown',
           photoUrls: r.photo_urls || [],
-          ratingOverall: 0,
+          ratingOverall: r.rating_value ?? 0, // fallback to rating_value if no overall
           ratingValue: r.rating_value ?? undefined,
           ratingAtmosphere: r.rating_atmosphere ?? undefined,
           reviewText: r.text || '',
+          isCommunityMember: r.users?.isCommunityMember === true,
         }));
         const avg = (arr: number[]) =>
           arr.reduce((sum, x) => sum + x, 0) / (arr.length || 1);
