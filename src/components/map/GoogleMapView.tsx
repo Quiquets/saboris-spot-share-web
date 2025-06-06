@@ -21,11 +21,13 @@ interface GoogleMapViewProps {
     price?: string[];
     rating?: string;
   };
+  onMapReady?: (map: google.maps.Map) => void;
 }
 
 const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   className,
   activeFilters,
+  onMapReady,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
@@ -60,6 +62,13 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   useEffect(() => {
     initializeMap();
   }, [initializeMap]);
+
+  // Notify parent when map is ready
+  useEffect(() => {
+    if (mapInstance && mapIsReady && onMapReady) {
+      onMapReady(mapInstance);
+    }
+  }, [mapInstance, mapIsReady, onMapReady]);
 
   // “Find Me” button logic
   const handleGetUserLocation = () => {

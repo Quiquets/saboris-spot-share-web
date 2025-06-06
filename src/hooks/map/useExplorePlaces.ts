@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,35 +12,45 @@ export function useExplorePlaces(
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    console.log('useExplorePlaces effect triggered with:', { user: user?.id, filter });
+    
+    if (!user) {
+      console.log('No user found, setting empty places');
+      setPlaces([]);
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
 
     (async () => {
       let ids: string[] = [user.id];
-      const isCommunityMember = filter === 'community';
+      const isCommunity = filter === 'community';
 
-      if (!isCommunityMember && filter !== 'my') {
+      if (!isCommunity && filter !== 'my') {
         const { data: friends = [] } = await supabase
           .from('follows')
           .select('following_id')
           .eq('follower_id', user.id);
         const friendIds = friends.map((f) => f.following_id);
 
-        if (filter === 'friends') {
-          ids = friendIds;
-        } else {
-          const { data: fof = [] } = await supabase
-            .from('follows')
-            .select('following_id')
-            .in('follower_id', friendIds);
-          ids = Array.from(
-            new Set([...friendIds, ...fof.map((f) => f.following_id)])
-          );
+          if (filter === 'friends') {
+            ids = friendIds;
+          } else {
+            const { data: fof = [] } = await supabase
+              .from('follows')
+              .select('following_id')
+              .in('follower_id', friendIds);
+            ids = Array.from(
+              new Set([...friendIds, ...fof.map((f) => f.following_id)])
+            );
+          }
         }
-      }
 
-      let reviewsQuery = supabase
-        .from("reviews")
+        console.log('User IDs to query:', ids);
+
+      let q = supabase
+        .from('reviews')
         .select(`
           id,
           user_id,
@@ -50,7 +61,7 @@ export function useExplorePlaces(
           rating_value,
           text,
           photo_urls,
-          places:place_id (
+          places (
             id,
             name,
             category,
@@ -60,17 +71,17 @@ export function useExplorePlaces(
           users:user_id (
             id,
             name,
-            isCommunityMember
+            isCommunitymember
           )
         `);
 
-      if (isCommunityMember) {
-        reviewsQuery = reviewsQuery.eq("users.isCommunityMember", true);
+      if (isCommunity) {
+        q = q.eq('users.isCommunitymember', true);
       } else {
-        reviewsQuery = reviewsQuery.in("user_id", ids);
+        q = q.in('user_id', ids);
       }
 
-      const { data: reviews, error } = await reviewsQuery;
+      const { data: reviews, error } = await q;
       if (error || !Array.isArray(reviews)) {
         console.error('fetchExplorePlaces error:', error);
         setPlaces([]);
@@ -80,25 +91,24 @@ export function useExplorePlaces(
 
       // Group by place_id
       const groups: Record<string, typeof reviews> = {};
-      reviews.forEach((r: any) => {
-        if (r.places && r.places.id) {
+      reviews.forEach((r) => {
+        if (r.places?.id) {
           (groups[r.place_id] ||= []).push(r);
         }
       });
 
       // Build ExplorePlace[]
-      const result: ExplorePlace[] = Object.values(groups).map((grp: any[]) => {
+      const result: ExplorePlace[] = Object.values(groups).map((grp) => {
         const first = grp[0];
         const loc = { lat: first.places.lat, lng: first.places.lng };
         const reviewers: ReviewerInfo[] = grp.map((r) => ({
           userId: r.user_id,
           userName: r.users?.name || 'Unknown',
           photoUrls: r.photo_urls || [],
-          ratingOverall: r.rating_value ?? 0, // fallback to rating_value if no overall
+          ratingOverall: 0,
           ratingValue: r.rating_value ?? undefined,
           ratingAtmosphere: r.rating_atmosphere ?? undefined,
           reviewText: r.text || '',
-          isCommunityMember: r.users?.isCommunityMember === true,
         }));
         const avg = (arr: number[]) =>
           arr.reduce((sum, x) => sum + x, 0) / (arr.length || 1);

@@ -1,11 +1,12 @@
 
 /// <reference types="@types/google.maps" />
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import GoogleMapView from './map/GoogleMapView';
 import MapFilters from './map/MapFilters';
+import CitySearch from './map/CitySearch';
 import { ActiveFilters } from './map/FilterOptions';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -16,6 +17,7 @@ interface MapSectionProps {
 const MapSection = ({ simplified = false }: MapSectionProps) => {
   const { user, setShowAuthModal } = useAuth();
   const isMobile = useIsMobile();
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
   
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     people: 'community', // Default to Saboris Community
@@ -80,6 +82,18 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     }
   };
   
+  const handleCityNavigation = (location: { lat: number; lng: number }, cityName: string) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.panTo(location);
+      mapInstanceRef.current.setZoom(12);
+      // Removed the temporary blue marker - no longer creating markers here
+    }
+  };
+
+  const handleMapReady = (map: google.maps.Map) => {
+    mapInstanceRef.current = map;
+  };
+
   // Mobile height adjustment
   const mapHeight = isMobile ? (simplified ? '300px' : '400px') : (simplified ? '400px' : '700px');
   
@@ -87,23 +101,26 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     <section id="map-section" className="py-2 md:py-6 px-1 md:px-2 bg-white">
       <div className="max-w-5xl mx-auto">
         {!simplified && (
-          <div className="mb-2 md:mb-6">
-            <MapFilters 
-              activeFilters={{
-                people: activeFilters.people,
-                occasion: activeFilters.occasion,
-                foodType: activeFilters.foodType,
-                vibe: activeFilters.vibe,
-                price: activeFilters.price,
-                rating: activeFilters.rating.toString(),
-                sortDirection: activeFilters.sortDirection
-              }}
-              handleFilterChange={handleFilterChange}
-              handlePeopleFilterChange={handlePeopleFilterChange}
-              toggleSortDirection={toggleSortDirection}
-              isUserAuthenticated={!!user}
-            />
-          </div>
+          <>
+            <CitySearch onCitySelect={handleCityNavigation} />
+            <div className="mb-2 md:mb-6">
+              <MapFilters 
+                activeFilters={{
+                  people: activeFilters.people,
+                  occasion: activeFilters.occasion,
+                  foodType: activeFilters.foodType,
+                  vibe: activeFilters.vibe,
+                  price: activeFilters.price,
+                  rating: activeFilters.rating.toString(),
+                  sortDirection: activeFilters.sortDirection
+                }}
+                handleFilterChange={handleFilterChange}
+                handlePeopleFilterChange={handlePeopleFilterChange}
+                toggleSortDirection={toggleSortDirection}
+                isUserAuthenticated={!!user}
+              />
+            </div>
+          </>
         )}
         
         {/* Google Map Component with adjustable height */}
@@ -118,6 +135,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
               price: activeFilters.price,
               rating: activeFilters.rating.toString(),
             }}
+            onMapReady={handleMapReady}
           />
         </div>
       </div>
