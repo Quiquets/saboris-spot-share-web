@@ -1,65 +1,131 @@
 
-import React, { useState, useRef } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 interface CitySearchProps {
-  onCitySelect: (location: { lat: number; lng: number }, cityName: string) => void;
+  onCitySelect: (location: { lat: number; lng: number }, placeName: string) => void;
+}
+
+interface Suggestion {
+  placeId: string;
+  description: string;
+  mainText: string;
+  secondaryText: string;
 }
 
 const CitySearch: React.FC<CitySearchProps> = ({ onCitySelect }) => {
   const [searchValue, setSearchValue] = useState('');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const initializeAutocomplete = () => {
-    if (window.google?.maps?.places && !autocompleteService.current) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+  const initializeServices = () => {
+    if (window.google?.maps?.places) {
+      if (!autocompleteService.current) {
+        autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      }
+      if (!placesService.current) {
+        // Create a dummy map element for PlacesService
+        const dummyMap = new google.maps.Map(document.createElement('div'));
+        placesService.current = new google.maps.places.PlacesService(dummyMap);
+      }
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchValue.trim()) {
-      toast.error('Please enter a city name');
+  const searchSuggestions = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
-    setIsSearching(true);
-    
     try {
-      initializeAutocomplete();
+      initializeServices();
       
       if (!autocompleteService.current) {
         throw new Error('Google Maps Places service not available');
       }
 
-      // Use Geocoding API to find the city
-      const geocoder = new google.maps.Geocoder();
-      
-      geocoder.geocode(
-        { 
-          address: searchValue,
-          componentRestrictions: { country: '' } // Allow worldwide search
+      autocompleteService.current.getPlacePredictions(
+        {
+          input: query,
+          types: ['geocode', 'establishment'], // Include both addresses and places
         },
-        (results, status) => {
+        (predictions, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+            const formattedSuggestions = predictions.slice(0, 5).map(prediction => ({
+              placeId: prediction.place_id,
+              description: prediction.description,
+              mainText: prediction.structured_formatting.main_text,
+              secondaryText: prediction.structured_formatting.secondary_text || '',
+            }));
+            setSuggestions(formattedSuggestions);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce the search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchSuggestions(value);
+    }, 300);
+  };
+
+  const handleSuggestionClick = async (suggestion: Suggestion) => {
+    setIsSearching(true);
+    setSearchValue(suggestion.description);
+    setShowSuggestions(false);
+
+    try {
+      initializeServices();
+      
+      if (!placesService.current) {
+        throw new Error('Google Maps Places service not available');
+      }
+
+      placesService.current.getDetails(
+        {
+          placeId: suggestion.placeId,
+          fields: ['geometry', 'name', 'formatted_address'],
+        },
+        (place, status) => {
           setIsSearching(false);
           
-          if (status === 'OK' && results && results[0]) {
-            const location = results[0].geometry.location;
-            const cityName = results[0].formatted_address;
+          if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+            const location = place.geometry.location;
+            const placeName = place.name || place.formatted_address || suggestion.description;
             
             onCitySelect(
               { lat: location.lat(), lng: location.lng() },
-              cityName
+              placeName
             );
             
-            toast.success(`Navigated to ${cityName}`);
+            toast.success(`Navigated to ${placeName}`);
             setSearchValue('');
           } else {
-            toast.error('City not found. Please try a different search term.');
+            toast.error('Location not found. Please try a different search term.');
           }
         }
       );
@@ -71,33 +137,71 @@ const CitySearch: React.FC<CitySearchProps> = ({ onCitySelect }) => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+    if (e.key === 'Enter' && suggestions.length > 0) {
+      handleSuggestionClick(suggestions[0]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
     }
   };
 
+  const handleInputFocus = () => {
+    if (suggestions.length > 0) {
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding to allow suggestion clicks
+    setTimeout(() => setShowSuggestions(false), 200);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <Card className="p-4 mb-4 bg-white shadow-sm">
-      <div className="flex gap-2 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+    <Card className="p-4 mb-4 bg-white shadow-sm relative">
+      <div className="relative">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4" style={{ color: '#EE8C80' }} />
           <Input
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            placeholder="Search for a city (e.g., New York, Paris, Tokyo)"
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            placeholder="Search for cities, streets, or places..."
             className="pl-10 pr-4"
             disabled={isSearching}
           />
         </div>
-        <Button 
-          onClick={handleSearch}
-          disabled={isSearching || !searchValue.trim()}
-          className="flex items-center gap-2"
-        >
-          <MapPin className="h-4 w-4" />
-          {isSearching ? 'Searching...' : 'Go'}
-        </Button>
+
+        {/* Autocomplete suggestions dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+            {suggestions.map((suggestion) => (
+              <div
+                key={suggestion.placeId}
+                className="px-4 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                onClick={() => handleSuggestionClick(suggestion)}
+              >
+                <div className="font-medium text-sm text-gray-900">
+                  {suggestion.mainText}
+                </div>
+                {suggestion.secondaryText && (
+                  <div className="text-xs text-gray-500">
+                    {suggestion.secondaryText}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );
