@@ -1,3 +1,4 @@
+
 /// <reference types="@types/google.maps" />
 
 import { useState, useEffect, useRef } from 'react';
@@ -85,21 +86,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.panTo(location);
       mapInstanceRef.current.setZoom(12);
-      
-      // Add a temporary marker for the searched city
-      new google.maps.Marker({
-        position: location,
-        map: mapInstanceRef.current,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: '#3B82F6',
-          fillOpacity: 1,
-          strokeColor: '#fff',
-          strokeWeight: 2,
-        },
-        title: cityName,
-      });
+      // Removed the temporary blue marker - no longer creating markers here
     }
   };
 
