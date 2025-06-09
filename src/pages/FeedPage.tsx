@@ -1,6 +1,8 @@
+
 import React, { useRef, useCallback, useState } from 'react';
 import { useFeed } from '@/hooks/useFeed';
-import type { FeedPost, PeopleFilterOption } from '@/services/feedService';
+import type { FeedPost } from '@/types/feed';
+import type { PeopleFilterOption } from '@/services/feedService';
 import FeedItem from '@/components/feed/FeedItem';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
