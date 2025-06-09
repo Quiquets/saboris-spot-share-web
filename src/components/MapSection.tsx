@@ -20,28 +20,38 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
-    people: 'community', // Default to Saboris Community
+    people: user ? 'friends' : 'community', // Default to friends if authenticated, community if not
     occasion: [],
     foodType: [],
     vibe: [],
     price: [],
     rating: 0,
-    foodSortDirection: "desc", // Default: high to low
-    serviceSortDirection: "desc", // Default: high to low
-    atmosphereSortDirection: "desc", // Default: high to low
-    valueSortDirection: "desc", // Default: high to low
-    sortDirection: "desc", // For compatibility
+    foodSortDirection: "desc",
+    serviceSortDirection: "desc",
+    atmosphereSortDirection: "desc",
+    valueSortDirection: "desc",
+    sortDirection: "desc",
   });
+
+  // Debug log for current filter state
+  useEffect(() => {
+    console.log('MapSection - Current filter state:', {
+      people: activeFilters.people,
+      user: user?.id,
+      isAuthenticated: !!user
+    });
+  }, [activeFilters.people, user]);
 
   useEffect(() => {
     // Update people filter based on authentication state
     setActiveFilters(prev => ({
       ...prev,
-      people: user ? prev.people : 'community'
+      people: user ? 'friends' : 'community'
     }));
   }, [user]);
   
   const handleFilterChange = (type: string, value: any) => {
+    console.log('Filter change:', type, value);
     setActiveFilters(prev => ({
       ...prev,
       [type]: value
@@ -49,6 +59,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
   };
   
   const handlePeopleFilterChange = (value: string) => {
+    console.log('People filter change:', value, 'User authenticated:', !!user);
     // Check if user is authenticated for friends-related filters
     if ((value === 'friends' || value === 'friends-of-friends') && !user) {
       toast.info("Please sign in to use friend filters");
@@ -77,7 +88,7 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
       setActiveFilters(prev => ({
         ...prev,
         [directionKey]: newDirection,
-        sortDirection: newDirection // Update this for compatibility
+        sortDirection: newDirection
       }));
     }
   };
@@ -86,7 +97,6 @@ const MapSection = ({ simplified = false }: MapSectionProps) => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.panTo(location);
       mapInstanceRef.current.setZoom(12);
-      // Removed the temporary blue marker - no longer creating markers here
     }
   };
 

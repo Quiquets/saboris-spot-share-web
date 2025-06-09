@@ -30,7 +30,7 @@ export function useExplorePlaces(
           const { data: communityUsers } = await supabase
             .from('users')
             .select('id')
-            .eq('isCommunitymemeber', true);
+            .eq('isCommunityMember', true);
           
           userIds = communityUsers?.map(u => u.id) || [];
           console.log('Community user IDs found:', userIds.length);
@@ -104,7 +104,7 @@ export function useExplorePlaces(
             users:user_id (
               id,
               name,
-              isCommunitymemeber
+              isCommunityMember
             )
           `)
           .in('user_id', userIds);

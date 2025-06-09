@@ -36,7 +36,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   // Map your filter UI into the hook's expected keys with better logging
   const peopleScope: 'my' | 'friends' | 'fof' | 'community' = (() => {
     const filterValue = activeFilters?.people;
-    console.log('Raw people filter value:', filterValue);
+    console.log('GoogleMapView - Raw people filter value:', filterValue);
     
     switch (filterValue) {
       case 'my-places':
@@ -46,14 +46,13 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
       case 'friends-of-friends':
         return 'fof';
       case 'community':
-        return 'community';
       default:
-        console.log('Unknown people filter, defaulting to community:', filterValue);
+        console.log('Using community filter, filterValue was:', filterValue);
         return 'community';
     }
   })();
 
-  console.log('Mapped people scope:', peopleScope);
+  console.log('GoogleMapView - Mapped people scope:', peopleScope);
 
   // 1) Fetch grouped & averaged explore data
   const { places, loading: exploreLoading } = useExplorePlaces(peopleScope);
@@ -71,13 +70,19 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
 
   // Debug logging for places
   useEffect(() => {
-    console.log('GoogleMapView - Places updated:', {
-      count: places.length,
-      loading: exploreLoading,
-      mapReady: mapIsReady,
-      places: places.map(p => ({ name: p.name, location: p.location }))
+    console.log('GoogleMapView - Places and state update:', {
+      peopleScope,
+      placesCount: places.length,
+      exploreLoading,
+      mapIsReady,
+      mapInstance: !!mapInstance,
+      places: places.map(p => ({ 
+        name: p.name, 
+        location: p.location,
+        reviewersCount: p.reviewers.length 
+      }))
     });
-  }, [places, exploreLoading, mapIsReady]);
+  }, [places, exploreLoading, mapIsReady, mapInstance, peopleScope]);
 
   // Run map setup once
   useEffect(() => {
@@ -137,6 +142,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
           <div>Places: {places.length}</div>
           <div>Loading: {exploreLoading ? 'Yes' : 'No'}</div>
           <div>Map Ready: {mapIsReady ? 'Yes' : 'No'}</div>
+          <div>Map Instance: {mapInstance ? 'Yes' : 'No'}</div>
         </div>
       )}
 
