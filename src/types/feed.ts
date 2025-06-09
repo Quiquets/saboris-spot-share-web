@@ -1,13 +1,13 @@
 
 export interface FeedPost {
   post_id: string;
-  post_type: 'review' | 'save' | 'follow'; // Added 'follow' as per original db function, though we filter for review/save in the SQL
+  post_type: 'review' | 'save' | 'follow';
   post_created_at: string;
   post_user_id: string;
   post_user_name: string;
   post_user_username: string;
   post_user_avatar_url?: string | null;
-  post_user_is_community_member?: boolean; // Added this field
+  post_user_is_community_member?: boolean;
   place_id?: string | null;
   place_name?: string | null;
   review_id?: string | null;
@@ -18,11 +18,11 @@ export interface FeedPost {
   review_rating_value?: number | null;
   review_rating_atmosphere?: number | null;
   average_rating?: number | null;
-  cuisineOptions?: string | null; // Added for food type filtering
+  cuisineOptions?: string | null;
 }
 
 export interface FeedResponse {
   data: FeedPost[] | null;
   error: any;
-  count?: number | null; // For potential total count if API provides it
+  count?: number | null;
 }

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Heart, Calendar, MapPin } from "lucide-react";
+import { Heart, Calendar, MapPin, Star } from "lucide-react";
 import type { ExplorePlace } from "@/types/explore";
 
 export default function InfoWindowContent({
@@ -12,122 +12,156 @@ export default function InfoWindowContent({
   onToggleSave: (placeId: string) => void;
   onInvite: (placeId: string) => void;
 }) {
-  const maxScore = Math.max(
-    place.avgOverall,
-    place.avgValue ?? 0,
-    place.avgAtmosphere ?? 0
-  );
-  const style = (val?: number) =>
-    val === maxScore ? "font-bold text-saboris-primary" : "";
+  // Render stars for ratings
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />);
+    }
+    
+    if (hasHalfStar) {
+      stars.push(<Star key="half" className="h-3 w-3 fill-yellow-400 text-yellow-400 opacity-60" />);
+    }
+    
+    const remainingStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < remainingStars; i++) {
+      stars.push(<Star key={`empty-${i}`} className="h-3 w-3 text-gray-300" />);
+    }
+    
+    return <div className="flex items-center gap-1">{stars}</div>;
+  };
 
-  // Collect all review texts and all photos
+  // Collect all review texts and photos
   const allPhotos = place.reviewers.flatMap((r) => r.photoUrls);
   const allTips = place.reviewers
     .map((r) => r.reviewText)
     .filter(Boolean) as string[];
 
+  // Get price info from reviews (this would need to be added to the data structure)
+  const priceIndicator = place.avgValue ? "€".repeat(Math.round(place.avgValue)) : "€€";
+
   return (
-    <div className="p-3 w-72 max-w-sm">
-      <header className="flex justify-between items-start mb-2">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 leading-tight">{place.name}</h3>
-          {place.category && (
-            <small className="text-xs text-gray-600 mt-1 block">{place.category}</small>
-          )}
-        </div>
-        <div className="flex gap-2 ml-2">
-          <button 
-            onClick={() => onToggleSave(place.placeId)}
-            className="p-1 hover:bg-gray-100 rounded"
-            title="Save place"
-          >
-            <Heart className="h-4 w-4 text-saboris-primary" />
-          </button>
-          <button 
-            onClick={() => onInvite(place.placeId)}
-            className="p-1 hover:bg-gray-100 rounded"
-            title="Invite friends"
-          >
-            <Calendar className="h-4 w-4 text-gray-600" />
-          </button>
-        </div>
-      </header>
-
-      {/* Quick Stats */}
-      <div className="text-sm mb-3 space-y-1 bg-gray-50 p-2 rounded">
-        <div className="flex justify-between">
-          <span>Overall:</span>
-          <span className={`font-medium ${style(place.avgOverall)}`}>
-            {place.avgOverall > 0 ? place.avgOverall.toFixed(1) : 'N/A'}
-          </span>
-        </div>
-        {place.avgValue != null && (
-          <div className="flex justify-between">
-            <span>Value:</span>
-            <span className={`font-medium ${style(place.avgValue)}`}>
-              {place.avgValue.toFixed(1)}
-            </span>
-          </div>
-        )}
-        {place.avgAtmosphere != null && (
-          <div className="flex justify-between">
-            <span>Atmosphere:</span>
-            <span className={`font-medium ${style(place.avgAtmosphere)}`}>
-              {place.avgAtmosphere.toFixed(1)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Photo Carousel */}
+    <div className="w-80 bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Header with main photo if available */}
       {allPhotos.length > 0 && (
+        <div className="h-32 relative">
+          <img
+            src={allPhotos[0]}
+            className="w-full h-full object-cover"
+            alt={place.name}
+          />
+          <div className="absolute top-2 right-2 flex gap-1">
+            <button 
+              onClick={() => onToggleSave(place.placeId)}
+              className="p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm"
+              title="Save place"
+            >
+              <Heart className="h-4 w-4 text-[#FF6B6B]" />
+            </button>
+            <button 
+              onClick={() => onInvite(place.placeId)}
+              className="p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm"
+              title="Invite friends"
+            >
+              <Calendar className="h-4 w-4 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="p-4">
+        {/* Restaurant name and category */}
         <div className="mb-3">
-          <div className="flex overflow-x-auto gap-1 pb-1">
-            {allPhotos.slice(0, 4).map((url, idx) => (
-              <img
-                key={idx}
-                src={url}
-                className="h-16 w-16 object-cover rounded flex-shrink-0"
-                alt="Review photo"
-              />
-            ))}
-            {allPhotos.length > 4 && (
-              <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                <span className="text-xs text-gray-600">+{allPhotos.length - 4}</span>
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">{place.name}</h3>
+          <div className="flex items-center justify-between">
+            {place.category && (
+              <span className="text-sm text-gray-600">{place.category}</span>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-[#FF6B6B]">{priceIndicator}</span>
+              <div className="flex items-center gap-1">
+                {renderStars(place.avgOverall)}
+                <span className="text-sm font-medium text-gray-700 ml-1">
+                  {place.avgOverall.toFixed(1)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Photo carousel if multiple photos */}
+        {allPhotos.length > 1 && (
+          <div className="mb-3">
+            <div className="flex overflow-x-auto gap-2 pb-2">
+              {allPhotos.slice(1, 4).map((url, idx) => (
+                <img
+                  key={idx}
+                  src={url}
+                  className="h-16 w-16 object-cover rounded flex-shrink-0"
+                  alt="Review photo"
+                />
+              ))}
+              {allPhotos.length > 4 && (
+                <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs text-gray-600 font-medium">+{allPhotos.length - 4}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Quick stats */}
+        <div className="bg-gray-50 rounded-lg p-3 mb-3">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {place.avgValue && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Value:</span>
+                <span className="font-medium">{place.avgValue.toFixed(1)}/5</span>
+              </div>
+            )}
+            {place.avgAtmosphere && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Vibe:</span>
+                <span className="font-medium">{place.avgAtmosphere.toFixed(1)}/5</span>
               </div>
             )}
           </div>
         </div>
-      )}
 
-      {/* Reviews Summary */}
-      {allTips.length > 0 && (
-        <div className="mb-3">
-          <div className="font-medium text-sm mb-2 text-gray-800">Recent Reviews:</div>
-          <div className="text-xs space-y-2 max-h-20 overflow-y-auto">
-            {allTips.slice(0, 2).map((tip, i) => (
-              <div key={i} className="italic text-gray-700 bg-white p-2 rounded border-l-2 border-saboris-primary">
-                "{tip.length > 80 ? tip.substring(0, 80) + '...' : tip}"
+        {/* Reviews summary */}
+        {allTips.length > 0 && (
+          <div className="mb-3">
+            <div className="text-sm font-medium text-gray-800 mb-2">
+              What {place.reviewers.length === 1 ? 'your friend' : 'your friends'} said:
+            </div>
+            <div className="space-y-2 max-h-24 overflow-y-auto">
+              {allTips.slice(0, 2).map((tip, i) => (
+                <div key={i} className="text-xs italic text-gray-700 bg-white p-2 rounded border-l-2 border-[#FF6B6B]">
+                  "{tip.length > 60 ? tip.substring(0, 60) + '...' : tip}"
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Reviewers list */}
+        <div className="border-t pt-3">
+          <div className="text-sm font-medium text-gray-800 mb-2">
+            {place.reviewers.length} Review{place.reviewers.length !== 1 ? 's' : ''} from your network
+          </div>
+          <div className="space-y-1 max-h-20 overflow-y-auto">
+            {place.reviewers.map((reviewer) => (
+              <div key={reviewer.userId} className="flex justify-between items-center text-xs">
+                <span className="font-medium text-gray-700">{reviewer.userName}</span>
+                <div className="flex items-center gap-1">
+                  {renderStars(reviewer.ratingOverall)}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Reviewers */}
-      <div className="border-t pt-2">
-        <div className="font-medium text-sm mb-1 text-gray-800">
-          {place.reviewers.length} Review{place.reviewers.length !== 1 ? 's' : ''}:
-        </div>
-        <div className="text-xs space-y-1 max-h-16 overflow-y-auto">
-          {place.reviewers.map((r) => (
-            <div key={r.userId} className="flex justify-between items-center">
-              <span className="font-medium text-gray-700">{r.userName}</span>
-              <span className="text-saboris-primary font-medium">
-                {r.ratingOverall > 0 ? r.ratingOverall.toFixed(1) : 'N/A'}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     </div>

@@ -23,11 +23,12 @@ export function useMapMarkers(
       places: places.map(p => ({ 
         name: p.name, 
         location: p.location,
-        hasValidCoords: !isNaN(p.location.lat) && !isNaN(p.location.lng)
+        hasValidCoords: !isNaN(p.location.lat) && !isNaN(p.location.lng),
+        avgRating: p.avgOverall
       }))
     });
 
-    // 1) clear existing markers & info window
+    // Clear existing markers & info window
     markersRef.current.forEach((m) => m.setMap(null));
     infoRef.current?.close();
     
@@ -39,7 +40,7 @@ export function useMapMarkers(
     
     markersRef.current = [];
 
-    // 2) add a marker + InfoWindow for each place
+    // Add a marker + InfoWindow for each place
     places.forEach((place, index) => {
       // Validate coordinates
       if (!place.location || isNaN(place.location.lat) || isNaN(place.location.lng)) {
@@ -50,31 +51,39 @@ export function useMapMarkers(
       console.log(`Creating marker ${index + 1}/${places.length} for:`, {
         name: place.name,
         location: place.location,
-        reviewers: place.reviewers.length
+        reviewers: place.reviewers.length,
+        avgRating: place.avgOverall
       });
       
       try {
+        // Create coral pink marker with rating display
+        const rating = place.avgOverall.toFixed(1);
         const marker = new google.maps.Marker({
           position: place.location,
           map,
           icon: {
             url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-              <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="16" cy="16" r="12" fill="#FF6B6B" stroke="#fff" stroke-width="2"/>
-                <circle cx="16" cy="16" r="6" fill="#fff"/>
+              <svg width="48" height="60" viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
+                <!-- Pin shape -->
+                <path d="M24 0C37.25 0 48 10.75 48 24C48 37.25 24 60 24 60S0 37.25 0 24C0 10.75 10.75 0 24 0Z" fill="#FF6B6B"/>
+                <path d="M24 0C37.25 0 48 10.75 48 24C48 37.25 24 60 24 60S0 37.25 0 24C0 10.75 10.75 0 24 0Z" stroke="#fff" stroke-width="2"/>
+                <!-- White circle for rating -->
+                <circle cx="24" cy="22" r="14" fill="#fff"/>
+                <!-- Rating text -->
+                <text x="24" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FF6B6B">${rating}</text>
               </svg>
             `),
-            scaledSize: new google.maps.Size(32, 32),
-            anchor: new google.maps.Point(16, 16),
+            scaledSize: new google.maps.Size(48, 60),
+            anchor: new google.maps.Point(24, 60),
           },
-          title: place.name,
+          title: `${place.name} - ${rating}⭐`,
           optimized: false,
           zIndex: 1000,
         });
 
         console.log(`Marker created successfully for ${place.name} at`, place.location);
 
-        // render React into a detached div using createRoot
+        // Render React into a detached div using createRoot
         const container = document.createElement("div");
         const root = ReactDOM.createRoot(container);
         
@@ -95,8 +104,12 @@ export function useMapMarkers(
         // Store the root for cleanup
         rootsRef.current.set(place.placeId, root);
 
-        // attach it to a Google InfoWindow
-        const infow = new google.maps.InfoWindow({ content: container });
+        // Attach it to a Google InfoWindow
+        const infow = new google.maps.InfoWindow({ 
+          content: container,
+          maxWidth: 320
+        });
+        
         marker.addListener("click", () => {
           console.log('Marker clicked for place:', place.name);
           infoRef.current?.close();
