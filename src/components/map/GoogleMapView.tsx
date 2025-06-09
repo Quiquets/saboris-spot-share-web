@@ -137,7 +137,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
 
       {/* Debug info */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="absolute top-4 left-4 bg-black/70 text-white p-2 rounded text-xs">
+        <div className="absolute top-4 left-4 bg-black/70 text-white p-2 rounded text-xs z-10">
           <div>Filter: {peopleScope}</div>
           <div>Places: {places.length}</div>
           <div>Loading: {exploreLoading ? 'Yes' : 'No'}</div>

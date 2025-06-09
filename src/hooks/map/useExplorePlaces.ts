@@ -125,19 +125,29 @@ export function useExplorePlaces(
 
         console.log('Reviews fetched:', reviews.length);
 
-        // Group reviews by place_id
+        // Group reviews by place_id and ensure we have valid place data
         const placeGroups: Record<string, typeof reviews> = {};
         reviews.forEach((review) => {
-          // Only include reviews that have valid place data
-          if (review.places?.id && review.places?.lat && review.places?.lng) {
+          // Only include reviews that have valid place data with coordinates
+          if (review.places?.id && 
+              typeof review.places.lat === 'number' && 
+              typeof review.places.lng === 'number' &&
+              !isNaN(review.places.lat) && 
+              !isNaN(review.places.lng)) {
             if (!placeGroups[review.place_id]) {
               placeGroups[review.place_id] = [];
             }
             placeGroups[review.place_id].push(review);
+          } else {
+            console.warn('Skipping review with invalid place data:', {
+              reviewId: review.id,
+              placeId: review.place_id,
+              place: review.places
+            });
           }
         });
 
-        console.log('Place groups created:', Object.keys(placeGroups).length);
+        console.log('Valid place groups created:', Object.keys(placeGroups).length);
 
         // Build ExplorePlace array
         const exploreePlaces: ExplorePlace[] = Object.values(placeGroups).map((reviewGroup) => {
@@ -193,7 +203,15 @@ export function useExplorePlaces(
           };
         });
 
-        console.log('Final explore places:', exploreePlaces.length);
+        console.log('Final explore places created:', {
+          count: exploreePlaces.length,
+          places: exploreePlaces.map(p => ({
+            name: p.name,
+            location: p.location,
+            reviewersCount: p.reviewers.length
+          }))
+        });
+        
         setPlaces(exploreePlaces);
         
       } catch (error) {

@@ -58,11 +58,18 @@ export function useMapMarkers(
           position: place.location,
           map,
           icon: {
-            url: "/icons/coral-pin.png", // Coral pink pin for community
+            url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+              <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="12" fill="#FF6B6B" stroke="#fff" stroke-width="2"/>
+                <circle cx="16" cy="16" r="6" fill="#fff"/>
+              </svg>
+            `),
             scaledSize: new google.maps.Size(32, 32),
+            anchor: new google.maps.Point(16, 16),
           },
-          title: place.name, // Add title for better accessibility
-          optimized: false, // Force rendering for debugging
+          title: place.name,
+          optimized: false,
+          zIndex: 1000,
         });
 
         console.log(`Marker created successfully for ${place.name} at`, place.location);
