@@ -7,6 +7,7 @@ export interface FeedPost {
   post_user_name: string;
   post_user_username: string;
   post_user_avatar_url?: string | null;
+  post_user_is_community_member?: boolean; // Added this field
   place_id?: string | null;
   place_name?: string | null;
   review_id?: string | null;
@@ -17,6 +18,7 @@ export interface FeedPost {
   review_rating_value?: number | null;
   review_rating_atmosphere?: number | null;
   average_rating?: number | null;
+  cuisineOptions?: string | null; // Added for food type filtering
 }
 
 export interface FeedResponse {
@@ -24,4 +26,3 @@ export interface FeedResponse {
   error: any;
   count?: number | null; // For potential total count if API provides it
 }
-

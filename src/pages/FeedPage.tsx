@@ -65,7 +65,7 @@ const FeedPage: React.FC = () => {
     const avgRating = post.average_rating ?? 0;
     const ratingMatch = minAvgRating === 0 || avgRating >= minAvgRating;
     // Only show posts where the author is a community member
-    const isCommunityMember = post.user?.isCommunityMember === true;
+    const isCommunityMember = post.post_user_is_community_member === true;
     return foodTypeMatch && ratingMatch && isCommunityMember;
   });
 
@@ -183,7 +183,7 @@ const FeedPage: React.FC = () => {
 
         {!isLoading && !hasNextPage && filteredFeedPosts.length > 0 && (
           <p className="text-center text-gray-500 mt-8">
-            You’ve reached the end of your feed.
+            You've reached the end of your feed.
           </p>
         )}
       </main>
