@@ -56,25 +56,25 @@ export function useMapMarkers(
       });
       
       try {
-        // Create coral pink marker with rating display
+        // Create smaller coral pink marker with rating display
         const rating = place.avgOverall.toFixed(1);
         const marker = new google.maps.Marker({
           position: place.location,
           map,
           icon: {
             url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-              <svg width="48" height="60" viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
-                <!-- Pin shape -->
-                <path d="M24 0C37.25 0 48 10.75 48 24C48 37.25 24 60 24 60S0 37.25 0 24C0 10.75 10.75 0 24 0Z" fill="#FF6B6B"/>
-                <path d="M24 0C37.25 0 48 10.75 48 24C48 37.25 24 60 24 60S0 37.25 0 24C0 10.75 10.75 0 24 0Z" stroke="#fff" stroke-width="2"/>
+              <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+                <!-- Pin shape with coral pink color -->
+                <path d="M16 0C24.8 0 32 7.2 32 16C32 24.8 16 40 16 40S0 24.8 0 16C0 7.2 7.2 0 16 0Z" fill="#FF6B6B"/>
+                <path d="M16 0C24.8 0 32 7.2 32 16C32 24.8 16 40 16 40S0 24.8 0 16C0 7.2 7.2 0 16 0Z" stroke="#fff" stroke-width="1.5"/>
                 <!-- White circle for rating -->
-                <circle cx="24" cy="22" r="14" fill="#fff"/>
+                <circle cx="16" cy="15" r="10" fill="#fff"/>
                 <!-- Rating text -->
-                <text x="24" y="28" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#FF6B6B">${rating}</text>
+                <text x="16" y="19" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#FF6B6B">${rating}</text>
               </svg>
             `),
-            scaledSize: new google.maps.Size(48, 60),
-            anchor: new google.maps.Point(24, 60),
+            scaledSize: new google.maps.Size(32, 40),
+            anchor: new google.maps.Point(16, 40),
           },
           title: `${place.name} - ${rating}⭐`,
           optimized: false,
@@ -98,6 +98,11 @@ export function useMapMarkers(
               console.log('Invite for place:', id);
               /* TODO: open invite dialog here */
             }}
+            onViewRestaurant={(id) => {
+              console.log('View restaurant for place:', id);
+              // Navigate to restaurant page
+              window.location.href = `/restaurant/${id}`;
+            }}
           />
         );
 
@@ -107,7 +112,7 @@ export function useMapMarkers(
         // Attach it to a Google InfoWindow
         const infow = new google.maps.InfoWindow({ 
           content: container,
-          maxWidth: 320
+          maxWidth: 280
         });
         
         marker.addListener("click", () => {

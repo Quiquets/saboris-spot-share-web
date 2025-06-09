@@ -1,16 +1,19 @@
 
 import React from "react";
-import { Heart, Calendar, MapPin, Star } from "lucide-react";
+import { Heart, MapPin, Star, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { ExplorePlace } from "@/types/explore";
 
 export default function InfoWindowContent({
   place,
   onToggleSave,
   onInvite,
+  onViewRestaurant,
 }: {
   place: ExplorePlace;
   onToggleSave: (placeId: string) => void;
   onInvite: (placeId: string) => void;
+  onViewRestaurant?: (placeId: string) => void;
 }) {
   // Render stars for ratings
   const renderStars = (rating: number) => {
@@ -31,138 +34,124 @@ export default function InfoWindowContent({
       stars.push(<Star key={`empty-${i}`} className="h-3 w-3 text-gray-300" />);
     }
     
-    return <div className="flex items-center gap-1">{stars}</div>;
+    return <div className="flex items-center gap-0.5">{stars}</div>;
   };
 
-  // Collect all review texts and photos
-  const allPhotos = place.reviewers.flatMap((r) => r.photoUrls);
-  const allTips = place.reviewers
-    .map((r) => r.reviewText)
-    .filter(Boolean) as string[];
-
-  // Get price info from reviews (this would need to be added to the data structure)
+  // Get first photo for header
+  const firstPhoto = place.reviewers.flatMap((r) => r.photoUrls)[0];
+  
+  // Get price info (placeholder logic)
   const priceIndicator = place.avgValue ? "€".repeat(Math.round(place.avgValue)) : "€€";
 
   return (
-    <div className="w-80 bg-white rounded-lg shadow-lg overflow-hidden">
-      {/* Header with main photo if available */}
-      {allPhotos.length > 0 && (
-        <div className="h-32 relative">
-          <img
-            src={allPhotos[0]}
-            className="w-full h-full object-cover"
-            alt={place.name}
-          />
-          <div className="absolute top-2 right-2 flex gap-1">
-            <button 
-              onClick={() => onToggleSave(place.placeId)}
-              className="p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm"
-              title="Save place"
-            >
-              <Heart className="h-4 w-4 text-[#FF6B6B]" />
-            </button>
-            <button 
-              onClick={() => onInvite(place.placeId)}
-              className="p-1.5 bg-white/90 hover:bg-white rounded-full shadow-sm"
-              title="Invite friends"
-            >
-              <Calendar className="h-4 w-4 text-gray-600" />
-            </button>
+    <div className="w-72 bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+      {/* Header with photo and actions */}
+      <div className="relative">
+        {firstPhoto ? (
+          <div className="h-24 relative">
+            <img
+              src={firstPhoto}
+              className="w-full h-full object-cover"
+              alt={place.name}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
+        ) : (
+          <div className="h-16 bg-gradient-to-r from-[#FF6B6B]/20 to-[#EE8C80]/20" />
+        )}
+        
+        {/* Action buttons */}
+        <div className="absolute top-2 right-2 flex gap-1">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSave(place.placeId);
+            }}
+            className="p-1.5 bg-white/95 hover:bg-white rounded-full shadow-sm transition-all duration-200 hover:scale-105"
+            title="Save place"
+          >
+            <Heart className="h-3.5 w-3.5 text-[#FF6B6B] hover:fill-current transition-colors" />
+          </button>
         </div>
-      )}
+      </div>
 
-      <div className="p-4">
-        {/* Restaurant name and category */}
-        <div className="mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{place.name}</h3>
-          <div className="flex items-center justify-between">
-            {place.category && (
-              <span className="text-sm text-gray-600">{place.category}</span>
-            )}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-[#FF6B6B]">{priceIndicator}</span>
-              <div className="flex items-center gap-1">
-                {renderStars(place.avgOverall)}
-                <span className="text-sm font-medium text-gray-700 ml-1">
-                  {place.avgOverall.toFixed(1)}
-                </span>
-              </div>
+      <div className="p-3">
+        {/* Restaurant name and basic info */}
+        <div className="mb-2">
+          <div className="flex items-start justify-between mb-1">
+            <h3 className="text-base font-semibold text-gray-900 leading-tight pr-2">{place.name}</h3>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {renderStars(place.avgOverall)}
+              <span className="text-sm font-medium text-gray-700 ml-1">
+                {place.avgOverall.toFixed(1)}
+              </span>
             </div>
           </div>
+          
+          <div className="flex items-center justify-between text-sm">
+            {place.category && (
+              <span className="text-gray-600">{place.category}</span>
+            )}
+            <span className="text-sm font-medium text-[#FF6B6B]">{priceIndicator}</span>
+          </div>
         </div>
 
-        {/* Photo carousel if multiple photos */}
-        {allPhotos.length > 1 && (
-          <div className="mb-3">
-            <div className="flex overflow-x-auto gap-2 pb-2">
-              {allPhotos.slice(1, 4).map((url, idx) => (
-                <img
-                  key={idx}
-                  src={url}
-                  className="h-16 w-16 object-cover rounded flex-shrink-0"
-                  alt="Review photo"
-                />
-              ))}
-              {allPhotos.length > 4 && (
-                <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs text-gray-600 font-medium">+{allPhotos.length - 4}</span>
+        {/* Quick stats in a compact layout */}
+        {(place.avgValue || place.avgAtmosphere) && (
+          <div className="bg-gray-50 rounded-lg p-2 mb-2">
+            <div className="flex justify-between text-xs">
+              {place.avgValue && (
+                <div className="flex flex-col items-center">
+                  <span className="text-gray-500">Value</span>
+                  <span className="font-medium text-gray-800">{place.avgValue.toFixed(1)}</span>
                 </div>
               )}
+              {place.avgAtmosphere && (
+                <div className="flex flex-col items-center">
+                  <span className="text-gray-500">Vibe</span>
+                  <span className="font-medium text-gray-800">{place.avgAtmosphere.toFixed(1)}</span>
+                </div>
+              )}
+              <div className="flex flex-col items-center">
+                <span className="text-gray-500">Reviews</span>
+                <span className="font-medium text-gray-800">{place.reviewers.length}</span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Quick stats */}
-        <div className="bg-gray-50 rounded-lg p-3 mb-3">
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {place.avgValue && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Value:</span>
-                <span className="font-medium">{place.avgValue.toFixed(1)}/5</span>
-              </div>
-            )}
-            {place.avgAtmosphere && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Vibe:</span>
-                <span className="font-medium">{place.avgAtmosphere.toFixed(1)}/5</span>
-              </div>
-            )}
+        {/* Reviewers summary */}
+        <div className="mb-3">
+          <div className="text-xs font-medium text-gray-700 mb-1">
+            From your network:
           </div>
-        </div>
-
-        {/* Reviews summary */}
-        {allTips.length > 0 && (
-          <div className="mb-3">
-            <div className="text-sm font-medium text-gray-800 mb-2">
-              What {place.reviewers.length === 1 ? 'your friend' : 'your friends'} said:
-            </div>
-            <div className="space-y-2 max-h-24 overflow-y-auto">
-              {allTips.slice(0, 2).map((tip, i) => (
-                <div key={i} className="text-xs italic text-gray-700 bg-white p-2 rounded border-l-2 border-[#FF6B6B]">
-                  "{tip.length > 60 ? tip.substring(0, 60) + '...' : tip}"
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Reviewers list */}
-        <div className="border-t pt-3">
-          <div className="text-sm font-medium text-gray-800 mb-2">
-            {place.reviewers.length} Review{place.reviewers.length !== 1 ? 's' : ''} from your network
-          </div>
-          <div className="space-y-1 max-h-20 overflow-y-auto">
-            {place.reviewers.map((reviewer) => (
-              <div key={reviewer.userId} className="flex justify-between items-center text-xs">
-                <span className="font-medium text-gray-700">{reviewer.userName}</span>
-                <div className="flex items-center gap-1">
-                  {renderStars(reviewer.ratingOverall)}
-                </div>
-              </div>
+          <div className="flex flex-wrap gap-1">
+            {place.reviewers.slice(0, 3).map((reviewer) => (
+              <span key={reviewer.userId} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-[#FF6B6B]/10 text-[#FF6B6B] font-medium">
+                {reviewer.userName}
+              </span>
             ))}
+            {place.reviewers.length > 3 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 font-medium">
+                +{place.reviewers.length - 3} more
+              </span>
+            )}
           </div>
         </div>
+
+        {/* View full page button */}
+        {onViewRestaurant && (
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewRestaurant(place.placeId);
+            }}
+            className="w-full bg-[#FF6B6B] hover:bg-[#FF6B6B]/90 text-white text-sm py-2 h-8 rounded-lg transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+            View Restaurant
+          </Button>
+        )}
       </div>
     </div>
   );
