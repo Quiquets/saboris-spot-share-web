@@ -12,128 +12,199 @@ export function useExplorePlaces(
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('useExplorePlaces effect triggered with:', { user: user?.id, filter });
-    
-    if (!user) {
-      console.log('No user found, setting empty places');
-      setPlaces([]);
-      setLoading(false);
-      return;
-    }
+    console.log('useExplorePlaces effect triggered with:', { 
+      user: user?.id, 
+      filter,
+      hasUser: !!user 
+    });
     
     setLoading(true);
 
-    (async () => {
-      let ids: string[] = [user.id];
-      const isCommunity = filter === 'community';
-
-      if (!isCommunity && filter !== 'my') {
-        const { data: friends = [] } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', user.id);
-        const friendIds = friends.map((f) => f.following_id);
-
-          if (filter === 'friends') {
-            ids = friendIds;
+    const fetchPlaces = async () => {
+      try {
+        let userIds: string[] = [];
+        
+        // Determine which user IDs to query based on filter
+        if (filter === 'community') {
+          // For community, get all users marked as community members
+          const { data: communityUsers } = await supabase
+            .from('users')
+            .select('id')
+            .eq('isCommunitymemeber', true);
+          
+          userIds = communityUsers?.map(u => u.id) || [];
+          console.log('Community user IDs found:', userIds.length);
+        } else if (!user) {
+          // If no user and not community, show empty results
+          console.log('No user authenticated for filter:', filter);
+          setPlaces([]);
+          setLoading(false);
+          return;
+        } else {
+          // Handle authenticated user filters
+          if (filter === 'my') {
+            userIds = [user.id];
           } else {
-            const { data: fof = [] } = await supabase
+            // Get friends first
+            const { data: friends = [] } = await supabase
               .from('follows')
               .select('following_id')
-              .in('follower_id', friendIds);
-            ids = Array.from(
-              new Set([...friendIds, ...fof.map((f) => f.following_id)])
-            );
+              .eq('follower_id', user.id);
+            
+            const friendIds = friends.map((f) => f.following_id);
+            console.log('Friend IDs found:', friendIds.length);
+
+            if (filter === 'friends') {
+              userIds = friendIds;
+            } else if (filter === 'fof') {
+              // Get friends of friends
+              const { data: fof = [] } = await supabase
+                .from('follows')
+                .select('following_id')
+                .in('follower_id', friendIds);
+              
+              const fofIds = fof.map((f) => f.following_id);
+              // Combine friends and friends-of-friends, remove duplicates
+              userIds = Array.from(new Set([...friendIds, ...fofIds]));
+              console.log('Friends + FoF IDs found:', userIds.length);
+            }
           }
         }
 
-        console.log('User IDs to query:', ids);
+        console.log('Final user IDs to query:', userIds);
 
-      let q = supabase
-        .from('reviews')
-        .select(`
-          id,
-          user_id,
-          place_id,
-          rating_atmosphere,
-          rating_food,
-          rating_service,
-          rating_value,
-          text,
-          photo_urls,
-          places (
-            id,
-            name,
-            category,
-            lat,
-            lng
-          ),
-          users:user_id (
-            id,
-            name,
-            isCommunitymember
-          )
-        `);
-
-      if (isCommunity) {
-        q = q.eq('users.isCommunitymember', true);
-      } else {
-        q = q.in('user_id', ids);
-      }
-
-      const { data: reviews, error } = await q;
-      if (error || !Array.isArray(reviews)) {
-        console.error('fetchExplorePlaces error:', error);
-        setPlaces([]);
-        setLoading(false);
-        return;
-      }
-
-      // Group by place_id
-      const groups: Record<string, typeof reviews> = {};
-      reviews.forEach((r) => {
-        if (r.places?.id) {
-          (groups[r.place_id] ||= []).push(r);
+        // If no user IDs found, return empty results
+        if (userIds.length === 0) {
+          console.log('No user IDs found for filter:', filter);
+          setPlaces([]);
+          setLoading(false);
+          return;
         }
-      });
 
-      // Build ExplorePlace[]
-      const result: ExplorePlace[] = Object.values(groups).map((grp) => {
-        const first = grp[0];
-        const loc = { lat: first.places.lat, lng: first.places.lng };
-        const reviewers: ReviewerInfo[] = grp.map((r) => ({
-          userId: r.user_id,
-          userName: r.users?.name || 'Unknown',
-          photoUrls: r.photo_urls || [],
-          ratingOverall: 0,
-          ratingValue: r.rating_value ?? undefined,
-          ratingAtmosphere: r.rating_atmosphere ?? undefined,
-          reviewText: r.text || '',
-        }));
-        const avg = (arr: number[]) =>
-          arr.reduce((sum, x) => sum + x, 0) / (arr.length || 1);
+        // Fetch reviews for these users
+        const { data: reviews, error } = await supabase
+          .from('reviews')
+          .select(`
+            id,
+            user_id,
+            place_id,
+            rating_atmosphere,
+            rating_food,
+            rating_service,
+            rating_value,
+            text,
+            photo_urls,
+            places (
+              id,
+              name,
+              category,
+              lat,
+              lng
+            ),
+            users:user_id (
+              id,
+              name,
+              isCommunitymemeber
+            )
+          `)
+          .in('user_id', userIds);
 
-        return {
-          placeId: first.place_id,
-          name: first.places.name,
-          category: first.places.category,
-          location: loc,
-          reviewers,
-          avgOverall: avg(reviewers.map((r) => r.ratingOverall)),
-          avgValue:
-            reviewers[0].ratingValue != null
-              ? avg(reviewers.map((r) => r.ratingValue!))
-              : undefined,
-          avgAtmosphere:
-            reviewers[0].ratingAtmosphere != null
-              ? avg(reviewers.map((r) => r.ratingAtmosphere!))
-              : undefined,
-        };
-      });
+        if (error) {
+          console.error('Error fetching reviews:', error);
+          setPlaces([]);
+          setLoading(false);
+          return;
+        }
 
-      setPlaces(result);
-      setLoading(false);
-    })();
+        if (!Array.isArray(reviews)) {
+          console.log('No reviews found');
+          setPlaces([]);
+          setLoading(false);
+          return;
+        }
+
+        console.log('Reviews fetched:', reviews.length);
+
+        // Group reviews by place_id
+        const placeGroups: Record<string, typeof reviews> = {};
+        reviews.forEach((review) => {
+          // Only include reviews that have valid place data
+          if (review.places?.id && review.places?.lat && review.places?.lng) {
+            if (!placeGroups[review.place_id]) {
+              placeGroups[review.place_id] = [];
+            }
+            placeGroups[review.place_id].push(review);
+          }
+        });
+
+        console.log('Place groups created:', Object.keys(placeGroups).length);
+
+        // Build ExplorePlace array
+        const exploreePlaces: ExplorePlace[] = Object.values(placeGroups).map((reviewGroup) => {
+          const firstReview = reviewGroup[0];
+          const place = firstReview.places!;
+          
+          // Calculate average ratings
+          const validRatings = reviewGroup
+            .map(r => [r.rating_food, r.rating_service, r.rating_atmosphere, r.rating_value])
+            .flat()
+            .filter(rating => rating != null) as number[];
+          
+          const avgOverall = validRatings.length > 0 
+            ? validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length 
+            : 0;
+
+          const valueRatings = reviewGroup
+            .map(r => r.rating_value)
+            .filter(rating => rating != null) as number[];
+          
+          const avgValue = valueRatings.length > 0
+            ? valueRatings.reduce((sum, rating) => sum + rating, 0) / valueRatings.length
+            : undefined;
+
+          const atmosphereRatings = reviewGroup
+            .map(r => r.rating_atmosphere)
+            .filter(rating => rating != null) as number[];
+          
+          const avgAtmosphere = atmosphereRatings.length > 0
+            ? atmosphereRatings.reduce((sum, rating) => sum + rating, 0) / atmosphereRatings.length
+            : undefined;
+
+          // Build reviewer info
+          const reviewers: ReviewerInfo[] = reviewGroup.map((review) => ({
+            userId: review.user_id,
+            userName: review.users?.name || 'Unknown',
+            photoUrls: review.photo_urls || [],
+            ratingOverall: avgOverall, // Use calculated average
+            ratingValue: review.rating_value ?? undefined,
+            ratingAtmosphere: review.rating_atmosphere ?? undefined,
+            reviewText: review.text || '',
+          }));
+
+          return {
+            placeId: place.id,
+            name: place.name,
+            category: place.category,
+            location: { lat: place.lat, lng: place.lng },
+            reviewers,
+            avgOverall,
+            avgValue,
+            avgAtmosphere,
+          };
+        });
+
+        console.log('Final explore places:', exploreePlaces.length);
+        setPlaces(exploreePlaces);
+        
+      } catch (error) {
+        console.error('Error in fetchPlaces:', error);
+        setPlaces([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlaces();
   }, [user, filter]);
 
   return { places, loading };

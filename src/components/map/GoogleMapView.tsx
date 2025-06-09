@@ -1,3 +1,4 @@
+
 // src/components/map/GoogleMapView.tsx
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -32,17 +33,27 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isLoadingMap, setIsLoadingMap] = useState(true);
 
-  // Map your filter UI into the hook’s expected keys
-  const peopleScope: 'my' | 'friends' | 'fof' | 'community' =
-    activeFilters?.people === 'my-places'
-      ? 'my'
-      : activeFilters?.people === 'friends'
-      ? 'friends'
-      : activeFilters?.people === 'friends-of-friends'
-      ? 'fof'
-      : activeFilters?.people === 'community'
-      ? 'community'
-      : 'my';
+  // Map your filter UI into the hook's expected keys with better logging
+  const peopleScope: 'my' | 'friends' | 'fof' | 'community' = (() => {
+    const filterValue = activeFilters?.people;
+    console.log('Raw people filter value:', filterValue);
+    
+    switch (filterValue) {
+      case 'my-places':
+        return 'my';
+      case 'friends':
+        return 'friends';
+      case 'friends-of-friends':
+        return 'fof';
+      case 'community':
+        return 'community';
+      default:
+        console.log('Unknown people filter, defaulting to community:', filterValue);
+        return 'community';
+    }
+  })();
+
+  console.log('Mapped people scope:', peopleScope);
 
   // 1) Fetch grouped & averaged explore data
   const { places, loading: exploreLoading } = useExplorePlaces(peopleScope);
@@ -58,6 +69,16 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
   // 3) Whenever places change, drop coral-pink pins
   useMapMarkers(mapInstance, places);
 
+  // Debug logging for places
+  useEffect(() => {
+    console.log('GoogleMapView - Places updated:', {
+      count: places.length,
+      loading: exploreLoading,
+      mapReady: mapIsReady,
+      places: places.map(p => ({ name: p.name, location: p.location }))
+    });
+  }, [places, exploreLoading, mapIsReady]);
+
   // Run map setup once
   useEffect(() => {
     initializeMap();
@@ -70,7 +91,7 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
     }
   }, [mapInstance, mapIsReady, onMapReady]);
 
-  // “Find Me” button logic
+  // "Find Me" button logic
   const handleGetUserLocation = () => {
     if (!mapIsReady) {
       toast.error('Map not ready. Please wait for the map to load completely.');
@@ -108,6 +129,16 @@ const GoogleMapView: React.FC<GoogleMapViewProps> = ({
         className="w-full h-full"
         style={{ display: isLoadingMap ? 'none' : 'block' }}
       />
+
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-4 left-4 bg-black/70 text-white p-2 rounded text-xs">
+          <div>Filter: {peopleScope}</div>
+          <div>Places: {places.length}</div>
+          <div>Loading: {exploreLoading ? 'Yes' : 'No'}</div>
+          <div>Map Ready: {mapIsReady ? 'Yes' : 'No'}</div>
+        </div>
+      )}
 
       <div className="absolute bottom-4 right-4">
         <Button
