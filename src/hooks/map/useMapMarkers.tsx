@@ -56,7 +56,7 @@ export function useMapMarkers(
       });
       
       try {
-        // Create coral pink marker with rating display
+        // Create coral pink marker with rating display using correct color #EE8C80
         const rating = place.avgOverall.toFixed(1);
         const marker = new google.maps.Marker({
           position: place.location,
@@ -64,13 +64,13 @@ export function useMapMarkers(
           icon: {
             url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
               <svg width="28" height="35" viewBox="0 0 28 35" xmlns="http://www.w3.org/2000/svg">
-                <!-- Coral pink pin shape -->
-                <path d="M14 0C21.5 0 28 6.27 28 14C28 21.73 14 35 14 35S0 21.73 0 14C0 6.27 6.5 0 14 0Z" fill="#FF6B6B"/>
+                <!-- Coral pink pin shape with correct color -->
+                <path d="M14 0C21.5 0 28 6.27 28 14C28 21.73 14 35 14 35S0 21.73 0 14C0 6.27 6.5 0 14 0Z" fill="#EE8C80"/>
                 <path d="M14 0C21.5 0 28 6.27 28 14C28 21.73 14 35 14 35S0 21.73 0 14C0 6.27 6.5 0 14 0Z" stroke="#ffffff" stroke-width="2"/>
                 <!-- White circle for rating -->
                 <circle cx="14" cy="13" r="8.5" fill="#ffffff"/>
                 <!-- Rating text in coral -->
-                <text x="14" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#FF6B6B">${rating}</text>
+                <text x="14" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#EE8C80">${rating}</text>
               </svg>
             `),
             scaledSize: new google.maps.Size(28, 35),
@@ -100,7 +100,7 @@ export function useMapMarkers(
             }}
             onViewRestaurant={(id) => {
               console.log('View restaurant for place:', id);
-              // Navigate to restaurant page - fix 404 by using correct routing
+              // Fix 404 by using correct routing path
               window.location.href = `/places/${id}`;
             }}
           />
@@ -109,10 +109,10 @@ export function useMapMarkers(
         // Store the root for cleanup
         rootsRef.current.set(place.placeId, root);
 
-        // Attach it to a Google InfoWindow
+        // Attach it to a Google InfoWindow with fixed width
         const infow = new google.maps.InfoWindow({ 
           content: container,
-          maxWidth: 260,
+          maxWidth: 280,
           disableAutoPan: false
         });
         

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,7 +80,7 @@ export function useExplorePlaces(
           return;
         }
 
-        // Fetch reviews for these users
+        // Fetch reviews for these users with explicit avatar_url field
         const { data: reviews, error } = await supabase
           .from('reviews')
           .select(`
@@ -125,6 +124,7 @@ export function useExplorePlaces(
         }
 
         console.log('Reviews fetched:', reviews.length);
+        console.log('Sample review with avatar:', reviews[0]?.users);
 
         // Group reviews by place_id and ensure we have valid place data
         const placeGroups: Record<string, typeof reviews> = {};
@@ -181,17 +181,25 @@ export function useExplorePlaces(
             ? atmosphereRatings.reduce((sum, rating) => sum + rating, 0) / atmosphereRatings.length
             : undefined;
 
-          // Build reviewer info with avatarUrl included
-          const reviewers: ReviewerInfo[] = reviewGroup.map((review) => ({
-            userId: review.user_id,
-            userName: review.users?.name || 'Unknown',
-            avatarUrl: review.users?.avatar_url || undefined,
-            photoUrls: review.photo_urls || [],
-            ratingOverall: avgOverall, // Use calculated average
-            ratingValue: review.rating_value ?? undefined,
-            ratingAtmosphere: review.rating_atmosphere ?? undefined,
-            reviewText: review.text || '',
-          }));
+          // Build reviewer info with avatarUrl included and debug logging
+          const reviewers: ReviewerInfo[] = reviewGroup.map((review) => {
+            console.log('Processing reviewer:', {
+              userId: review.user_id,
+              userName: review.users?.name,
+              avatarUrl: review.users?.avatar_url
+            });
+            
+            return {
+              userId: review.user_id,
+              userName: review.users?.name || 'Unknown',
+              avatarUrl: review.users?.avatar_url || undefined,
+              photoUrls: review.photo_urls || [],
+              ratingOverall: avgOverall, // Use calculated average
+              ratingValue: review.rating_value ?? undefined,
+              ratingAtmosphere: review.rating_atmosphere ?? undefined,
+              reviewText: review.text || '',
+            };
+          });
 
           return {
             placeId: place.id,
@@ -210,7 +218,8 @@ export function useExplorePlaces(
           places: exploreePlaces.map(p => ({
             name: p.name,
             location: p.location,
-            reviewersCount: p.reviewers.length
+            reviewersCount: p.reviewers.length,
+            firstReviewerAvatar: p.reviewers[0]?.avatarUrl
           }))
         });
         
