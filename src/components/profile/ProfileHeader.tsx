@@ -36,6 +36,7 @@ const ProfileHeader = ({
   const { user: currentUser } = useAuth();
   const [isFollowing, setIsFollowing] = useState(false);
   const [isCommunityMember, setIsCommunityMember] = useState(false);
+  const [followCheckLoading, setFollowCheckLoading] = useState(false);
 
   const avatarUrl = user?.avatar_url ? `${user.avatar_url}?t=${new Date().getTime()}` : `https://avatar.vercel.sh/${user?.email || user?.id}.png`;
   const username = user?.username || 'Unknown';
@@ -54,7 +55,6 @@ const ProfileHeader = ({
 
         if (!error && data) {
           setIsCommunityMember(data.isCommunityMember || false);
-          console.log('Community member status fetched:', data.isCommunityMember);
         }
       } catch (error) {
         console.error('Error fetching community status:', error);
@@ -64,33 +64,40 @@ const ProfileHeader = ({
     fetchCommunityStatus();
   }, [user?.id]);
 
+  // Check following status
   useEffect(() => {
     const checkFollowingStatus = async () => {
-      if (!currentUser || !user || isOwnProfile || !user.id) return;
+      if (!currentUser || !user || isOwnProfile || !user.id) {
+        setIsFollowing(false);
+        return;
+      }
 
       try {
+        setFollowCheckLoading(true);
         const { data, error } = await supabase
           .from('follows')
           .select('id')
           .match({
             follower_id: currentUser.id,
             following_id: user.id,
-          });
+          })
+          .single();
 
-        if (!error) {
-          setIsFollowing(data && data.length > 0);
+        if (!error && data) {
+          setIsFollowing(true);
         } else {
-          console.error('Error checking follow status:', error.message);
+          setIsFollowing(false);
         }
       } catch (error: any) {
-        console.error('Error checking follow status:', error.message);
+        console.error('Error checking follow status:', error);
+        setIsFollowing(false);
+      } finally {
+        setFollowCheckLoading(false);
       }
     };
 
-    if (user?.id) {
-      checkFollowingStatus();
-    }
-  }, [currentUser, user, isOwnProfile, user?.id]);
+    checkFollowingStatus();
+  }, [currentUser, user?.id, isOwnProfile]);
 
   const onPlacesClick = () => {
     const placesSection = document.getElementById('shared-places-section');

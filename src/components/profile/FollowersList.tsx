@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -50,7 +51,6 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
         // If this is in the following list, remove the user from displayed users
         if (listType === 'following') {
           setDisplayedUsers(current => current.filter(user => user.id !== userId));
-          toast.success("User unfollowed");
           return;
         }
       } else {
@@ -66,7 +66,6 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
         }
       }));
       
-      toast.success(isCurrentlyFollowing ? "Unfollowed user" : "Now following user");
     } catch (error) {
       console.error("Error toggling follow:", error);
       toast.error("Failed to update follow status");
@@ -121,14 +120,14 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
                 {user.is_self !== true && (
                   <Button
                     size="sm"
-                    variant={followingStates[user.id]?.isFollowing ? "outline" : "default"}
-                    onClick={(e) => toggleFollow(e, user.id)}
-                    disabled={followingStates[user.id]?.isLoading}
-                    className={`ml-2 ${followingStates[user.id]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}`}
+                    variant={followingStates[userId]?.isFollowing ? "outline" : "default"}
+                    onClick={(e) => toggleFollow(e, userId)}
+                    disabled={followingStates[userId]?.isLoading}
+                    className={`ml-2 ${followingStates[userId]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}`}
                   >
-                    {followingStates[user.id]?.isLoading ? (
+                    {followingStates[userId]?.isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : followingStates[user.id]?.isFollowing ? (
+                    ) : followingStates[userId]?.isFollowing ? (
                       "Unfollow"
                     ) : (
                       "Follow"

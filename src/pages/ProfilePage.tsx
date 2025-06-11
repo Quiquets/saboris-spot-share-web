@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Header from "@/components/Header";
@@ -26,38 +27,46 @@ const ProfilePage = () => {
   const [showFollowing, setShowFollowing] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [viewedUser, setViewedUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
 
   // Determine if we're viewing our own profile or someone else's
   useEffect(() => {
-    if (authLoading) return;
+    const loadUserData = async () => {
+      if (authLoading) return;
 
-    const currentViewingUserId = routeUserId || user?.id;
+      const targetUserId = routeUserId || user?.id;
+      if (!targetUserId) return;
 
-    if (user && currentViewingUserId) {
-      const own = user.id === currentViewingUserId;
-      setIsOwnProfile(own);
-      if (!own) {
-        supabaseService.getUserProfile(currentViewingUserId)
-          .then((profile) => {
-            setViewedUser(profile);
-            if (!profile) console.warn(`No profile found for user ID: ${currentViewingUserId}`);
-          })
-          .catch(error => console.error("Error fetching viewed user profile:", error));
+      const isOwn = user && user.id === targetUserId;
+      setIsOwnProfile(!!isOwn);
+
+      if (isOwn) {
+        // Viewing own profile - use authenticated user data
+        setViewedUser(user as User);
       } else {
-        setViewedUser(user as User); 
-      }
-    } else if (!user && routeUserId) {
-      setIsOwnProfile(false);
-      supabaseService.getUserProfile(routeUserId)
-          .then((profile) => {
+        // Viewing someone else's profile - fetch their data
+        try {
+          setUserLoading(true);
+          const profile = await supabaseService.getUserProfile(targetUserId);
+          if (profile) {
             setViewedUser(profile);
-            if (!profile) console.warn(`No profile found for user ID: ${routeUserId}`);
-          })
-          .catch(error => console.error("Error fetching viewed user profile:", error));
-    }
+          } else {
+            console.warn(`No profile found for user ID: ${targetUserId}`);
+            toast.error("User profile not found");
+          }
+        } catch (error) {
+          console.error("Error fetching viewed user profile:", error);
+          toast.error("Failed to load user profile");
+        } finally {
+          setUserLoading(false);
+        }
+      }
+    };
+
+    loadUserData();
   }, [user, routeUserId, authLoading]);
 
-  if (authLoading) return <ProfileLoading />;
+  if (authLoading || userLoading) return <ProfileLoading />;
   
   if (!user && !routeUserId) return <ProfileUnauthenticated />;
   
@@ -65,6 +74,12 @@ const ProfilePage = () => {
 
   if (!targetUserId) {
     return <ProfileUnauthenticated />;
+  }
+
+  // Get the effective user for display
+  const effectiveUser = viewedUser || user;
+  if (!effectiveUser) {
+    return <ProfileLoading />;
   }
 
   // 1) Fetch all profile data (including name & username)
@@ -127,34 +142,20 @@ const ProfilePage = () => {
     openReviewDialog,
   } = useProfileReviews();
 
-  const displayUserForHeaderLogic = () => {
-    if (isOwnProfile && user) return user;
-    if (!isOwnProfile && viewedUser) return viewedUser;
-    
-    // Define a type that includes the optional property for casting
-    type UserWithCommunityStatus = User & { is_CommunityMember?: boolean };
-
-    return {
-        id: targetUserId,
-        name: name || "User",
-        username: username || "username",
-        bio: bio || "",
-        avatar_url: profileImageUrl || undefined,
-        email: "", 
-        is_CommunityMember: (isOwnProfile && (user as UserWithCommunityStatus)?.is_CommunityMember) || 
-                           (!isOwnProfile && (viewedUser as UserWithCommunityStatus)?.is_CommunityMember) || 
-                           false,
-        location: userLocation || ""
-    } as User; 
+  // Create header user object with proper data hierarchy
+  const headerUser: User = {
+    id: targetUserId,
+    name: name || effectiveUser.name || "User",
+    username: username || effectiveUser.username || "username",
+    bio: bio || effectiveUser.bio || "",
+    avatar_url: profileImageUrl || effectiveUser.avatar_url || undefined,
+    email: effectiveUser.email || "",
+    location: userLocation || effectiveUser.location || "",
+    is_private: isPrivate,
+    isCommunityMember: effectiveUser.isCommunityMember || false
   };
   
-  const headerUser = displayUserForHeaderLogic();
-  const effectiveUserLocation = isOwnProfile ? (user?.location || userLocation) : (viewedUser?.location || userLocation);
-
-  // Loading states
-  if (profileDataLoading && !headerUser.id && !routeUserId) return <ProfileLoading />;
-  if (!isOwnProfile && routeUserId && !viewedUser && profileDataLoading) return <ProfileLoading />;
-
+  const effectiveUserLocation = userLocation || effectiveUser.location;
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -164,7 +165,7 @@ const ProfilePage = () => {
         <div className="max-w-5xl mx-auto">
           {/* Profile Header */}
           <ProfileHeader
-            user={headerUser} // Pass the determined headerUser
+            user={headerUser}
             isOwnProfile={isOwnProfile}
             profileStats={profileStats}
             isPrivate={isPrivate}
@@ -179,21 +180,21 @@ const ProfilePage = () => {
               setShowFollowing(true);
               setShowFollowers(false);
             }}
-            userLocation={effectiveUserLocation} // Pass userLocation here
+            userLocation={effectiveUserLocation}
           />
 
           {/* Edit Profile Dialog (own profile only) */}
-          {isOwnProfile && user && ( // Ensure user is not null for EditProfileDialog
+          {isOwnProfile && user && (
             <EditProfileDialog
               isOpen={isEditProfileOpen}
               onOpenChange={setIsEditProfileOpen}
-              user={user} // Pass the authenticated user
+              user={user}
               name={name}
               setName={setName}
               username={username}
               setUsername={setUsername}
-              userLocation={userLocation} // This is passed to EditProfileDialog
-              setUserLocation={setUserLocation} // This is passed to EditProfileDialog
+              userLocation={userLocation}
+              setUserLocation={setUserLocation}
               bio={bio}
               setBio={setBio}
               isPrivate={isPrivate}
@@ -222,12 +223,12 @@ const ProfilePage = () => {
               isOpen={isReviewDialogOpen}
               onOpenChange={setIsReviewDialogOpen}
               selectedPlace={selectedPlace}
-              onPlaceDeleted={fetchProfileData} // Refresh all data if a place/review is deleted
+              onPlaceDeleted={fetchProfileData}
             />
           )}
 
           {/* Shared Places grid */}
-          <div id="shared-places-section"> {/* Added ID for scrolling */}
+          <div id="shared-places-section">
             <SharedPlaces
               loading={profileDataLoading}
               sharedPlaces={sharedPlaces}
@@ -238,7 +239,7 @@ const ProfilePage = () => {
                    toast.info(`Viewing details for ${selectedPlace.place.name}`);
                 }
               }}
-              refreshPlaces={fetchProfileData} // Refresh all data
+              refreshPlaces={fetchProfileData}
               isOwnProfile={isOwnProfile}
             />
           </div>

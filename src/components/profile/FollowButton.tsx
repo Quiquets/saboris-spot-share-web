@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,11 +16,16 @@ interface FollowButtonProps {
 const FollowButton: React.FC<FollowButtonProps> = ({ 
   currentUser, 
   profileUser, 
-  isFollowing,
+  isFollowing: initialIsFollowing,
   onFollowStatusChange 
 }) => {
   const [loading, setLoading] = useState(false);
-  const [following, setFollowing] = useState(isFollowing);
+  const [following, setFollowing] = useState(initialIsFollowing);
+  
+  // Update local state when prop changes
+  useEffect(() => {
+    setFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
   
   const handleFollowToggle = async () => {
     if (currentUser.id === profileUser.id) return; // Can't follow yourself
@@ -38,23 +43,45 @@ const FollowButton: React.FC<FollowButtonProps> = ({
             following_id: profileUser.id 
           });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Unfollow error:', error);
+          throw error;
+        }
         
         toast.success(`Unfollowed @${profileUser.username || 'user'}`);
         setFollowing(false);
       } else {
-        // Follow
-        const { error } = await supabase
+        // Check if already following before inserting
+        const { data: existingFollow } = await supabase
           .from('follows')
-          .insert({ 
+          .select('id')
+          .match({ 
             follower_id: currentUser.id, 
             following_id: profileUser.id 
-          });
+          })
+          .single();
           
-        if (error) throw error;
-        
-        toast.success(`Following @${profileUser.username || 'user'}`);
-        setFollowing(true);
+        if (existingFollow) {
+          // Already following, just update UI
+          setFollowing(true);
+          toast.success(`Already following @${profileUser.username || 'user'}`);
+        } else {
+          // Follow
+          const { error } = await supabase
+            .from('follows')
+            .insert({ 
+              follower_id: currentUser.id, 
+              following_id: profileUser.id 
+            });
+            
+          if (error) {
+            console.error('Follow error:', error);
+            throw error;
+          }
+          
+          toast.success(`Following @${profileUser.username || 'user'}`);
+          setFollowing(true);
+        }
       }
       
       // Call callback if provided
