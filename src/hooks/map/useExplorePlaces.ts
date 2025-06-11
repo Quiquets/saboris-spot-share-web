@@ -104,6 +104,7 @@ export function useExplorePlaces(
             users:user_id (
               id,
               name,
+              avatar_url,
               isCommunityMember
             )
           `)
@@ -180,10 +181,11 @@ export function useExplorePlaces(
             ? atmosphereRatings.reduce((sum, rating) => sum + rating, 0) / atmosphereRatings.length
             : undefined;
 
-          // Build reviewer info
+          // Build reviewer info with avatarUrl included
           const reviewers: ReviewerInfo[] = reviewGroup.map((review) => ({
             userId: review.user_id,
             userName: review.users?.name || 'Unknown',
+            avatarUrl: review.users?.avatar_url || undefined,
             photoUrls: review.photo_urls || [],
             ratingOverall: avgOverall, // Use calculated average
             ratingValue: review.rating_value ?? undefined,

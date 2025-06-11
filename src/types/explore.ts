@@ -1,11 +1,13 @@
+
 export interface ReviewerInfo {
   userId: string;
   userName: string;
+  avatarUrl?: string; // Add this missing property
   photoUrls: string[];
   ratingOverall: number;
   ratingValue?: number;
   ratingAtmosphere?: number;
-  reviewText?: string; // Add this line
+  reviewText?: string;
 }
 
 export interface ExplorePlace {
