@@ -25,37 +25,41 @@ const ProfilePage = () => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [viewedUser, setViewedUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(false);
 
-  // Determine if we're viewing our own profile or someone else's
+  // Determine the target user ID and whether this is own profile
+  const targetUserId = routeUserId || user?.id;
+  const isOwnProfile = user && targetUserId === user.id;
+
+  // Load user profile data
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadUserProfile = async () => {
       if (authLoading) return;
+      
+      if (!targetUserId) {
+        setViewedUser(null);
+        return;
+      }
 
-      const targetUserId = routeUserId || user?.id;
-      if (!targetUserId) return;
+      if (isOwnProfile && user) {
+        // Use authenticated user data for own profile
+        setViewedUser(user);
+        return;
+      }
 
-      const isOwn = user && user.id === targetUserId;
-      setIsOwnProfile(!!isOwn);
-
-      if (isOwn) {
-        // Viewing own profile - use authenticated user data
-        setViewedUser(user as User);
-      } else {
-        // Viewing someone else's profile - fetch their data
+      if (routeUserId && routeUserId !== user?.id) {
+        // Load external user profile
         try {
           setUserLoading(true);
-          const profile = await supabaseService.getUserProfile(targetUserId);
+          const profile = await supabaseService.getUserProfile(routeUserId);
           if (profile) {
             setViewedUser(profile);
           } else {
-            console.warn(`No profile found for user ID: ${targetUserId}`);
             toast.error("User profile not found");
           }
         } catch (error) {
-          console.error("Error fetching viewed user profile:", error);
+          console.error("Error fetching user profile:", error);
           toast.error("Failed to load user profile");
         } finally {
           setUserLoading(false);
@@ -63,26 +67,30 @@ const ProfilePage = () => {
       }
     };
 
-    loadUserData();
-  }, [user, routeUserId, authLoading]);
+    loadUserProfile();
+  }, [user, routeUserId, authLoading, isOwnProfile, targetUserId]);
 
-  if (authLoading || userLoading) return <ProfileLoading />;
-  
-  if (!user && !routeUserId) return <ProfileUnauthenticated />;
-  
-  const targetUserId = routeUserId || user?.id;
+  // Show loading while auth is loading or user profile is loading
+  if (authLoading || userLoading) {
+    return <ProfileLoading />;
+  }
 
+  // Show unauthenticated state if no user and no route userId
+  if (!user && !routeUserId) {
+    return <ProfileUnauthenticated />;
+  }
+
+  // Show unauthenticated if no target user ID determined
   if (!targetUserId) {
     return <ProfileUnauthenticated />;
   }
 
-  // Get the effective user for display
-  const effectiveUser = viewedUser || user;
-  if (!effectiveUser) {
+  // Show loading if we don't have the viewed user data yet
+  if (!viewedUser) {
     return <ProfileLoading />;
   }
 
-  // 1) Fetch all profile data (including name & username)
+  // Use profile data hooks
   const {
     sharedPlaces,
     profileStats,
@@ -106,7 +114,7 @@ const ProfilePage = () => {
     fetchFollowing,
   } = useProfileData(user, targetUserId);
 
-  // 2) Edit hook with onClose callback to auto‐dismiss dialog
+  // Edit profile hooks
   const {
     isSubmitting,
     handleFileChange,
@@ -134,7 +142,7 @@ const ProfilePage = () => {
     fetchProfileData
   );
 
-  // 3) Reviews dialog
+  // Reviews dialog
   const {
     selectedPlace,
     isReviewDialogOpen,
@@ -145,17 +153,17 @@ const ProfilePage = () => {
   // Create header user object with proper data hierarchy
   const headerUser: User = {
     id: targetUserId,
-    name: name || effectiveUser.name || "User",
-    username: username || effectiveUser.username || "username",
-    bio: bio || effectiveUser.bio || "",
-    avatar_url: profileImageUrl || effectiveUser.avatar_url || undefined,
-    email: effectiveUser.email || "",
-    location: userLocation || effectiveUser.location || "",
+    name: name || viewedUser.name || "User",
+    username: username || viewedUser.username || "username",
+    bio: bio || viewedUser.bio || "",
+    avatar_url: profileImageUrl || viewedUser.avatar_url || undefined,
+    email: viewedUser.email || "",
+    location: userLocation || viewedUser.location || "",
     is_private: isPrivate,
-    isCommunityMember: effectiveUser.isCommunityMember || false
+    isCommunityMember: viewedUser.isCommunityMember || false
   };
   
-  const effectiveUserLocation = userLocation || effectiveUser.location;
+  const effectiveUserLocation = userLocation || viewedUser.location;
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -166,7 +174,7 @@ const ProfilePage = () => {
           {/* Profile Header */}
           <ProfileHeader
             user={headerUser}
-            isOwnProfile={isOwnProfile}
+            isOwnProfile={!!isOwnProfile}
             profileStats={profileStats}
             isPrivate={isPrivate}
             setIsEditProfileOpen={setIsEditProfileOpen}
@@ -240,7 +248,7 @@ const ProfilePage = () => {
                 }
               }}
               refreshPlaces={fetchProfileData}
-              isOwnProfile={isOwnProfile}
+              isOwnProfile={!!isOwnProfile}
             />
           </div>
         </div>
