@@ -120,14 +120,14 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
                 {user.is_self !== true && (
                   <Button
                     size="sm"
-                    variant={followingStates[userId]?.isFollowing ? "outline" : "default"}
-                    onClick={(e) => toggleFollow(e, userId)}
-                    disabled={followingStates[userId]?.isLoading}
-                    className={`ml-2 ${followingStates[userId]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}`}
+                    variant={followingStates[user.id]?.isFollowing ? "outline" : "default"}
+                    onClick={(e) => toggleFollow(e, user.id)}
+                    disabled={followingStates[user.id]?.isLoading}
+                    className={`ml-2 ${followingStates[user.id]?.isFollowing ? "border-gray-300" : "bg-saboris-primary"}`}
                   >
-                    {followingStates[userId]?.isLoading ? (
+                    {followingStates[user.id]?.isLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : followingStates[userId]?.isFollowing ? (
+                    ) : followingStates[user.id]?.isFollowing ? (
                       "Unfollow"
                     ) : (
                       "Follow"
