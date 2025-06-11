@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +26,7 @@ export function useExplorePlaces(
         
         // Determine which user IDs to query based on filter
         if (filter === 'community') {
-          // For community, get all users marked as community members
+          // For community, get all users marked as community members - use correct field name
           const { data: communityUsers } = await supabase
             .from('users')
             .select('id')
@@ -80,7 +81,7 @@ export function useExplorePlaces(
           return;
         }
 
-        // Fetch reviews for these users with explicit avatar_url field
+        // Fetch reviews for these users with explicit avatar_url and isCommunityMember fields
         const { data: reviews, error } = await supabase
           .from('reviews')
           .select(`
@@ -124,7 +125,7 @@ export function useExplorePlaces(
         }
 
         console.log('Reviews fetched:', reviews.length);
-        console.log('Sample review with avatar:', reviews[0]?.users);
+        console.log('Sample review with community status:', reviews[0]?.users);
 
         // Group reviews by place_id and ensure we have valid place data
         const placeGroups: Record<string, typeof reviews> = {};
@@ -186,7 +187,8 @@ export function useExplorePlaces(
             console.log('Processing reviewer:', {
               userId: review.user_id,
               userName: review.users?.name,
-              avatarUrl: review.users?.avatar_url
+              avatarUrl: review.users?.avatar_url,
+              isCommunityMember: review.users?.isCommunityMember
             });
             
             return {

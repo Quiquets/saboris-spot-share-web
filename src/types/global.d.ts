@@ -1,3 +1,4 @@
+
 declare global {
   interface Window {
     google: any;
@@ -15,4 +16,5 @@ export interface User {
   bio?: string;
   location?: string;
   is_private?: boolean;
+  isCommunityMember?: boolean;
 }
