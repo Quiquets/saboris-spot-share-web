@@ -8,8 +8,8 @@ export const useFollowers = (user: User | null, targetUserId: string | null) => 
   const [followers, setFollowers] = useState<any[]>([]);
   const [following, setFollowing] = useState<any[]>([]);
 
-  const fetchFollowers = async () => {
-    if (!targetUserId) return [];
+  const fetchFollowers = async (): Promise<void> => {
+    if (!targetUserId) return;
     
     try {
       // Get followers with additional data about whether current user follows each follower
@@ -31,16 +31,14 @@ export const useFollowers = (user: User | null, targetUserId: string | null) => 
       );
       
       setFollowers(followersWithFollowingStatus);
-      return followersWithFollowingStatus;
     } catch (error) {
       console.error("Error fetching followers:", error);
       toast.error("Failed to load followers");
-      return [];
     }
   };
 
-  const fetchFollowing = async () => {
-    if (!targetUserId) return [];
+  const fetchFollowing = async (): Promise<void> => {
+    if (!targetUserId) return;
     
     try {
       // Get users that the target user is following
@@ -66,11 +64,9 @@ export const useFollowers = (user: User | null, targetUserId: string | null) => 
       );
       
       setFollowing(processedFollowing);
-      return processedFollowing;
     } catch (error) {
       console.error("Error fetching following:", error);
       toast.error("Failed to load following");
-      return [];
     }
   };
 
