@@ -12,6 +12,12 @@ export const useProfileData = (user: User | null, targetUserId?: string) => {
   // Use the target user id if provided, otherwise use the logged-in user's id
   const activeUserId = targetUserId || (user ? user.id : null);
   
+  console.log('useProfileData: Initializing with:', { 
+    hasUser: !!user, 
+    targetUserId, 
+    activeUserId 
+  });
+
   // Import functionality from specialized hooks
   const { sharedPlaces, fetchSharedPlaces } = useSharedPlaces(activeUserId);
   
@@ -31,9 +37,14 @@ export const useProfileData = (user: User | null, targetUserId?: string) => {
 
   // Combined fetch function to load all profile data
   const fetchProfileData = async () => {
-    if (!user || !activeUserId) return;
+    if (!activeUserId) {
+      console.log('useProfileData: No active user ID, skipping fetch');
+      setLoading(false);
+      return;
+    }
     
     try {
+      console.log('useProfileData: Starting to fetch profile data for:', activeUserId);
       setLoading(true);
       
       await Promise.all([
@@ -42,18 +53,27 @@ export const useProfileData = (user: User | null, targetUserId?: string) => {
         fetchProfileSettings()
       ]);
       
+      console.log('useProfileData: Successfully loaded profile data');
     } catch (error) {
-      console.error("Error fetching profile data:", error);
+      console.error("useProfileData: Error fetching profile data:", error);
+      // Don't throw error, just log it and continue
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user && activeUserId) {
+    console.log('useProfileData: useEffect triggered with:', { 
+      hasUser: !!user, 
+      activeUserId 
+    });
+    
+    if (activeUserId) {
       fetchProfileData();
+    } else {
+      setLoading(false);
     }
-  }, [user, activeUserId]);
+  }, [activeUserId]);
 
   return {
     sharedPlaces,

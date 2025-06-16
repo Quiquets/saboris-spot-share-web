@@ -97,29 +97,11 @@ const ProfilePage = () => {
 
   console.log('ProfilePage: About to render main content for user:', viewedUser.id);
 
-  // Use profile data hooks - Add error boundary here
-  let profileDataHookResult;
-  try {
-    profileDataHookResult = useProfileData(user, targetUserId);
-    console.log('ProfilePage: useProfileData result:', {
-      loading: profileDataHookResult.loading,
-      hasSharedPlaces: !!profileDataHookResult.sharedPlaces,
-      hasProfileStats: !!profileDataHookResult.profileStats
-    });
-  } catch (error) {
-    console.error('ProfilePage: Error in useProfileData:', error);
-    return (
-      <main className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Error Loading Profile</h1>
-            <p className="text-gray-600">There was an error loading the profile data.</p>
-          </div>
-        </div>
-        <Footer />
-      </main>
-    );
+  // Use profile data hooks with proper error boundaries
+  const profileDataResult = useProfileData(user, targetUserId);
+  if (!profileDataResult) {
+    console.log('ProfilePage: useProfileData returned null/undefined');
+    return <ProfileLoading />;
   }
 
   const {
@@ -143,49 +125,34 @@ const ProfilePage = () => {
     fetchProfileData,
     fetchFollowers,
     fetchFollowing,
-  } = profileDataHookResult;
+  } = profileDataResult;
 
-  // Edit profile hooks - Add error boundary here
-  let profileEditHookResult;
-  try {
-    profileEditHookResult = useProfileEdit(
-      user, 
-      async () => {
-        await refreshUserData(); 
-        await fetchProfileData(); 
-        setIsEditProfileOpen(false);
-      },
-      bio,
-      setBio,
-      name,
-      setName,
-      username,
-      setUsername,
-      userLocation,
-      setUserLocation,
-      isPrivate,
-      setIsPrivate,
-      profileImageUrl,
-      setProfileImageUrl,
-      fetchProfileData
-    );
-    console.log('ProfilePage: useProfileEdit result:', {
-      isSubmitting: profileEditHookResult.isSubmitting
-    });
-  } catch (error) {
-    console.error('ProfilePage: Error in useProfileEdit:', error);
-    return (
-      <main className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Error Loading Profile</h1>
-            <p className="text-gray-600">There was an error loading the profile edit functionality.</p>
-          </div>
-        </div>
-        <Footer />
-      </main>
-    );
+  // Edit profile hooks with proper error boundaries
+  const profileEditResult = useProfileEdit(
+    user, 
+    async () => {
+      await refreshUserData(); 
+      await fetchProfileData(); 
+      setIsEditProfileOpen(false);
+    },
+    bio,
+    setBio,
+    name,
+    setName,
+    username,
+    setUsername,
+    userLocation,
+    setUserLocation,
+    isPrivate,
+    setIsPrivate,
+    profileImageUrl,
+    setProfileImageUrl,
+    fetchProfileData
+  );
+
+  if (!profileEditResult) {
+    console.log('ProfilePage: useProfileEdit returned null/undefined');
+    return <ProfileLoading />;
   }
 
   const {
@@ -193,30 +160,13 @@ const ProfilePage = () => {
     handleFileChange,
     handleSaveProfile,
     handleDeleteAccount,
-  } = profileEditHookResult;
+  } = profileEditResult;
 
-  // Reviews dialog - Add error boundary here
-  let profileReviewsHookResult;
-  try {
-    profileReviewsHookResult = useProfileReviews();
-    console.log('ProfilePage: useProfileReviews result:', {
-      hasSelectedPlace: !!profileReviewsHookResult.selectedPlace,
-      isReviewDialogOpen: profileReviewsHookResult.isReviewDialogOpen
-    });
-  } catch (error) {
-    console.error('ProfilePage: Error in useProfileReviews:', error);
-    return (
-      <main className="min-h-screen flex flex-col">
-        <Header />
-        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Error Loading Profile</h1>
-            <p className="text-gray-600">There was an error loading the profile reviews functionality.</p>
-          </div>
-        </div>
-        <Footer />
-      </main>
-    );
+  // Reviews dialog with proper error boundaries
+  const profileReviewsResult = useProfileReviews();
+  if (!profileReviewsResult) {
+    console.log('ProfilePage: useProfileReviews returned null/undefined');
+    return <ProfileLoading />;
   }
 
   const {
@@ -224,7 +174,7 @@ const ProfilePage = () => {
     isReviewDialogOpen,
     setIsReviewDialogOpen,
     openReviewDialog,
-  } = profileReviewsHookResult;
+  } = profileReviewsResult;
 
   console.log('ProfilePage: About to render ProfilePageContent');
 
@@ -236,23 +186,23 @@ const ProfilePage = () => {
         <ProfilePageContent
           viewedUser={viewedUser}
           isOwnProfile={!!isOwnProfile}
-          sharedPlaces={sharedPlaces}
+          sharedPlaces={sharedPlaces || []}
           profileStats={profileStats}
           profileDataLoading={profileDataLoading}
-          isPrivate={isPrivate}
+          isPrivate={isPrivate || false}
           setIsPrivate={setIsPrivate}
-          bio={bio}
+          bio={bio || ''}
           setBio={setBio}
-          name={name}
+          name={name || ''}
           setName={setName}
-          username={username}
+          username={username || ''}
           setUsername={setUsername}
-          userLocation={userLocation}
+          userLocation={userLocation || ''}
           setUserLocation={setUserLocation}
           profileImageUrl={profileImageUrl}
           setProfileImageUrl={setProfileImageUrl}
-          followers={followers}
-          following={following}
+          followers={followers || []}
+          following={following || []}
           fetchFollowers={fetchFollowers}
           fetchFollowing={fetchFollowing}
           isEditProfileOpen={isEditProfileOpen}
