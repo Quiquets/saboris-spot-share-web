@@ -132,10 +132,10 @@ export function useMapMarkers(
         // Store the root for cleanup
         rootsRef.current.set(place.placeId, root);
 
-        // Attach it to a Google InfoWindow with fixed width
+        // Attach it to a Google InfoWindow with compact, fixed dimensions
         const infow = new google.maps.InfoWindow({ 
           content: container,
-          maxWidth: 280,
+          maxWidth: 264, // Fixed width to match our component (256px + padding)
           disableAutoPan: false
         });
         
