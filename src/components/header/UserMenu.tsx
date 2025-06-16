@@ -1,11 +1,11 @@
+
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User as UserIcon, LogOut, MapPin, PlusCircle } from 'lucide-react'; // Renamed User to UserIcon to avoid conflict
+import { User as UserIcon, LogOut, MapPin, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
-// import { useIsMobile } from '@/hooks/use-mobile'; // useIsMobile not used in current logic, can be removed if not planned
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,6 @@ const UserMenu = () => {
   const { user, signOut, setShowAuthModal } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  // const isMobile = useIsMobile(); // Not currently used
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -29,10 +28,21 @@ const UserMenu = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      // toast.success("Successfully signed out"); // AuthContext already shows a toast on sign out
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out");
+    }
+  };
+
+  // Handle profile navigation
+  const handleProfileClick = () => {
+    console.log('UserMenu: Profile clicked, user:', user);
+    if (user && user.id) {
+      console.log('UserMenu: Navigating to profile with user ID:', user.id);
+      navigate(`/profile/${user.id}`);
+    } else {
+      console.log('UserMenu: No user ID available, navigating to /profile');
+      navigate('/profile');
     }
   };
   
@@ -68,7 +78,7 @@ const UserMenu = () => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate(`/profile/${user.id}`)}>
+          <DropdownMenuItem onClick={handleProfileClick}>
             <UserIcon className="h-4 w-4 mr-2" />
             <span>My Profile</span>
           </DropdownMenuItem>

@@ -99,11 +99,22 @@ export const useProfilePageState = () => {
     };
 
     loadUserProfile();
-  }, [authLoading, routeUserId, user?.id]); // Simplified dependencies
+  }, [authLoading, routeUserId, user]);
 
   // Derived values calculated after data is loaded
   const targetUserId = routeUserId || user?.id;
   const isOwnProfile = user && targetUserId === user.id;
+
+  console.log('useProfilePageState returning:', {
+    user: !!user,
+    routeUserId,
+    targetUserId,
+    isOwnProfile,
+    viewedUser: !!viewedUser,
+    authLoading,
+    userLoading,
+    pageReady
+  });
 
   return {
     user,

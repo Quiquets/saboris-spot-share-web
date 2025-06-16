@@ -13,6 +13,8 @@ import { useProfileEdit } from "@/hooks/useProfileEdit";
 import { useProfileReviews } from "@/hooks/useProfileReviews";
 
 const ProfilePage = () => {
+  console.log('ProfilePage: Component starting to render');
+  
   const { refreshUserData } = useAuth();
   
   // Profile page state management
@@ -25,6 +27,16 @@ const ProfilePage = () => {
     userLoading,
     pageReady
   } = useProfilePageState();
+
+  console.log('ProfilePage: State after useProfilePageState', {
+    hasUser: !!user,
+    targetUserId,
+    isOwnProfile,
+    hasViewedUser: !!viewedUser,
+    authLoading,
+    userLoading,
+    pageReady
+  });
 
   // Dialog management
   const {
@@ -50,19 +62,19 @@ const ProfilePage = () => {
 
   // Show loading while still initializing
   if (authLoading || userLoading || !pageReady) {
-    console.log('Showing loading state:', { authLoading, userLoading, pageReady });
+    console.log('ProfilePage: Showing loading state:', { authLoading, userLoading, pageReady });
     return <ProfileLoading />;
   }
 
   // Show unauthenticated state if no user and no route userId
   if (!user && !targetUserId) {
-    console.log('Showing unauthenticated - no user, no target');
+    console.log('ProfilePage: Showing unauthenticated - no user, no target');
     return <ProfileUnauthenticated />;
   }
 
   // If we have a target user ID but no viewed user data, something went wrong
   if (targetUserId && !viewedUser) {
-    console.log('Error: Have target user ID but no viewed user data');
+    console.log('ProfilePage: Error - Have target user ID but no viewed user data');
     return (
       <main className="min-h-screen flex flex-col">
         <Header />
@@ -79,13 +91,37 @@ const ProfilePage = () => {
 
   // Must have viewedUser at this point
   if (!viewedUser) {
-    console.log('Unexpected: No viewed user data available');
+    console.log('ProfilePage: Unexpected - No viewed user data available');
     return <ProfileLoading />;
   }
 
-  console.log('Rendering main profile content for user:', viewedUser.id);
+  console.log('ProfilePage: About to render main content for user:', viewedUser.id);
 
-  // Use profile data hooks
+  // Use profile data hooks - Add error boundary here
+  let profileDataHookResult;
+  try {
+    profileDataHookResult = useProfileData(user, targetUserId);
+    console.log('ProfilePage: useProfileData result:', {
+      loading: profileDataHookResult.loading,
+      hasSharedPlaces: !!profileDataHookResult.sharedPlaces,
+      hasProfileStats: !!profileDataHookResult.profileStats
+    });
+  } catch (error) {
+    console.error('ProfilePage: Error in useProfileData:', error);
+    return (
+      <main className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Error Loading Profile</h1>
+            <p className="text-gray-600">There was an error loading the profile data.</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   const {
     sharedPlaces,
     profileStats,
@@ -107,43 +143,90 @@ const ProfilePage = () => {
     fetchProfileData,
     fetchFollowers,
     fetchFollowing,
-  } = useProfileData(user, targetUserId);
+  } = profileDataHookResult;
 
-  // Edit profile hooks
+  // Edit profile hooks - Add error boundary here
+  let profileEditHookResult;
+  try {
+    profileEditHookResult = useProfileEdit(
+      user, 
+      async () => {
+        await refreshUserData(); 
+        await fetchProfileData(); 
+        setIsEditProfileOpen(false);
+      },
+      bio,
+      setBio,
+      name,
+      setName,
+      username,
+      setUsername,
+      userLocation,
+      setUserLocation,
+      isPrivate,
+      setIsPrivate,
+      profileImageUrl,
+      setProfileImageUrl,
+      fetchProfileData
+    );
+    console.log('ProfilePage: useProfileEdit result:', {
+      isSubmitting: profileEditHookResult.isSubmitting
+    });
+  } catch (error) {
+    console.error('ProfilePage: Error in useProfileEdit:', error);
+    return (
+      <main className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Error Loading Profile</h1>
+            <p className="text-gray-600">There was an error loading the profile edit functionality.</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   const {
     isSubmitting,
     handleFileChange,
     handleSaveProfile,
     handleDeleteAccount,
-  } = useProfileEdit(
-    user, 
-    async () => {
-      await refreshUserData(); 
-      await fetchProfileData(); 
-      setIsEditProfileOpen(false);
-    },
-    bio,
-    setBio,
-    name,
-    setName,
-    username,
-    setUsername,
-    userLocation,
-    setUserLocation,
-    isPrivate,
-    setIsPrivate,
-    profileImageUrl,
-    setProfileImageUrl,
-    fetchProfileData
-  );
+  } = profileEditHookResult;
 
-  // Reviews dialog
+  // Reviews dialog - Add error boundary here
+  let profileReviewsHookResult;
+  try {
+    profileReviewsHookResult = useProfileReviews();
+    console.log('ProfilePage: useProfileReviews result:', {
+      hasSelectedPlace: !!profileReviewsHookResult.selectedPlace,
+      isReviewDialogOpen: profileReviewsHookResult.isReviewDialogOpen
+    });
+  } catch (error) {
+    console.error('ProfilePage: Error in useProfileReviews:', error);
+    return (
+      <main className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Error Loading Profile</h1>
+            <p className="text-gray-600">There was an error loading the profile reviews functionality.</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
   const {
     selectedPlace,
     isReviewDialogOpen,
     setIsReviewDialogOpen,
     openReviewDialog,
-  } = useProfileReviews();
+  } = profileReviewsHookResult;
+
+  console.log('ProfilePage: About to render ProfilePageContent');
 
   return (
     <main className="min-h-screen flex flex-col">
