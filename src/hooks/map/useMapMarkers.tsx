@@ -56,25 +56,48 @@ export function useMapMarkers(
       });
       
       try {
-        // Create coral pink marker with rating display using correct color #EE8C80
+        // Create aesthetic coral pink marker with bold rating text
         const rating = place.avgOverall.toFixed(1);
         const marker = new google.maps.Marker({
           position: place.location,
           map,
           icon: {
             url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
-              <svg width="28" height="35" viewBox="0 0 28 35" xmlns="http://www.w3.org/2000/svg">
-                <!-- Coral pink pin shape with correct color -->
-                <path d="M14 0C21.5 0 28 6.27 28 14C28 21.73 14 35 14 35S0 21.73 0 14C0 6.27 6.5 0 14 0Z" fill="#EE8C80"/>
-                <path d="M14 0C21.5 0 28 6.27 28 14C28 21.73 14 35 14 35S0 21.73 0 14C0 6.27 6.5 0 14 0Z" stroke="#ffffff" stroke-width="2"/>
-                <!-- White circle for rating -->
-                <circle cx="14" cy="13" r="8.5" fill="#ffffff"/>
-                <!-- Rating text in coral -->
-                <text x="14" y="17" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#EE8C80">${rating}</text>
+              <svg width="40" height="48" viewBox="0 0 40 48" xmlns="http://www.w3.org/2000/svg">
+                <!-- Drop shadow -->
+                <ellipse cx="22" cy="45" rx="6" ry="3" fill="rgba(0,0,0,0.15)"/>
+                
+                <!-- Main coral pink pin with gradient -->
+                <defs>
+                  <linearGradient id="coralGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#F5A299;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#EE8C80;stop-opacity:1" />
+                  </linearGradient>
+                  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.2)"/>
+                  </filter>
+                </defs>
+                
+                <!-- Pin shape with aesthetic rounded design -->
+                <path d="M20 2C29.941 2 38 9.373 38 18.5C38 28.5 20 44 20 44S2 28.5 2 18.5C2 9.373 10.059 2 20 2Z" 
+                      fill="url(#coralGradient)" 
+                      stroke="#ffffff" 
+                      stroke-width="2.5"
+                      filter="url(#shadow)"/>
+                
+                <!-- White circle for rating with subtle shadow -->
+                <circle cx="20" cy="18.5" r="11" fill="#ffffff" stroke="rgba(238,140,128,0.2)" stroke-width="1"/>
+                
+                <!-- Bold rating text in coral -->
+                <text x="20" y="23.5" text-anchor="middle" 
+                      font-family="system-ui, -apple-system, sans-serif" 
+                      font-size="10" 
+                      font-weight="900" 
+                      fill="#EE8C80">${rating}</text>
               </svg>
             `),
-            scaledSize: new google.maps.Size(28, 35),
-            anchor: new google.maps.Point(14, 35),
+            scaledSize: new google.maps.Size(40, 48),
+            anchor: new google.maps.Point(20, 48),
           },
           title: `${place.name} - ${rating}⭐`,
           optimized: false,
