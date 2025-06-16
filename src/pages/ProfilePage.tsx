@@ -27,35 +27,57 @@ const ProfilePage = () => {
   const [showFollowing, setShowFollowing] = useState(false);
   const [viewedUser, setViewedUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
 
   // Determine the target user ID and whether this is own profile
   const targetUserId = routeUserId || user?.id;
   const isOwnProfile = user && targetUserId === user.id;
 
+  console.log('ProfilePage render:', {
+    routeUserId,
+    userId: user?.id,
+    targetUserId,
+    isOwnProfile,
+    authLoading,
+    userLoading,
+    viewedUser: !!viewedUser,
+    pageReady
+  });
+
   // Load user profile data
   useEffect(() => {
     const loadUserProfile = async () => {
-      if (authLoading) return;
+      console.log('loadUserProfile called:', { authLoading, targetUserId, isOwnProfile, user: !!user });
+      
+      if (authLoading) {
+        console.log('Still loading auth, returning early');
+        return;
+      }
       
       if (!targetUserId) {
+        console.log('No target user ID, setting as unauthenticated');
         setViewedUser(null);
+        setPageReady(true);
         return;
       }
 
       if (isOwnProfile && user) {
-        // Use authenticated user data for own profile
+        console.log('Own profile, using authenticated user data');
         setViewedUser(user);
+        setPageReady(true);
         return;
       }
 
       if (routeUserId && routeUserId !== user?.id) {
-        // Load external user profile
+        console.log('Loading external user profile for:', routeUserId);
         try {
           setUserLoading(true);
           const profile = await supabaseService.getUserProfile(routeUserId);
+          console.log('External profile loaded:', !!profile);
           if (profile) {
             setViewedUser(profile);
           } else {
+            console.log('Profile not found');
             toast.error("User profile not found");
           }
         } catch (error) {
@@ -63,7 +85,11 @@ const ProfilePage = () => {
           toast.error("Failed to load user profile");
         } finally {
           setUserLoading(false);
+          setPageReady(true);
         }
+      } else {
+        console.log('Setting page ready - no external profile needed');
+        setPageReady(true);
       }
     };
 
@@ -71,24 +97,30 @@ const ProfilePage = () => {
   }, [user, routeUserId, authLoading, isOwnProfile, targetUserId]);
 
   // Show loading while auth is loading or user profile is loading
-  if (authLoading || userLoading) {
+  if (authLoading || userLoading || !pageReady) {
+    console.log('Showing loading state:', { authLoading, userLoading, pageReady });
     return <ProfileLoading />;
   }
 
   // Show unauthenticated state if no user and no route userId
   if (!user && !routeUserId) {
+    console.log('Showing unauthenticated - no user, no route');
     return <ProfileUnauthenticated />;
   }
 
   // Show unauthenticated if no target user ID determined
   if (!targetUserId) {
+    console.log('Showing unauthenticated - no target user ID');
     return <ProfileUnauthenticated />;
   }
 
   // Show loading if we don't have the viewed user data yet
   if (!viewedUser) {
+    console.log('Showing loading - no viewed user data');
     return <ProfileLoading />;
   }
+
+  console.log('Rendering main profile content');
 
   // Use profile data hooks
   const {
