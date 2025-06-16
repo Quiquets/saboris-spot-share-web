@@ -14,15 +14,9 @@ export const useProfilePageState = () => {
   const [userLoading, setUserLoading] = useState(false);
   const [pageReady, setPageReady] = useState(false);
 
-  // Determine the target user ID and whether this is own profile
-  const targetUserId = routeUserId || user?.id;
-  const isOwnProfile = user && targetUserId === user.id;
-
-  console.log('useProfilePageState:', {
+  console.log('useProfilePageState render:', {
     routeUserId,
     userId: user?.id,
-    targetUserId,
-    isOwnProfile,
     authLoading,
     userLoading,
     viewedUser: !!viewedUser,
@@ -32,20 +26,40 @@ export const useProfilePageState = () => {
   // Load user profile data
   useEffect(() => {
     const loadUserProfile = async () => {
-      console.log('loadUserProfile called:', { authLoading, targetUserId, isOwnProfile, user: !!user });
+      console.log('loadUserProfile called:', { 
+        authLoading, 
+        routeUserId, 
+        userId: user?.id 
+      });
       
+      // Wait for auth to finish loading
       if (authLoading) {
         console.log('Still loading auth, returning early');
         return;
       }
-      
-      if (!targetUserId) {
-        console.log('No target user ID, setting as unauthenticated');
+
+      // If no route userId and no authenticated user, we're done
+      if (!routeUserId && !user) {
+        console.log('No route user ID and no authenticated user');
         setViewedUser(null);
         setPageReady(true);
         return;
       }
 
+      // Determine target user ID
+      const targetUserId = routeUserId || user?.id;
+      const isOwnProfile = user && targetUserId === user.id;
+
+      console.log('Target user determined:', { targetUserId, isOwnProfile });
+
+      if (!targetUserId) {
+        console.log('No target user ID available');
+        setViewedUser(null);
+        setPageReady(true);
+        return;
+      }
+
+      // If viewing own profile and we have user data, use it
       if (isOwnProfile && user) {
         console.log('Own profile, using authenticated user data');
         setViewedUser(user);
@@ -53,33 +67,43 @@ export const useProfilePageState = () => {
         return;
       }
 
+      // If viewing external profile, fetch it
       if (routeUserId && routeUserId !== user?.id) {
         console.log('Loading external user profile for:', routeUserId);
         try {
           setUserLoading(true);
           const profile = await supabaseService.getUserProfile(routeUserId);
           console.log('External profile loaded:', !!profile);
+          
           if (profile) {
             setViewedUser(profile);
           } else {
             console.log('Profile not found');
             toast.error("User profile not found");
+            setViewedUser(null);
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
           toast.error("Failed to load user profile");
+          setViewedUser(null);
         } finally {
           setUserLoading(false);
           setPageReady(true);
         }
-      } else {
-        console.log('Setting page ready - no external profile needed');
-        setPageReady(true);
+        return;
       }
+
+      // Default case - just mark as ready
+      console.log('Default case - marking as ready');
+      setPageReady(true);
     };
 
     loadUserProfile();
-  }, [user, routeUserId, authLoading, isOwnProfile, targetUserId]);
+  }, [authLoading, routeUserId, user?.id]); // Simplified dependencies
+
+  // Derived values calculated after data is loaded
+  const targetUserId = routeUserId || user?.id;
+  const isOwnProfile = user && targetUserId === user.id;
 
   return {
     user,

@@ -48,7 +48,7 @@ const ProfilePage = () => {
     isOwnProfile
   });
 
-  // Show loading while auth is loading or user profile is loading
+  // Show loading while still initializing
   if (authLoading || userLoading || !pageReady) {
     console.log('Showing loading state:', { authLoading, userLoading, pageReady });
     return <ProfileLoading />;
@@ -60,13 +60,30 @@ const ProfilePage = () => {
     return <ProfileUnauthenticated />;
   }
 
-  // Show loading if we don't have the viewed user data yet
+  // If we have a target user ID but no viewed user data, something went wrong
+  if (targetUserId && !viewedUser) {
+    console.log('Error: Have target user ID but no viewed user data');
+    return (
+      <main className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Profile Not Found</h1>
+            <p className="text-gray-600">The requested profile could not be loaded.</p>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  // Must have viewedUser at this point
   if (!viewedUser) {
-    console.log('Showing loading - no viewed user data');
+    console.log('Unexpected: No viewed user data available');
     return <ProfileLoading />;
   }
 
-  console.log('Rendering main profile content');
+  console.log('Rendering main profile content for user:', viewedUser.id);
 
   // Use profile data hooks
   const {
