@@ -1,7 +1,7 @@
 
 /// <reference types="@types/google.maps" />
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMapInitialization } from '@/hooks/map/useMapInitialization';
 import { useMapMarkers } from '@/hooks/map/useMapMarkers';
 import { useExplorePlaces } from '@/hooks/map/useExplorePlaces';
@@ -24,17 +24,40 @@ interface GoogleMapViewProps {
 const GoogleMapView = ({ className = "h-96 w-full", activeFilters, onMapReady }: GoogleMapViewProps) => {
   const { user, setShowAuthModal } = useAuth();
   const mapRef = useRef<HTMLDivElement>(null);
-  const { map, isLoaded, loadError } = useMapInitialization(mapRef);
-  const { places, loading: placesLoading } = useExplorePlaces(activeFilters);
+  const [isLoadingMap, setIsLoadingMap] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  
+  // Use the correct hook interface
+  const { mapInstance, mapIsReady, userLocation, initializeMap } = useMapInitialization(mapRef, setIsLoadingMap);
+  
+  // Convert activeFilters to the expected format for useExplorePlaces
+  const filterType = activeFilters?.people || 'community';
+  const { places, loading: placesLoading } = useExplorePlaces(filterType as 'my' | 'friends' | 'fof' | 'community');
 
   // Use the map markers hook with user and auth modal
-  useMapMarkers(map, places, user, setShowAuthModal);
+  useMapMarkers(mapInstance, places, user, setShowAuthModal);
+
+  // Initialize map on mount
+  useEffect(() => {
+    const initMap = async () => {
+      try {
+        await initializeMap();
+        setLoadError(null);
+      } catch (error) {
+        console.error('Failed to initialize map:', error);
+        setLoadError('Failed to load map');
+        setIsLoadingMap(false);
+      }
+    };
+
+    initMap();
+  }, [initializeMap]);
 
   useEffect(() => {
-    if (map && onMapReady) {
-      onMapReady(map);
+    if (mapInstance && onMapReady) {
+      onMapReady(mapInstance);
     }
-  }, [map, onMapReady]);
+  }, [mapInstance, onMapReady]);
 
   if (loadError) {
     return (
@@ -47,7 +70,7 @@ const GoogleMapView = ({ className = "h-96 w-full", activeFilters, onMapReady }:
     );
   }
 
-  if (!isLoaded || placesLoading) {
+  if (!mapIsReady || placesLoading || isLoadingMap) {
     return <MapLoading className={className} />;
   }
 
