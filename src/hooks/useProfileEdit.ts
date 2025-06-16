@@ -1,4 +1,4 @@
-// src/hooks/useProfileEdit.ts
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { supabaseService } from "@/services/supabaseService";
@@ -10,70 +10,80 @@ export const useProfileEdit = (
   refreshUserData: () => Promise<void>,
   bio: string,
   setBio: (value: string) => void,
-
-  // **New**: display name
   name: string,
   setName: (value: string) => void,
-
   username: string,
   setUsername: (value: string) => void,
-
   userLocation: string,
   setUserLocation: (value: string) => void,
-
   isPrivate: boolean,
   setIsPrivate: (value: boolean) => void,
-
   profileImageUrl: string | null,
   setProfileImageUrl: (value: string | null) => void,
-
   fetchProfileData: () => Promise<void>
 ) => {
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    /* …your existing file‐size checks/upload preview… */
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size must be less than 5MB");
+        return;
+      }
+      
+      setProfileImageFile(file);
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setProfileImageUrl(previewUrl);
+    }
   };
 
   const handleSaveProfile = async () => {
-    if (!user) return false;
+    if (!user) {
+      toast.error("User not authenticated");
+      return false;
+    }
 
-    // 0) No spaces allowed in username
+    // Validation checks
     if (/\s/.test(username)) {
       toast.error("Username cannot contain spaces.");
       return false;
     }
 
-    // 1) Username pattern (letters, numbers, underscore; 1–32 chars)
     const usernameRegex = /^[A-Za-z0-9_]{1,32}$/;
     if (!usernameRegex.test(username)) {
       toast.error("Username must be 1–32 characters: letters, numbers, or underscores only.");
       return false;
     }
 
-    // 2) Multilingual bad‐word filter
+    // Bad word filter
     const swearList = [
-      /* English */ "fuck","shit","bitch","bastard","asshole","dick","cunt","prick","slut","whore",
-      /* Spanish */ "puta","mierda","coño","joder","gilipollas","cabrón","zorra","pendejo",
-      /* German  */ "scheiße","fotze","arschloch","hurensohn","schlampe","wixer","verpissdich",
-      /* Portuguese */ "porra","merda","caralho","buceta","filho da puta",
-      /* Dutch */ "kanker","tering","lul","hoer","tyfus","klootzak",
-      /* French */ "merde","putain","connard","salope","enculé",
-      /* Italian */ "cazzo","merda","stronzo","figa","vaffanculo",
-      /* Swedish */ "jävlar","skit","kuk","hora","fitta",
-      /* Russian */ "blyat","suka","pidor","khuy","zhopa",
-      /* Polish */ "kurwa","chuj","pizda","spierdalaj","skurwysyn",
-      /* Turkish */ "orospu","yarrak","siktir","amk","gavat",
-      /* Arabic */ "kalb","ziit","haram","sharmoota","ibn el kalb"
+      "fuck","shit","bitch","bastard","asshole","dick","cunt","prick","slut","whore",
+      "puta","mierda","coño","joder","gilipollas","cabrón","zorra","pendejo",
+      "scheiße","fotze","arschloch","hurensohn","schlampe","wixer","verpissdich",
+      "porra","merda","caralho","buceta","filho da puta",
+      "kanker","tering","lul","hoer","tyfus","klootzak",
+      "merde","putain","connard","salope","enculé",
+      "cazzo","merda","stronzo","figa","vaffanculo",
+      "jävlar","skit","kuk","hora","fitta",
+      "blyat","suka","pidor","khuy","zhopa",
+      "kurwa","chuj","pizda","spierdalaj","skurwysyn",
+      "orospu","yarrak","siktir","amk","gavat",
+      "kalb","ziit","haram","sharmoota","ibn el kalb"
     ];
+    
     const lowerName = name.toLowerCase();
     const lowerUsername = username.toLowerCase();
     const found = swearList.filter(w =>
       lowerName.includes(w) || lowerUsername.includes(w)
     );
+    
     if (found.length > 0) {
-      // Only list each bad word once
       const uniqueOffenses = Array.from(new Set(found));
       toast.error(
         `The following terms are against our policy guidelines: ${uniqueOffenses.join(", ")}`
@@ -81,29 +91,57 @@ export const useProfileEdit = (
       return false;
     }
 
-    // 3) Username uniqueness
-    const { data: existing, error: uniqErr } = await supabase
-      .from("users")
-      .select("id")
-      .eq("username", username.trim())
-      .neq("id", user.id)
-      .single();
-    if (uniqErr) console.warn("Username uniqueness check error:", uniqErr);
-    if (existing) {
-      toast.error("That username is already taken.");
-      return false;
+    // Username uniqueness check
+    try {
+      const { data: existing, error: uniqErr } = await supabase
+        .from("users")
+        .select("id")
+        .eq("username", username.trim())
+        .neq("id", user.id)
+        .single();
+      
+      if (uniqErr && uniqErr.code !== 'PGRST116') {
+        console.warn("Username uniqueness check error:", uniqErr);
+      }
+      
+      if (existing) {
+        toast.error("That username is already taken.");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking username uniqueness:", error);
     }
 
     setIsSubmitting(true);
     try {
-      // === Handle avatar upload if needed ===
       let newAvatarDatabaseUrl = user.avatar_url || "";
 
       if (profileImageFile) {
-        /* …your existing upload logic… */
+        try {
+          const fileExt = profileImageFile.name.split('.').pop();
+          const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, profileImageFile);
+
+          if (uploadError) {
+            console.error("Upload error:", uploadError);
+            throw uploadError;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+
+          newAvatarDatabaseUrl = publicUrl;
+        } catch (uploadError) {
+          console.error("Avatar upload failed:", uploadError);
+          toast.error("Failed to upload profile image");
+          return false;
+        }
       }
 
-      // 4) Prepare updates
       const updates = {
         name: name.trim(),
         username: username.trim(),
@@ -113,14 +151,12 @@ export const useProfileEdit = (
         is_private: isPrivate,
       };
 
-      // 5) Update custom users table
       const success = await supabaseService.updateUserProfile(user.id, updates);
       if (!success) {
         toast.error("Failed to update profile in database");
         return false;
       }
 
-      // 6) Update Auth metadata
       const { error: authErr } = await supabase.auth.updateUser({
         data: {
           name: updates.name,
@@ -128,12 +164,12 @@ export const useProfileEdit = (
           avatar_url: updates.avatar_url,
         }
       });
+      
       if (authErr) {
         console.warn("Auth metadata update error:", authErr);
         toast.warning("Profile updated, but session might not reflect changes until next sign-in.");
       }
 
-      // 7) Refresh data & UI
       await refreshUserData();
       await fetchProfileData();
       setProfileImageUrl(updates.avatar_url);
@@ -161,6 +197,7 @@ export const useProfileEdit = (
     }
   };
 
+  // Always return an object, never null
   return {
     profileImageFile,
     isSubmitting,

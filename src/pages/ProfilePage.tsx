@@ -97,38 +97,37 @@ const ProfilePage = () => {
 
   console.log('ProfilePage: About to render main content for user:', viewedUser.id);
 
-  // Use profile data hooks with proper error boundaries
-  const profileDataResult = useProfileData(user, targetUserId);
-  if (!profileDataResult) {
-    console.log('ProfilePage: useProfileData returned null/undefined');
-    return <ProfileLoading />;
-  }
-
+  // Use profile data hooks with fallbacks instead of null checks
   const {
-    sharedPlaces,
-    profileStats,
-    loading: profileDataLoading,
-    isPrivate,
-    setIsPrivate,
-    followers,
-    following,
-    bio,
-    setBio,
-    name,
-    setName,
-    username,
-    setUsername,
-    userLocation, 
-    setUserLocation,
-    profileImageUrl,
-    setProfileImageUrl,
-    fetchProfileData,
-    fetchFollowers,
-    fetchFollowing,
-  } = profileDataResult;
+    sharedPlaces = [],
+    profileStats = null,
+    loading: profileDataLoading = false,
+    isPrivate = false,
+    setIsPrivate = () => {},
+    followers = [],
+    following = [],
+    bio = '',
+    setBio = () => {},
+    name = '',
+    setName = () => {},
+    username = '',
+    setUsername = () => {},
+    userLocation = '', 
+    setUserLocation = () => {},
+    profileImageUrl = null,
+    setProfileImageUrl = () => {},
+    fetchProfileData = async () => {},
+    fetchFollowers = async () => {},
+    fetchFollowing = async () => {},
+  } = useProfileData(user, targetUserId) || {};
 
-  // Edit profile hooks with proper error boundaries
-  const profileEditResult = useProfileEdit(
+  // Edit profile hooks with fallbacks
+  const {
+    isSubmitting = false,
+    handleFileChange = () => {},
+    handleSaveProfile = async () => false,
+    handleDeleteAccount = () => {},
+  } = useProfileEdit(
     user, 
     async () => {
       await refreshUserData(); 
@@ -148,33 +147,15 @@ const ProfilePage = () => {
     profileImageUrl,
     setProfileImageUrl,
     fetchProfileData
-  );
+  ) || {};
 
-  if (!profileEditResult) {
-    console.log('ProfilePage: useProfileEdit returned null/undefined');
-    return <ProfileLoading />;
-  }
-
+  // Reviews dialog with fallbacks
   const {
-    isSubmitting,
-    handleFileChange,
-    handleSaveProfile,
-    handleDeleteAccount,
-  } = profileEditResult;
-
-  // Reviews dialog with proper error boundaries
-  const profileReviewsResult = useProfileReviews();
-  if (!profileReviewsResult) {
-    console.log('ProfilePage: useProfileReviews returned null/undefined');
-    return <ProfileLoading />;
-  }
-
-  const {
-    selectedPlace,
-    isReviewDialogOpen,
-    setIsReviewDialogOpen,
-    openReviewDialog,
-  } = profileReviewsResult;
+    selectedPlace = null,
+    isReviewDialogOpen = false,
+    setIsReviewDialogOpen = () => {},
+    openReviewDialog = () => {},
+  } = useProfileReviews() || {};
 
   console.log('ProfilePage: About to render ProfilePageContent');
 
@@ -186,23 +167,23 @@ const ProfilePage = () => {
         <ProfilePageContent
           viewedUser={viewedUser}
           isOwnProfile={!!isOwnProfile}
-          sharedPlaces={sharedPlaces || []}
+          sharedPlaces={sharedPlaces}
           profileStats={profileStats}
           profileDataLoading={profileDataLoading}
-          isPrivate={isPrivate || false}
+          isPrivate={isPrivate}
           setIsPrivate={setIsPrivate}
-          bio={bio || ''}
+          bio={bio}
           setBio={setBio}
-          name={name || ''}
+          name={name}
           setName={setName}
-          username={username || ''}
+          username={username}
           setUsername={setUsername}
-          userLocation={userLocation || ''}
+          userLocation={userLocation}
           setUserLocation={setUserLocation}
           profileImageUrl={profileImageUrl}
           setProfileImageUrl={setProfileImageUrl}
-          followers={followers || []}
-          following={following || []}
+          followers={followers}
+          following={following}
           fetchFollowers={fetchFollowers}
           fetchFollowing={fetchFollowing}
           isEditProfileOpen={isEditProfileOpen}
