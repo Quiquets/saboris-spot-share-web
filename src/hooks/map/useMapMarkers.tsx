@@ -3,14 +3,52 @@ import { useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import InfoWindowContent from "@/components/map/InfoWindowContent";
 import type { ExplorePlace } from "@/types/explore";
+import { supabaseService } from "@/services/supabaseService";
+import { toast } from "sonner";
 
 export function useMapMarkers(
   map: google.maps.Map | null,
-  places: ExplorePlace[]
+  places: ExplorePlace[],
+  user?: { id: string } | null,
+  setShowAuthModal?: (show: boolean) => void
 ) {
   const markersRef = useRef<google.maps.Marker[]>([]);
   const infoRef = useRef<google.maps.InfoWindow | null>(null);
   const rootsRef = useRef<Map<string, ReactDOM.Root>>(new Map());
+
+  const handleToggleSave = async (placeId: string) => {
+    if (!user) {
+      toast.info("Please sign in to save places");
+      setShowAuthModal?.(true);
+      return;
+    }
+
+    try {
+      // For now, we'll always save (not toggle) since we don't have saved state tracking
+      // In a full implementation, you'd check if already saved and toggle accordingly
+      await supabaseService.saveRestaurant(user.id, placeId);
+    } catch (error) {
+      console.error('Error saving place:', error);
+      toast.error("Failed to save place");
+    }
+  };
+
+  const handleInvite = (placeId: string) => {
+    if (!user) {
+      toast.info("Please sign in to invite friends");
+      setShowAuthModal?.(true);
+      return;
+    }
+    
+    console.log('Invite for place:', placeId);
+    toast.info("Invite feature coming soon!");
+  };
+
+  const handleViewRestaurant = (placeId: string) => {
+    console.log('View restaurant for place:', placeId);
+    // Fix 404 by using correct routing path
+    window.location.href = `/places/${placeId}`;
+  };
 
   useEffect(() => {
     if (!map) {
@@ -113,19 +151,9 @@ export function useMapMarkers(
         root.render(
           <InfoWindowContent
             place={place}
-            onToggleSave={(id) => {
-              console.log('Toggle save for place:', id);
-              /* TODO: your save/unsave logic here */
-            }}
-            onInvite={(id) => {
-              console.log('Invite for place:', id);
-              /* TODO: open invite dialog here */
-            }}
-            onViewRestaurant={(id) => {
-              console.log('View restaurant for place:', id);
-              // Fix 404 by using correct routing path
-              window.location.href = `/places/${id}`;
-            }}
+            onToggleSave={handleToggleSave}
+            onInvite={handleInvite}
+            onViewRestaurant={handleViewRestaurant}
           />
         );
 
@@ -178,7 +206,7 @@ export function useMapMarkers(
         });
       }
     }
-  }, [map, places]);
+  }, [map, places, user, setShowAuthModal]);
 
   // Cleanup on unmount
   useEffect(() => {
