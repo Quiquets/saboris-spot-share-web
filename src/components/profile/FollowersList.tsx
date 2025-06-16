@@ -4,10 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabaseService } from '@/services/supabaseService';
-import { User } from '@/types/global';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface FollowersListProps {
   users: any[];
@@ -15,14 +14,19 @@ interface FollowersListProps {
   className?: string;
 }
 
+interface FollowingState {
+  isFollowing: boolean;
+  isLoading: boolean;
+}
+
 const FollowersList = ({ users, listType, className = '' }: FollowersListProps) => {
   const [displayedUsers, setDisplayedUsers] = useState<any[]>(users);
-  const [followingStates, setFollowingStates] = useState<Record<string, { isFollowing: boolean, isLoading: boolean }>>({});
+  const [followingStates, setFollowingStates] = useState<Record<string, FollowingState>>({});
   const navigate = useNavigate();
 
   useEffect(() => {
     // Initialize following states from users data
-    const initialStates: Record<string, { isFollowing: boolean, isLoading: boolean }> = {};
+    const initialStates: Record<string, FollowingState> = {};
     users.forEach(user => {
       initialStates[user.id] = { 
         isFollowing: user.is_following || false,
@@ -33,14 +37,18 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
     setDisplayedUsers(users);
   }, [users]);
 
+  const updateFollowingState = (userId: string, updates: Partial<FollowingState>) => {
+    setFollowingStates(prev => ({
+      ...prev,
+      [userId]: { ...prev[userId], ...updates }
+    }));
+  };
+
   const toggleFollow = async (e: React.MouseEvent, userId: string) => {
     // Prevent navigation when clicking follow/unfollow button
     e.stopPropagation();
     
-    setFollowingStates(prev => ({
-      ...prev,
-      [userId]: { ...prev[userId], isLoading: true }
-    }));
+    updateFollowingState(userId, { isLoading: true });
 
     try {
       const isCurrentlyFollowing = followingStates[userId]?.isFollowing;
@@ -58,21 +66,15 @@ const FollowersList = ({ users, listType, className = '' }: FollowersListProps) 
       }
       
       // Update the following state for user who stays in the list
-      setFollowingStates(prev => ({
-        ...prev,
-        [userId]: { 
-          isFollowing: !isCurrentlyFollowing, 
-          isLoading: false 
-        }
-      }));
+      updateFollowingState(userId, { 
+        isFollowing: !isCurrentlyFollowing, 
+        isLoading: false 
+      });
       
     } catch (error) {
       console.error("Error toggling follow:", error);
       toast.error("Failed to update follow status");
-      setFollowingStates(prev => ({
-        ...prev,
-        [userId]: { ...prev[userId], isLoading: false }
-      }));
+      updateFollowingState(userId, { isLoading: false });
     }
   };
 

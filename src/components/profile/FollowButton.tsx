@@ -26,6 +26,55 @@ const FollowButton: React.FC<FollowButtonProps> = ({
   useEffect(() => {
     setFollowing(initialIsFollowing);
   }, [initialIsFollowing]);
+
+  const checkExistingFollow = async () => {
+    const { data } = await supabase
+      .from('follows')
+      .select('id')
+      .match({ 
+        follower_id: currentUser.id, 
+        following_id: profileUser.id 
+      })
+      .single();
+    return !!data;
+  };
+
+  const performFollow = async () => {
+    const existingFollow = await checkExistingFollow();
+    
+    if (existingFollow) {
+      setFollowing(true);
+      toast.success(`Already following @${profileUser.username || 'user'}`);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('follows')
+      .insert({ 
+        follower_id: currentUser.id, 
+        following_id: profileUser.id 
+      });
+      
+    if (error) throw error;
+    
+    toast.success(`Following @${profileUser.username || 'user'}`);
+    setFollowing(true);
+  };
+
+  const performUnfollow = async () => {
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .match({ 
+        follower_id: currentUser.id, 
+        following_id: profileUser.id 
+      });
+      
+    if (error) throw error;
+    
+    toast.success(`Unfollowed @${profileUser.username || 'user'}`);
+    setFollowing(false);
+  };
   
   const handleFollowToggle = async () => {
     if (currentUser.id === profileUser.id) return; // Can't follow yourself
@@ -34,54 +83,9 @@ const FollowButton: React.FC<FollowButtonProps> = ({
       setLoading(true);
       
       if (following) {
-        // Unfollow
-        const { error } = await supabase
-          .from('follows')
-          .delete()
-          .match({ 
-            follower_id: currentUser.id, 
-            following_id: profileUser.id 
-          });
-          
-        if (error) {
-          console.error('Unfollow error:', error);
-          throw error;
-        }
-        
-        toast.success(`Unfollowed @${profileUser.username || 'user'}`);
-        setFollowing(false);
+        await performUnfollow();
       } else {
-        // Check if already following before inserting
-        const { data: existingFollow } = await supabase
-          .from('follows')
-          .select('id')
-          .match({ 
-            follower_id: currentUser.id, 
-            following_id: profileUser.id 
-          })
-          .single();
-          
-        if (existingFollow) {
-          // Already following, just update UI
-          setFollowing(true);
-          toast.success(`Already following @${profileUser.username || 'user'}`);
-        } else {
-          // Follow
-          const { error } = await supabase
-            .from('follows')
-            .insert({ 
-              follower_id: currentUser.id, 
-              following_id: profileUser.id 
-            });
-            
-          if (error) {
-            console.error('Follow error:', error);
-            throw error;
-          }
-          
-          toast.success(`Following @${profileUser.username || 'user'}`);
-          setFollowing(true);
-        }
+        await performFollow();
       }
       
       // Call callback if provided

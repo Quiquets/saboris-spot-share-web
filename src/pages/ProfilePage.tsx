@@ -1,100 +1,52 @@
 
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import EditProfileDialog from "@/components/profile/EditProfileDialog";
-import SocialListsContainer from "@/components/profile/SocialListsContainer";
-import ReviewDialog from "@/components/profile/ReviewDialog";
-import SharedPlaces from "@/components/profile/SharedPlaces";
+import ProfilePageContent from "@/components/profile/ProfilePageContent";
 import ProfileLoading from "@/components/profile/ProfileLoading";
 import ProfileUnauthenticated from "@/components/profile/ProfileUnauthenticated";
+import { useProfilePageState } from "@/hooks/profile/useProfilePageState";
+import { useProfileDialogs } from "@/hooks/profile/useProfileDialogs";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileEdit } from "@/hooks/useProfileEdit";
 import { useProfileReviews } from "@/hooks/useProfileReviews";
-import { supabaseService } from "@/services/supabaseService";
-import { User } from "@/types/global";
-import { toast } from "sonner";
 
 const ProfilePage = () => {
-  const { userId: routeUserId } = useParams<{ userId?: string }>();
-  const { user, loading: authLoading, refreshUserData } = useAuth();
-
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [showFollowers, setShowFollowers] = useState(false);
-  const [showFollowing, setShowFollowing] = useState(false);
-  const [viewedUser, setViewedUser] = useState<User | null>(null);
-  const [userLoading, setUserLoading] = useState(false);
-  const [pageReady, setPageReady] = useState(false);
-
-  // Determine the target user ID and whether this is own profile
-  const targetUserId = routeUserId || user?.id;
-  const isOwnProfile = user && targetUserId === user.id;
-
-  console.log('ProfilePage render:', {
-    routeUserId,
-    userId: user?.id,
+  const { refreshUserData } = useAuth();
+  
+  // Profile page state management
+  const {
+    user,
     targetUserId,
     isOwnProfile,
+    viewedUser,
     authLoading,
     userLoading,
-    viewedUser: !!viewedUser,
     pageReady
+  } = useProfilePageState();
+
+  // Dialog management
+  const {
+    isEditProfileOpen,
+    setIsEditProfileOpen,
+    showFollowers,
+    showFollowing,
+    setShowFollowers,
+    setShowFollowing,
+    openFollowersDialog,
+    openFollowingDialog
+  } = useProfileDialogs();
+
+  console.log('ProfilePage render - state check:', {
+    authLoading,
+    userLoading,
+    pageReady,
+    hasUser: !!user,
+    hasViewedUser: !!viewedUser,
+    targetUserId,
+    isOwnProfile
   });
-
-  // Load user profile data
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      console.log('loadUserProfile called:', { authLoading, targetUserId, isOwnProfile, user: !!user });
-      
-      if (authLoading) {
-        console.log('Still loading auth, returning early');
-        return;
-      }
-      
-      if (!targetUserId) {
-        console.log('No target user ID, setting as unauthenticated');
-        setViewedUser(null);
-        setPageReady(true);
-        return;
-      }
-
-      if (isOwnProfile && user) {
-        console.log('Own profile, using authenticated user data');
-        setViewedUser(user);
-        setPageReady(true);
-        return;
-      }
-
-      if (routeUserId && routeUserId !== user?.id) {
-        console.log('Loading external user profile for:', routeUserId);
-        try {
-          setUserLoading(true);
-          const profile = await supabaseService.getUserProfile(routeUserId);
-          console.log('External profile loaded:', !!profile);
-          if (profile) {
-            setViewedUser(profile);
-          } else {
-            console.log('Profile not found');
-            toast.error("User profile not found");
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-          toast.error("Failed to load user profile");
-        } finally {
-          setUserLoading(false);
-          setPageReady(true);
-        }
-      } else {
-        console.log('Setting page ready - no external profile needed');
-        setPageReady(true);
-      }
-    };
-
-    loadUserProfile();
-  }, [user, routeUserId, authLoading, isOwnProfile, targetUserId]);
 
   // Show loading while auth is loading or user profile is loading
   if (authLoading || userLoading || !pageReady) {
@@ -103,14 +55,8 @@ const ProfilePage = () => {
   }
 
   // Show unauthenticated state if no user and no route userId
-  if (!user && !routeUserId) {
-    console.log('Showing unauthenticated - no user, no route');
-    return <ProfileUnauthenticated />;
-  }
-
-  // Show unauthenticated if no target user ID determined
-  if (!targetUserId) {
-    console.log('Showing unauthenticated - no target user ID');
+  if (!user && !targetUserId) {
+    console.log('Showing unauthenticated - no user, no target');
     return <ProfileUnauthenticated />;
   }
 
@@ -182,108 +128,51 @@ const ProfilePage = () => {
     openReviewDialog,
   } = useProfileReviews();
 
-  // Create header user object with proper data hierarchy
-  const headerUser: User = {
-    id: targetUserId,
-    name: name || viewedUser.name || "User",
-    username: username || viewedUser.username || "username",
-    bio: bio || viewedUser.bio || "",
-    avatar_url: profileImageUrl || viewedUser.avatar_url || undefined,
-    email: viewedUser.email || "",
-    location: userLocation || viewedUser.location || "",
-    is_private: isPrivate,
-    isCommunityMember: viewedUser.isCommunityMember || false
-  };
-  
-  const effectiveUserLocation = userLocation || viewedUser.location;
-
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
 
       <div className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto">
-          {/* Profile Header */}
-          <ProfileHeader
-            user={headerUser}
-            isOwnProfile={!!isOwnProfile}
-            profileStats={profileStats}
-            isPrivate={isPrivate}
-            setIsEditProfileOpen={setIsEditProfileOpen}
-            fetchFollowers={async () => {
-              await fetchFollowers();
-              setShowFollowers(true);
-              setShowFollowing(false);
-            }}
-            fetchFollowing={async () => {
-              await fetchFollowing();
-              setShowFollowing(true);
-              setShowFollowers(false);
-            }}
-            userLocation={effectiveUserLocation}
-          />
-
-          {/* Edit Profile Dialog (own profile only) */}
-          {isOwnProfile && user && (
-            <EditProfileDialog
-              isOpen={isEditProfileOpen}
-              onOpenChange={setIsEditProfileOpen}
-              user={user}
-              name={name}
-              setName={setName}
-              username={username}
-              setUsername={setUsername}
-              userLocation={userLocation}
-              setUserLocation={setUserLocation}
-              bio={bio}
-              setBio={setBio}
-              isPrivate={isPrivate}
-              setIsPrivate={setIsPrivate}
-              profileImageUrl={profileImageUrl}
-              handleFileChange={handleFileChange}
-              handleSaveProfile={handleSaveProfile}
-              handleDeleteAccount={handleDeleteAccount}
-              isSubmitting={isSubmitting}
-            />
-          )}
-
-          {/* Followers / Following overlay */}
-          <SocialListsContainer
-            followers={showFollowers ? followers : []}
-            following={showFollowing ? following : []}
-            showFollowers={showFollowers}
-            showFollowing={showFollowing}
-            setShowFollowers={setShowFollowers}
-            setShowFollowing={setShowFollowing}
-          />
-
-          {/* Review Dialog */}
-          {selectedPlace && (
-            <ReviewDialog
-              isOpen={isReviewDialogOpen}
-              onOpenChange={setIsReviewDialogOpen}
-              selectedPlace={selectedPlace}
-              onPlaceDeleted={fetchProfileData}
-            />
-          )}
-
-          {/* Shared Places grid */}
-          <div id="shared-places-section">
-            <SharedPlaces
-              loading={profileDataLoading}
-              sharedPlaces={sharedPlaces}
-              openReviewDialog={isOwnProfile ? openReviewDialog : (place) => { 
-                if (place && place.place) { 
-                  toast.info(`Viewing details for ${place.place.name}`);
-                } else if (selectedPlace && selectedPlace.place) { 
-                   toast.info(`Viewing details for ${selectedPlace.place.name}`);
-                }
-              }}
-              refreshPlaces={fetchProfileData}
-              isOwnProfile={!!isOwnProfile}
-            />
-          </div>
-        </div>
+        <ProfilePageContent
+          viewedUser={viewedUser}
+          isOwnProfile={!!isOwnProfile}
+          sharedPlaces={sharedPlaces}
+          profileStats={profileStats}
+          profileDataLoading={profileDataLoading}
+          isPrivate={isPrivate}
+          setIsPrivate={setIsPrivate}
+          bio={bio}
+          setBio={setBio}
+          name={name}
+          setName={setName}
+          username={username}
+          setUsername={setUsername}
+          userLocation={userLocation}
+          setUserLocation={setUserLocation}
+          profileImageUrl={profileImageUrl}
+          setProfileImageUrl={setProfileImageUrl}
+          followers={followers}
+          following={following}
+          fetchFollowers={fetchFollowers}
+          fetchFollowing={fetchFollowing}
+          isEditProfileOpen={isEditProfileOpen}
+          setIsEditProfileOpen={setIsEditProfileOpen}
+          showFollowers={showFollowers}
+          showFollowing={showFollowing}
+          setShowFollowers={setShowFollowers}
+          setShowFollowing={setShowFollowing}
+          openFollowersDialog={openFollowersDialog}
+          openFollowingDialog={openFollowingDialog}
+          isSubmitting={isSubmitting}
+          handleFileChange={handleFileChange}
+          handleSaveProfile={handleSaveProfile}
+          handleDeleteAccount={handleDeleteAccount}
+          selectedPlace={selectedPlace}
+          isReviewDialogOpen={isReviewDialogOpen}
+          setIsReviewDialogOpen={setIsReviewDialogOpen}
+          openReviewDialog={openReviewDialog}
+          fetchProfileData={fetchProfileData}
+        />
       </div>
 
       <Footer />
